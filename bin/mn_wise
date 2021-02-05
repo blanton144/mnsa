@@ -1,0 +1,196 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_wise
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import copy
+import numpy as np
+import scipy.interpolate as interpolate
+import scipy.optimize as optimize
+import scipy.signal as signal
+import fitsio
+import mnsa.utils.configuration as configuration
+import crr.reconstruct as reconstruct
+import astropy.wcs as wcs
+import unwise_psf.unwise_psf as unwise_psf
+
+wise_psf_interp = None
+
+wise_image = 0.
+
+
+def psf(x, y, i):
+    cx = np.float32(wise_psf.shape[1] // 2)
+    cy = np.float32(wise_psf.shape[0] // 2)
+    lx = x * 0.75 / 2.75
+    ly = y * 0.75 / 2.75
+    return(wise_psf_interp(lx + cx, ly + cy, grid=False).flatten())
+
+
+def mem_function(u, A, f, llambda):
+    Ar = (A.dot(u) - f)
+    As = (Ar**2).sum()
+    Bs = (u * np.log(u)).sum()
+    val = As + llambda * Bs
+    grad = 2. * A.T.dot(Ar) + llambda * (1. + np.log(u))
+    return (val, grad)
+
+
+def mem_fit(lnlambda, r, flux):
+    llambda = np.exp(lnlambda)
+    S_M0 = np.ones(r.nx * r.ny)
+    bounds = zip([1.e-12] * (len(S_M0)),
+                 [None] * (len(S_M0)))
+    bounds = [x for x in bounds]
+    results = optimize.minimize(mem_function, S_M0,
+                                args=(r.A, flux, llambda),
+                                method='L-BFGS-B', jac=True,
+                                bounds=bounds)
+    return(results)
+
+
+def mem_lambda_function(lnlambda, r, flux, ivar):
+    results = mem_fit(lnlambda, r, flux)
+    recon = r.A.dot(results.x)
+    chi2 = ((recon - flux)**2 * ivar).sum()
+    val = chi2 - len(recon)
+    print(val)
+    return(val)
+
+
+def mem_all(r, flux, ivar):
+    bracket = [np.log(1.e-20), np.log(1.e+25)]
+    try:
+        rootresults = optimize.root_scalar(mem_lambda_function,
+                                           args=(r, flux, ivar),
+                                           method='brentq',
+                                           bracket=bracket)
+        lnl = rootresults.root
+    except ValueError:
+        if(mem_lambda_function(bracket[1], r, flux, ivar) < 0.):
+            lnl = bracket[1] 
+        if(mem_lambda_function(bracket[0], r, flux, ivar) > 0.):
+            lnl = bracket[0]
+
+    results = mem_fit(lnl, r, flux)
+    return(results.x.reshape(r.ny, r.nx), lnl)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Creates WISE image at MaNGA resolution')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+
+    plate, ifu = [int(x) for x in plateifu.split('-')]
+    bands = cfg['WISE']['bands'].split()
+
+    plateifu_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                version, str(plate), str(ifu))
+    native_dir = os.path.join(plateifu_dir, 'native')
+
+    manga_file = os.path.join(native_dir,
+                              '{plateifu}-manga-logcube-crr.fits.gz')
+    manga_file = manga_file.format(plateifu=plateifu)
+
+    hdr_out_orig = fitsio.read_header(manga_file, ext='FLUX')
+    psf_out = fitsio.read(manga_file, ext='RPSF')
+
+    for band in bands:
+
+        hdr_out = copy.deepcopy(hdr_out_orig)
+
+        # Hack here because we don't know the coadd_id
+        coadd_id = '0000m031'
+        bandnum = int(band[-1])
+        wise_psf = unwise_psf.get_unwise_psf(bandnum, coadd_id)
+        wise_psf = wise_psf / wise_psf.sum()
+        xpsf = np.arange(wise_psf.shape[1])
+        ypsf = np.arange(wise_psf.shape[0])
+        wise_psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, wise_psf)
+
+        # Read the WISE data
+        wise_file = os.path.join(native_dir,
+                                 '{plateifu}-wise-image-{band}.fits.fz')
+        wise_file = wise_file.format(plateifu=plateifu, band=band)
+
+        wise_invvar_file = os.path.join(native_dir,
+                                        '{plateifu}-wise-invvar-{band}.fits.fz')
+        wise_invvar_file = wise_invvar_file.format(plateifu=plateifu,
+                                                   band=band)
+
+        image, hdr_in = fitsio.read(wise_file, header=True)
+        invvar = fitsio.read(wise_invvar_file)
+
+        hdr_in['NAXIS1'] = image.shape[0]
+        hdr_in['NAXIS2'] = image.shape[1]
+
+        # Get the WCS info for input and output
+        wcs_in = wcs.WCS(header=hdr_in)
+        wcs_out = wcs.WCS(header=hdr_out, naxis=[1, 2])
+
+        # Create a reconstruct object in order to calculate which
+        # input pixels influence the output
+        rall = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out)
+        rall.set_grid()
+        rall.psf = psf
+        rall.set_Amatrix()
+        coverage = rall.A.sum(axis=1).reshape(image.shape)
+        coverage = coverage / coverage.max()
+        trim = coverage > 3.e-2
+
+        # Create a reconstruct object with only the pixels with coverage
+        pad = 10
+        r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out, trim=trim,
+                                       pad=pad)
+        r.set_grid()
+        r.psf = psf
+        r.set_Amatrix()
+        r.tlambda = 1.e-3
+        r.set_weights(F_weights=True)
+
+        # Set the input array
+        subimage = image[trim]
+        subinvvar = invvar[trim]
+
+        scale = (0.75 / 2.75)**2
+
+        image_G = r.apply_weights(subimage.flatten()) * scale
+
+        image_mem, lnl = mem_all(r, subimage.flatten(), subinvvar.flatten())
+        image_mem = image_mem * scale
+
+        wise_manga_file = os.path.join(plateifu_dir, 'manga',
+                                       '{plateifu}-wise-{band}.fits')
+        wise_manga_file = wise_manga_file.format(plateifu=plateifu, band=band)
+        hdr_out['LNL_MEM'] = lnl
+        fitsio.write(wise_manga_file, image_mem[pad:-pad, pad:-pad],
+                     header=hdr_out, clobber=True)
