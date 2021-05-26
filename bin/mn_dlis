@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_dlis
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import copy
+import numpy as np
+import fitsio
+import mnsa.utils.configuration as configuration
+import mnsa.resample as resample
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+
+    pixscale = np.float32(cfg['General']['pixscale'])
+    plate, ifu = [int(x) for x in plateifu.split('-')]
+    bands = cfg['DLIS']['bands'].split()
+
+    plateifu_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                version, str(plate), str(ifu))
+    native_dir = os.path.join(plateifu_dir, 'native')
+
+    manga_file = os.path.join(native_dir,
+                              '{plateifu}-manga-logcube-crr.fits.gz')
+    manga_file = manga_file.format(plateifu=plateifu)
+
+    hdr_out_orig = fitsio.read_header(manga_file, ext='FLUX')
+    psf_out = fitsio.read(manga_file, ext='RPSF')
+
+    for band in bands:
+        hdr_out = copy.deepcopy(hdr_out_orig)
+
+        dlis_file = os.path.join(native_dir,
+                                 '{plateifu}-dlis-image-{band}.fits.fz')
+        dlis_file = dlis_file.format(plateifu=plateifu, band=band)
+
+        image, hdr_in = fitsio.read(dlis_file, header=True)
+
+        r = resample.Resample(image=image, input_header=hdr_in)
+        r.set_output_header(hdr_out)
+        r.set_output_psf(psf_out)
+        image_down = r.downsample()
+
+        dlis_manga_file = os.path.join(plateifu_dir, 'manga',
+                                       '{plateifu}-dlis-{band}.fits')
+        dlis_manga_file = dlis_manga_file.format(plateifu=plateifu, band=band)
+        fitsio.write(dlis_manga_file, image_down, header=hdr_out, clobber=True)

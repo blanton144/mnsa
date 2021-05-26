@@ -1,1 +1,11 @@
-Get COADDID for WISE
+* error bar estimates
+* do GALEX
+* do SDSS
+* clean overall structure and script
+* send summary to JM
+* Calculate error bars
+* Clean headers
+* Clean code structure
+* Get GALEX PSFs
+* Get WISE PSFs
+* Run on a reasonably-sized sample
