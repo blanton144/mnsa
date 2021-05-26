@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_manga
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import numpy as np
+import marvin
+import mnsa.manga as manga
+
+marvin.config.setRelease('DR15')
+marvin.config.mode = 'local'
+marvin.config.download = True
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-s', '--start', dest='start',
+                        type=np.int32, help='start index', default=-1)
+
+    parser.add_argument('-e', '--end', dest='end',
+                        type=np.int32, help='end index', default=-1)
+
+    args = parser.parse_args()
+    version = args.version
+    drp_start = args.start
+    drp_end = args.end
+
+    drpall = marvin.utils.general.general.get_drpall_table()
+
+    # Find all datacubes 
+    selected = drpall[(drpall['mngtarg1'] != 0) | (drpall['mngtarg3'] != 0)]
+
+    if(drp_start < 0):
+        drp_start = 0
+    if(drp_end < 0):
+        drp_end = len(selected) - 1
+
+    print(len(selected))
+    for i in range(drp_start, drp_end + 1):
+        plateifu = selected['plateifu'][i]
+        print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
+        manga.manga_native(plateifu=plateifu, version=version)

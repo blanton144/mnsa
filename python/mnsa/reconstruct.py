@@ -579,15 +579,17 @@ class Reconstruct(object):
                                     dtype=np.float32)
         print(nWave)
         for iWave in np.arange(nWave):
-            print(iWave)
+            print(iWave, flush=True)
             if self.waveindex is None and psf_slices is True:
                 iWave = self.bbindex[iWave]
-            w0, weights = self.create_weights(xsample=self.xpos[0:self.nExp * self.nfiber, iWave],
-                                              ysample=self.ypos[0:self.nExp * self.nfiber, iWave],
+            try:
+                w0, weights = self.create_weights(xsample=self.xpos[0:self.nExp * self.nfiber, iWave],
+                                                  ysample=self.ypos[0:self.nExp * self.nfiber, iWave],
                                               ivar=flux_ivar[:, iWave],
                                               waveindex=iWave, **kwargs)
-            # print('failing to converge', iWave)
-             #   self.slice_fail.append(iWave)
+            except np.linalg.LinAlgError:
+                print('failing to converge', iWave)
+                self.slice_fail.append(iWave)
             self.w0 = w0
             if nWave <= 3 and keyword == 'simulation':
                 self.weights_psf[iWave, :, :] = weights
@@ -1297,18 +1299,18 @@ def set_G(plate=None, ifu=None, release='DR15', waveindex=None, dimage=0.75, lam
 
 """
     base = ReconstructG(plate=plate, ifu=ifu, release=release, waveindex=waveindex)
-    print("rss")
+    print("rss", flush=True)
     base.set_rss()
-    print("image grid")
+    print("image grid", flush=True)
     base.set_image_grid(dimage=dimage)
-    print("kernel")
+    print("kernel", flush=True)
     base.set_kernel()
-    print("flux rss")
+    print("flux rss", flush=True)
     base.set_flux_rss()
-    print("flux psf")
+    print("flux psf", flush=True)
     base.set_flux_psf(alpha=alpha, xcen=xcen, ycen=ycen, noise=noise)
     start_time = time.time()
-    print("cube")
+    print("cube", flush=True)
     base.set_cube(psf_slices=psf_slices, beta=beta, lam=lam)
     stop_time = time.time()
 # if len(base.waveindex)>4000:
@@ -1533,7 +1535,7 @@ def write(datafile, filename):
     if 'BZERO' not in list(cubehdr.header.keys()):
         cubehdr.header.insert('BUNIT', card_BZERO, after=False)
     try:
-        card_flux_fail = fits.Card('FAIL_SLICE', str(datafile.slice_fail), 'slices failed to converge')
+        card_flux_fail = fits.Card('FAILSLIC', str(datafile.slice_fail), 'slices failed to converge')
         cubehdr.header.insert('ZFWHM', card_flux_fail, after=True)
     except:
         pass
