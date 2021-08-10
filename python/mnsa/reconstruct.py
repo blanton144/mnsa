@@ -9,17 +9,13 @@ import matplotlib.cm as cm
 from astropy.io import fits
 from pydl.pydlutils.sdss import sdss_flagval
 from scipy import sparse
-import time
+import mnsa.kernel
 import os
-import sys
-
 
 # Set Marvin configuration so it gets everything local
 marvin.config.setRelease('DR15')
 marvin.config.mode = 'local'
 marvin.config.download = True
-
-plt.ion()
 
 
 # Rough grid length in arcsec to use for each IFU size
@@ -29,8 +25,36 @@ gridsize = {7: 12, 19: 17, 37: 22, 61: 27, 91: 32, 127: 36}
 class Reconstruct(object):
     """Base class for reconstruction of cubes from RSS files
 
+    Parameters:
+    ----------
+
+    plate : int, np.int32
+        plate number
+
+    ifu : int, np.int32
+        IFU number
+
+    release : str
+        data release (default 'DR15')
+
+    waveindex : int, np.int32
+        indices of wavelengths to reconstruct, or None to reconstruct all
+        (default None)
+
+    pixelscale : float, np.float32
+        pixel scale of output grid in arcsec (default 0.75)
+
+    dkernel : float, np.float32
+        underlying resolution of kernel in arcsec (default 0.05)
+
+    verbose : bool
+        If True, be verbose
+
     Attributes:
     ----------
+
+    verbose : bool
+        If True, be verbose
 
     plate : int, np.int32
         plate number
@@ -42,77 +66,115 @@ class Reconstruct(object):
         number of fibers
 
     release : str
-        data release (default 'DR15')
+        data release
 
     rss : RSS object
         Marvin RSS output
 
     waveindex : int, np.int32
-        indices of wavelengths to reconstruct (default None)
+        indices of wavelengths to reconstruct
 
-    Methods:
-    -------
+    dkernel : np.float32
+        underlying resolution of kernel in arcsec
 
-    set_rss() : Acquire the RSS data
+    nExp : int, np.int32
+        number of exposures
 
-    set_image_grid(dimage) : Set up the spatial grid for the cube
+    xpos : 2D ndarray of np.float32
+        X positions of each fiber at each wavelength [nExp * nfiber, nWave]
 
-    set_kernel(fwhm) : Create the kernel estimation from accessing to data base
+    ypos : 2D ndarray of np.float32
+        Y positions of each fiber at each wavelength [nExp * nfiber, nWave]
 
-    set_flux_rss() : Set the flux used for reconstruction from RSS
+    wave : ndarray of np.float32
+        wavelength grid
 
-    set_flux_psf(xcen=0., ycen=0.,alpha=1,noise=None) : Set the flux used for reconstruction to a PSF
+    nWave : int, np.int32
+        size of wavelength grid
 
-    set_weights() : Set the weights for mapping spectra to cube
+    obsinfo : ndarray 
+        observing information object
 
-    create_weights() : Calculate the weights for mapping spectra to cube
+    seeing0 : ndarray of np.float32
+        FWHM of seeing at guider wavelength (5400 Angstroms) [nExp]
 
-    normalize_weights(w) : Normalize the weights
+    seeing : 2D ndarray of np.float32
+        FWHM of seeing at each wavelength [nWave, nExp]
 
-    set_cube() : Calculates and sets cube for both RSS and simulation
+    bbwave : ndarray of np.float32
+        [4] g, r, i, z band reference wavelengths
 
-    calculate_cube(flux,flux_ivar,flux_mask): Calculate the result for given flux, flux_ivar and flux_mask
+    bbindex : ndarray of np.float32
+        [4] index of wave closest to g, r, i, z reference wavelengths
 
-    covar() : Calculate covariance matrix for a slice of the cube
+    pixelscale : np.float32
+        pixel scale for output grid (arcsec)
 
-    mask(): Calculate mask matrix for a slice of the cube
+    dkernel : np.float32
+        pixel scale for kernel (arcsec)
 
-    plot_slice() : Plots a slice of the cube
+    kernel : Kernel class object
+        object to return radial kernel function
 
-    FWHM(xi=None, yi=None, PSF=None, xcen=0, ycen=0): calculate FWHM for given reconstructed image
+    conversion : np.float32
+        factor to multiply per fiber units by to get per pixel units
 
-    Notes:
-    ------
+    nside : np.int32
+        number of pixels on a side for the image grid
 
-    Additional attributes are set by the methods, as documented.
+    nimage : np.int32
+        number of pixels total for the image grid
 
-    Unless waveindex is set, uses all wavelengths.
+    length : np.float32
+        length of image grid in arcsec (based on outer pixel edges)
 
-    Typical usage would be (for a limited number of wavelengths):
+    x2i : 2D ndarray of np.float32
+        array of X positions on grid
 
-     import reconstruction
-     r = reconstruction.Reconstruct(plate=8485, ifu=3701, waveindex=[1000, 2000])
-     r.set_rss() # Gets and reads in the RSS file (sets .rss attribute)
-     r.set_image_grid() # Creates the output image spatial grid
-     r.set_kernel() # Sets the kernel for every wavelength and exposure
-     r.set_flux_rss() # Sets up to use the RSS fluxes (sets .flux, .flux_ivar)
-     r.set_flux_psf(xcen=0.5, ycen=1.5, alpha=1,noise=5) # Puts fake data into PSF fluxes (sets .flux_psf, .flux_psf_ivar)
-     r.set_weights() # Sets the weights (sets .weights)
-     r.set_cube() # Sets the weights (sets .cube, .cube_ivar .cube_mask)
-     r.plot_slice(0)
+    y2i : 2D ndarray of np.float32
+        array of Y positions on grid
 
+    xi : ndarray of np.float32
+        1D array of X positions
+
+    yi : ndarray of np.float32
+        1D array of Y positions
+
+    xmin : np.float32
+        outer edge of lowest X pixel
+
+    ymin : np.float32
+        outer edge of lowest Y pixel
+
+    xmax : np.float32
+        outer edge of highest X pixel
+
+    ymax : np.float32
+        outer edge of highest Y pixel
 """
-
-    def __init__(self, plate=None, ifu=None, release='DR15', waveindex=None):
+    def __init__(self, plate=None, ifu=None, release='DR15', waveindex=None,
+                 pixelscale=0.75, dkernel=0.05, verbose=True):
         self.plate = plate
         self.ifu = ifu
         self.plateifu = "{plate}-{ifu}".format(plate=self.plate, ifu=self.ifu)
         self.release = release
-        self.nfiber = int(self.ifu / 100)
+        self.nfiber = int(self.ifu) // 100  # depends on MaNGA naming
         self.rss = None
         self.waveindex = waveindex
-        if (self.waveindex is not None):
+        self.pixelscale = pixelscale
+        self.verbose = verbose
+        self.dkernel = dkernel
+        if self.waveindex is not None:
             self.waveindex = self._arrayify_int32(self.waveindex)
+        self.fiberradius = 1.
+        self.GPSF = None
+        self.RPSF = None
+        self.IPSF = None
+        self.ZPSF = None
+        self.GFWHM = None
+        self.RFWHM = None
+        self.IFWHM = None
+        self.ZFWHM = None
         return
 
     def _arrayify_int32(self, quantity):
@@ -123,14 +185,37 @@ class Reconstruct(object):
             length = 1
         return np.zeros(length, dtype=np.int32) + quantity
 
+    def run(self):
+        """Perform all steps to create a cube"""
+        if(self.verbose):
+            print("Importing RSS fluxes.")
+        self.set_rss()
+        if(self.verbose):
+            print("Creating output grid.")
+        self.set_image_grid()
+        if(self.verbose):
+            print("Setting up kernel.")
+        self.set_kernel()
+        if(self.verbose):
+            print("Constructing data flux and ivar arrays to use.")
+        self.set_flux_rss()
+        if(self.verbose):
+            print("Constructing PSF model flux array.")
+        self.set_flux_psf()
+        if(self.verbose):
+            print("Calculate cube.")
+        self.calculate_cube()
+        if (len(self.wave) == self.rss.data['FLUX'].data.shape[1]):
+            self.set_band()
+        return
+
     def set_rss(self):
         """Acquire the RSS data and set related attributes
 
-        Parameters:
-        ----------
-
         Notes:
         -----
+
+        Uses Marvin tools to get RSS data.
 
         Sets attributes:
 
@@ -141,8 +226,10 @@ class Reconstruct(object):
          .wave - Selected wavelength grid [nWave]
          .nWave - Size of wavelength grid
          .obsinfo - Observing information object
-         .fwhm0 - FWHM of seeing at guider wavelength (5400 Angstroms) [nExp]
-         .fwhm - FWHM at each wavelength [nWave, nExp]
+         .seeing0 - FWHM of seeing at guider wavelength (5400 Angstroms) [nExp]
+         .seeing - FWHM at each wavelength [nWave, nExp]
+         .bbwave - g, r, i, z band reference wavelengths
+         .bbindex - index of wave closest to g, r, i, z reference wavelengths
 """
         self.rss = rss.RSS(plateifu=self.plateifu, release=self.release)
         self.nExp = self.rss.data[0].header['NEXP']
@@ -151,14 +238,19 @@ class Reconstruct(object):
 
         self.wave = self.rss.data['WAVE'].data
         self.nWave = self.rss.data['FLUX'].shape[1]
+
+        # Find wavelengths near griz
         gpivot = 4702.50
         rpivot = 6176.58
         ipivot = 7496.12
         zpivot = 8946.71
-        self.bbwave = [gpivot, rpivot, ipivot, zpivot]
-        self.bbindex = []
-        for wave in self.bbwave:
-            self.bbindex.append(min(range(len(self.wave)), key=lambda i: abs(self.wave[i] - wave)))
+        self.bbwave = np.array([gpivot, rpivot, ipivot, zpivot],
+                               dtype=np.float32)
+        self.bbindex = np.zeros(len(self.bbwave), dtype=np.int32)
+        for j, wave in enumerate(self.bbwave):
+            self.bbindex[j] = min(range(len(self.wave)),
+                                  key=lambda i: abs(self.wave[i] - wave))
+
         # Use waveindex if that was set
         if (self.waveindex is not None):
             self.nWave = len(self.waveindex)
@@ -168,46 +260,40 @@ class Reconstruct(object):
 
         # Set FWHM values as a function of wavelength
         self.obsinfo = self.rss.data['OBSINFO'].data
-        self.fwhm0 = (self.obsinfo.field('SEEING') *
-                      self.obsinfo.field('PSFFAC'))
+        self.seeing0 = (self.obsinfo.field('SEEING') *
+                        self.obsinfo.field('PSFFAC'))
 
         lambda0 = 5400.
-        self.fwhm = [[self.fwhm0[i] * math.pow(lambda0 / self.wave[j], 1. / 5.)
-                      for i in range(self.fwhm0.shape[0])]
-                     for j in range(self.nWave)]
-        self.fwhm = np.array(self.fwhm)
-
+        self.seeing = [[self.seeing0[i] * math.pow(lambda0 / self.wave[j], 1. / 5.)
+                        for i in range(self.seeing0.shape[0])]
+                       for j in range(self.nWave)]
+        self.seeing = np.array(self.seeing)
         return
 
     def _create_grid(self, d=None):
         """Create a grid (used for image and kernel)"""
         rough_length = gridsize[self.nfiber]
         nside = ((np.int32(np.ceil(rough_length / d)) // 2) * 2 + 1)
-        length = nside * d
+        length = np.float32(nside * d)
         xmin = -0.5 * length
         xmax = 0.5 * length
         ymin = -0.5 * length
         ymax = 0.5 * length
-        xi = np.linspace(xmin + 0.5 * d, xmax - 0.5 * d, nside)
-        yi = np.linspace(ymin + 0.5 * d, ymax - 0.5 * d, nside)
+        xi = np.linspace(xmin + 0.5 * d, xmax - 0.5 * d, nside,
+                         dtype=np.float32)
+        yi = np.linspace(ymin + 0.5 * d, ymax - 0.5 * d, nside,
+                         dtype=np.float32)
         x2i, y2i = np.meshgrid(xi, yi)
         return (nside, length, x2i, y2i, xi, yi)
 
-    def set_image_grid(self, dimage=0.75):
+    def set_image_grid(self):
         """Create the image output grid
-
-        Parameters:
-        ----------
-
-        dimage : float, np.float32
-            pixel scale for output grid in arcsec (default: 0.75)
 
         Notes:
         -----
 
         Sets attributes:
 
-         .dimage - pixel scale for output grid in arcsec
          .conversion - factor to multiply per fiber units by to get
                        per pixel units
          .nside - number of pixels on a side for the image grid
@@ -222,9 +308,8 @@ class Reconstruct(object):
          .xmax - outer edge of highest X pixel
          .ymax - outer edge of highest Y pixel
 """
-        self.dimage = dimage
-        self.conversion = self.dimage ** 2 / np.pi
-        (self.nside, self.length, self.x2i, self.y2i, self.xi, self.yi) = self._create_grid(self.dimage)
+        self.conversion = self.pixelscale ** 2 / np.pi
+        (self.nside, self.length, self.x2i, self.y2i, self.xi, self.yi) = self._create_grid(self.pixelscale)
         self.nimage = self.nside ** 2
         self.xmin = -0.5 * self.length
         self.xmax = 0.5 * self.length
@@ -232,69 +317,21 @@ class Reconstruct(object):
         self.ymax = 0.5 * self.length
         return
 
-    def set_kernel(self, dkernel=0.05):
+    def set_kernel(self):
         """Set the kernel for each wavelength and exposure
-
-        Parameters:
-        ----------
-
-        dkernel : float, np.float32
-            pixel scale for kernel grid in arcsec (default: 0.05)
 
         Notes:
         -----
 
         Sets attributes:
 
-         .x2k - 2-D array of X positions of kernel grid
-         .y2k - 2-D array of Y positions of kernel grid
-         .xkernel - 1-D array of X positions of kernel grid
-         .ykernel - 1-D array of Y positions of kernel grid
-         .nkernel - number of pixels on a side of kernel image
-         .kernelbase - 3D array of kernel data used to access kernel value [250,nkernelbase,nkernelbase]
-         .nkernelbase - number of pixels on a side of base kernel slice
-         .kernel_radial - the value of kernel at given radius
+         .kernel - Kernel class object
 """
-        self.dkernel = dkernel
-        (self.nkernel, length, self.x2k, self.y2k, self.xkernel, self.ykernel) = self._create_grid(self.dkernel)
-
-        filename = os.path.join(os.getenv('MNSA_DIR'),
-                                'python', 'data', 'kernel_database.fits')
-        kernelfile = fits.open(filename)
-        self.kernelbase = kernelfile[0].data
-        kernelfile.close()
-        self.nkernelbase = self.kernelbase.shape[1]
-
-        filename = os.path.join(os.getenv('MNSA_DIR'),
-                                'python', 'data', 'kernel_radial_database.fits')
-        kernelradial = fits.open(filename)
-        self.kernel_radial = kernelradial[0].data
-        kernelradial.close()
-
-    def _kernel(self, fwhm):
-        """acquire kernel values corresponding to a given fwhm
-
-        Parameters:
-        ----------
-
-        fwhm: float, np.float32
-            the fwhm of kernel(range:0.5-3.0)
-
-        Returns:
-        -------
-
-        kernel: ndarray of np.float32
-            kernel value [nkernel,nkernel]
-
-"""
-        index = int(fwhm * 100 - 50)
-        index2 = fwhm * 100 - 50 - index
-        kernel = self.kernelbase[index] * (1 - index2) + self.kernelbase[index + 1] * index2
-        index_p = int((self.nkernel + self.nkernelbase) / 2)
-        index_m = int((self.nkernel - self.nkernelbase) / 2)
-        kernelvalue = np.zeros([self.nkernel, self.nkernel])
-        kernelvalue[index_m:index_p, index_m:index_p] = kernel.copy()
-        return kernelvalue
+        rough_length = gridsize[self.nfiber]
+        self.kernel = mnsa.kernel.Kernel(rough_length=rough_length,
+                                         dkernel=self.dkernel,
+                                         nseeing=100)
+        return
 
     def set_flux_psf(self, xcen=0., ycen=0., alpha=1, noise=None):
         """Set the fiber fluxes to a PSF corresponding to the kernel
@@ -308,9 +345,11 @@ class Reconstruct(object):
         ycen : float, np.float32
             Y center of PSF desired
 
-        alpha : deviation ratio of actual PSF with regard to assumed PSF (default:1)
+        alpha : float, np.float32
+            scale to apply to PSF size (default 1)
 
-        noise : scale factor of simulated flux to generate noise
+        noise : float, np.float32
+            noise scaling log factor
 
         Notes:
         -----
@@ -318,54 +357,47 @@ class Reconstruct(object):
         Requires set_kernel() to have already been called to set the
         flux for each exposure and wavelength.
 
-        Only uses wavelengths specified by the object's waveindex attribute or all the wavelengths if waveindex not given.
+        Only uses wavelengths specified by the object's waveindex
+        attribute or all the wavelengths if waveindex not given.
+
+        It adds noise by multiplying the fluxes by 10^noise, sampling
+        from a Poisson distribution using that as a mean, and then
+        dividing by 10^noise.
 
         Sets attributes:
 
          .flux_psf - flux in each fiber for simulation [nExp * nfiber, nWave]
          .flux_psf_ivar - inverse variance of flux in each fiber for simulation
                       [nExp * nfiber, nWave]
-         .imagevalue - simulated image [nExp, nWave, nkernel, nkernel]
-
+         .flux_psf0 - noise free version of flux_psf [nExp * nFiber, nWave]
 """
         if (xcen is None):
             xcen = 0.
         if (ycen is None):
             ycen = 0.
-        if (noise is None):
-            noise = 0
 
         self.flux_psf = np.zeros([self.xpos.shape[0], self.nWave])
         self.flux_psf_ivar = np.ones([self.xpos.shape[0], self.nWave],
                                      dtype=np.float32)
         self.flux_psf_mask = np.zeros([self.xpos.shape[0], self.nWave])
-        imagevalue = []
         for iWave in np.arange(self.nWave):
             for iExp in np.arange(self.nExp):
                 xsample = self.xpos[iExp * self.nfiber:(iExp + 1) * self.nfiber, iWave]
                 ysample = self.ypos[iExp * self.nfiber:(iExp + 1) * self.nfiber, iWave]
                 dx = xsample - xcen
                 dy = ysample - ycen
-                dd = np.zeros((len(xsample), 2))
-                dd[:, 0] = dx.flatten()
-                dd[:, 1] = dy.flatten()
-                if (iExp < self.nExp):
-                    kernelvalue = self._kernel(self.fwhm[iWave, iExp] * alpha)
-                else:
-                    kernelvalue = self._kernel(np.mean(self.fwhm[iWave, :]) * alpha)
+                rsample = np.sqrt(dx**2 + dy**2)
+                self.flux_psf[iExp * self.nfiber:(iExp + 1) * self.nfiber,
+                              iWave] = self.kernel.radial(seeing=self.seeing[iWave, iExp] * alpha, radii=rsample) * np.pi * self.fiberradius**2
 
-                self.flux_psf[iExp * self.nfiber:(iExp + 1) * self.nfiber, iWave] = interpolate.interpn(
-                    (self.xkernel, self.ykernel), kernelvalue, dd, method='linear',
-                    bounds_error=False, fill_value=0.) * np.pi / self.dkernel ** 2
-                if (self.nWave <= 4):
-                    imagevalue.append(kernelvalue)
-        if (self.nWave <= 4):
-            self.imagevalue = np.array(imagevalue).reshape(self.nExp, self.nWave, self.nkernel, self.nkernel)
+        self.flux_psf0 = self.flux_psf.copy()
 
-        if (noise != 0):
-            self.flux_psf0 = self.flux_psf.copy()
+        # Add noise if desired
+        if(noise is not None):
             for i in range(len(self.flux_psf)):
-                self.flux_psf[i] = np.random.poisson(self.flux_psf[i] * 10 ** noise) / 10 ** noise
+                self.flux_psf[i] = np.random.poisson(self.flux_psf[i] * 10 ** noise) / 10. ** noise
+
+        return
 
     def set_flux_rss(self):
         """Set the flux to the RSS input values
@@ -373,7 +405,8 @@ class Reconstruct(object):
         Notes:
         -----
 
-        Only uses wavelengths specified by the object's waveindex attribute or all the wavelengths if waveindex not given.
+        Only uses wavelengths specified by the object's waveindex
+        attribute or all the wavelengths if waveindex not given.
 
         Sets attributes:
 
@@ -381,6 +414,10 @@ class Reconstruct(object):
          .flux_ivar - inverse variance of flux in each fiber
                       [nExp * nfiber, nWave]
          .flux_mask - mask of each fiber [nExp * nfiber, nWave]
+
+         .flux_disp - LSF dispersion [nExp * nfiber, nWave]
+         .flux_predisp - LSF pre-dispersion [nExp * nfiber, nWave]
+         .lsf_exist - True if flux_disp, flux_predisp available, False if not
 """
         self.flux = self.rss.data['FLUX'].data
         self.flux_ivar = self.rss.data['IVAR'].data
@@ -390,6 +427,7 @@ class Reconstruct(object):
             self.flux = self.flux[:, self.waveindex]
             self.flux_ivar = self.flux_ivar[:, self.waveindex]
             self.flux_mask = self.flux_mask[:, self.waveindex]
+
         try:
             self.flux_disp = self.rss.data['DISP'].data
             self.flux_predisp = self.rss.data['PREDISP'].data
@@ -400,8 +438,11 @@ class Reconstruct(object):
         except:
             self.lsf_exist = False
 
-    def create_weights(self, xsample=None, ysample=None, ivar=None, waveindex=None):
-        """Calculate weights for nearest fiber
+        return
+
+    def create_weights(self, xsample=None, ysample=None, ivar=None,
+                       waveindex=None):
+        """Calculate weights based on nearest fiber
 
         Parameters:
         ----------
@@ -470,173 +511,116 @@ class Reconstruct(object):
         wwT = ww.T
         return (wwT)
 
-    def set_cube(self, psf_slices=True, **kwargs):
-        """Set cube for each wavelength
-
-        psf_slices: boolean, Ture if only to calculate pivot wavelengths
+    def calculate_cube(self):
+        """Calculate cube and cube inverse variance
 
         Notes:
-        -----
-
-        Sets the attributes:
-
-          .cube - cube of RSS as ndarray of np.float32
-                  [nside, nside, nWave]
-          .cube_ivar - inverse variance of cube as ndarray of np.float32
-                       [nside, nside, nWave]
-          .cube_corr - correlation matrix
-
-          .cube_psf - cube of simulation as ndarray of np.float32
-                  [nside, nside, nWave]
-          .cube_ivar - inverse variance of cube of simulation as ndarray of np.float32
-                       [nside, nside, nWave]
-"""
-        self.psf_slices = psf_slices
-        self.cube_psf, self.cube_psf_ivar, self.cube_psf_corr, self.cube_psf_mask = self.calculate_cube(self.flux_psf,
-                                                                                                        self.flux_psf_ivar,
-                                                                                                        self.flux_psf_mask,
-                                                                                                        keyword='simulation',
-                                                                                                        psf_slices=psf_slices,
-                                                                                                        **kwargs)
-        self.cube, self.cube_ivar, self.cube_corr, self.cube_mask = self.calculate_cube(self.flux, self.flux_ivar,
-                                                                                        self.flux_mask, keyword='real',
-                                                                                        psf_slices=False, **kwargs)
-        return
-
-    def calculate_cube(self, flux, flux_ivar, flux_mask, keyword, psf_slices=False, **kwargs):
-        """calculate cube and cube inverse variance for given flux
-
-        Parameters:
-        ----------
-
-        flux: ndarray of np.float32
-            flux of each fiber [nExp * nfiber, nWave]
-
-        flux_ivar: ndarray of np.float32
-            flux inverse variance of each fiber [nExp * nfiber, nWave]
-
-        flux_mask: ndarray of np.int32
-            mask of each fiber [nExp * nfiber, nWave]
-
-        keyword: str, "simulation" or "real"
-
-        psf_slices: boolean, Ture if only to calculate pivot wavelengths
-
-        Return:
         ------
 
-        cube : ndarray of np.float32 [nside, nside, nWave]
-            reconstruction result
-        cube_ivar : ndarray of np.float32 [nside, nside, nWave]
-            inverse variance of reconstruction result
-        cube_corr : list of correlation matrix in sparse array format.
-            If waveindex is None, return the correlation matrix at SDSS g,r,i,z broadband effective wavelengths;
-            else, return the correlation matrix first four wavelength indexes
-        cube_mask : ndarray of np.int32 [nside, nside, nWave]
-            mask of reconstruction pixels
+        Sets attributes:
 
-        Notes:
-        -----
-        For the actual flux, nWave is the number of input wavelength slices.
-        For the simulation case, if  waveindex is None, return the result at SDSS g,r,i,z broadband effective wavelengths.
-        else if the input is more than 4 wavelength slices, then choose the first four indexes.
-
+        .cube : ndarray of np.float32
+            [nWave, nside, nside] reconstruction result
+        .cube_psf : ndarray of np.float32
+            [nWave, nside, nside] reconstruction result for PSF
+        .cube_ivar : ndarray of np.float32
+            [nWave, nside, nside] inverse variance of reconstruction result
+        .cube_corr : list of correlation matrix in sparse array format.
+            If waveindex is None, return the correlation matrix at SDSS 
+            g,r,i,z broadband effective wavelengths; else, return the
+            correlation matrix for first four wavelength indexes
+        .cube_mask : ndarray of np.int32
+            [nWave, nside, nside] mask of reconstruction pixels
 """
-        if psf_slices:
-            if self.waveindex is None:  ## if calculate slices for PSF, and set as spectrum, choose 4 bands
-                waveindex = self.bbindex
-                nWave = len(waveindex)
-            else:  # else,choose 4 at most
-                nWave = min(self.nWave, 4)
-                waveindex = self.waveindex[0:nWave]
+        if self.waveindex is None:
+            waveindex = np.arange(self.nWave)
+            nWave = len(waveindex)
         else:
-            if self.waveindex is None:  # if real,choose spectrum
-                waveindex = np.arange(self.nWave)
-                nWave = len(waveindex)
-            else:
-                nWave = self.nWave
-                waveindex = self.waveindex
-        cube = np.zeros([nWave, self.nside, self.nside],
-                        dtype=np.float32)
+            nWave = self.nWave
+            waveindex = self.waveindex
 
-        cube_ivar = np.zeros([nWave, self.nside, self.nside],
+        self.cube = np.zeros([nWave, self.nside, self.nside],
                              dtype=np.float32)
+        self.cube_psf = np.zeros([nWave, self.nside, self.nside],
+                                 dtype=np.float32)
+        self.cube_ivar = np.zeros([nWave, self.nside, self.nside],
+                                  dtype=np.float32)
+
         i = 0
-        cube_corr = []
+        self.cube_corr = []
         self.slice_fail = []
-        cube_mask = np.zeros([nWave, self.nside, self.nside],
-                             dtype=np.int32)
-        if nWave <= 3 and keyword == 'simulation':
-            self.weights_psf = np.zeros([nWave, self.nside * self.nside,
-                                         self.nExp * self.nfiber])
-        if nWave <= 3 and keyword == 'real':
-            self.weights = np.zeros([nWave, self.nside * self.nside,
-                                     self.nExp * self.nfiber])
-        if keyword == 'real' and self.lsf_exist:
+        self.cube_mask = np.zeros([nWave, self.nside, self.nside],
+                                  dtype=np.int32)
+        if(self.lsf_exist):
             self.disp = np.zeros([nWave, self.nside, self.nside],
                                  dtype=np.float32)
             self.predisp = np.zeros([nWave, self.nside, self.nside],
                                     dtype=np.float32)
+
         print(nWave)
         for iWave in np.arange(nWave):
             print(iWave, flush=True)
-            if self.waveindex is None and psf_slices is True:
-                iWave = self.bbindex[iWave]
             try:
                 w0, weights = self.create_weights(xsample=self.xpos[0:self.nExp * self.nfiber, iWave],
                                                   ysample=self.ypos[0:self.nExp * self.nfiber, iWave],
-                                              ivar=flux_ivar[:, iWave],
-                                              waveindex=iWave, **kwargs)
+                                                  ivar=self.flux_ivar[:, iWave],
+                                                  waveindex=iWave)
             except np.linalg.LinAlgError:
                 print('failing to converge', iWave)
                 self.slice_fail.append(iWave)
             self.w0 = w0
-            if nWave <= 3 and keyword == 'simulation':
-                self.weights_psf[iWave, :, :] = weights
-            elif keyword == 'real' and nWave <= 3:
-                self.weights[iWave, :, :] = weights
-            fcube = ((weights.dot(flux[:, iWave])).reshape(self.nside,
-                                                           self.nside) *
+            fcube = ((weights.dot(self.flux[:, iWave])).reshape(self.nside,
+                                                                self.nside) *
                      self.conversion)
-            cube[i, :, :] = fcube
+            self.cube[i, :, :] = fcube
+            fcube = ((weights.dot(self.flux_psf[:, iWave])).reshape(self.nside,
+                                                                    self.nside) *
+                     self.conversion)
+            self.cube_psf[i, :, :] = fcube
 
             # covariance
-            covar = self.covar(iWave, flux_ivar, weights) * self.conversion ** 2
+            covar = (self.covar(iWave, self.flux_ivar, weights) *
+                     self.conversion**2)
             var = np.diagonal(covar)
             igt0 = np.where(var > 0)[0]
             ivar = np.zeros(self.nside * self.nside, dtype=np.float32)
             ivar[igt0] = 1. / var[igt0]
-            cube_ivar[i, :, :] = ivar.reshape([self.nside,
-                                               self.nside])
+            self.cube_ivar[i, :, :] = ivar.reshape([self.nside,
+                                                    self.nside])
 
             # correlation matrix only available for up to four wavelength slices
             if self.waveindex is None:
                 if iWave in self.bbindex:
                     corr = covar / np.outer(np.sqrt(var), np.sqrt(var))
                     corr[np.where(covar == 0)] = 0
-                    cube_corr.append(sparse.csr_matrix(corr))
+                    self.cube_corr.append(sparse.csr_matrix(corr))
             elif i < 4:
                 corr = covar / np.outer(np.sqrt(var), np.sqrt(var))
                 corr[np.where(covar == 0)] = 0
-                cube_corr.append(sparse.csr_matrix(corr))
+                self.cube_corr.append(sparse.csr_matrix(corr))
 
             # mask
-            cube_mask[i, :, :] = self.mask(iWave, flux_ivar, flux_mask, w0, weights).reshape([self.nside, self.nside])
+            self.cube_mask[i, :, :] = self.mask(iWave, self.flux_ivar,
+                                                self.flux_mask, w0,
+                                                weights).reshape([self.nside,
+                                                                  self.nside])
 
             i = i + 1
-            if keyword == 'real' and self.lsf_exist:
+
+            if(self.lsf_exist):
                 self.disp[iWave] = (
                 (np.abs(weights) / (matlib.repmat(np.abs(weights).sum(axis=1), weights.shape[-1], 1).T)).dot(
                     self.flux_disp[:, iWave])).reshape(self.nside, self.nside)
                 self.predisp[iWave] = (
                 (np.abs(weights) / (matlib.repmat(np.abs(weights).sum(axis=1), weights.shape[-1], 1).T)).dot(
                     self.flux_predisp[:, iWave])).reshape(self.nside, self.nside)
-        if keyword == 'real' and self.lsf_exist:
+
+        if(self.lsf_exist):
             indices = np.isnan(self.disp)
             self.disp[indices] = 0
             indices = np.isnan(self.predisp)
             self.predisp[indices] = 0
-        return (cube, cube_ivar, cube_corr, cube_mask)
+        return
 
     def covar(self, iWave=None, flux_ivar=None, weights=None):
         """Return cube covariance matrix for a wavelength
@@ -651,19 +635,22 @@ class Reconstruct(object):
             flux inverse variance of each fiber [nExp * nfiber]
 
         weights: ndarray of np.float32
-            weights matrix between pixels and fibers [nside * nside, nExp * nfiber]
+            [nside * nside, nExp * nfiber]
+            weights matrix between pixels and fibers
 
         Returns:
         -------
 
-        covar : ndarray of np.float32 [nside * nside, nside * nside]
+        covar : ndarray of np.float32
+            [nside * nside, nside * nside] covariance matrix
 """
         iok = np.where(flux_ivar[:, iWave] > 0)[0]
         wwT = (weights[:, :])[:, iok]
         covar = wwT.dot(np.diag(1 / (flux_ivar[iok, iWave]))).dot(wwT.T)
         return (covar)
 
-    def mask(self, iWave=None, flux_ivar=None, flux_mask=None, w0=None, weights=None):
+    def mask(self, iWave=None, flux_ivar=None, flux_mask=None, w0=None,
+             weights=None):
         """Return mask matrix for a typical wavelength given the weights matrix
 
         Parameters:
@@ -678,30 +665,40 @@ class Reconstruct(object):
         flux_mask : ndarray of np.int32
             mask of each fiber [nExp * nfiber]
 
+        w0: ndarray of np.float32 
+            [nside * nside, nExp * nfiber]
+            unnormalized weights without bad fibers
+
         weights: ndarray of np.float32
-            weights matrix between pixels and fibers [nside * nside, nExp * nfiber]
+            [nside * nside, nExp * nfiber]
+            weights matrix between pixels and fibers
 
         Returns:
         -------
 
-        maskimg : ndarray of np.int32 [nside * nside, nside * nside]
+        maskimg : ndarray of np.int32
+            [nside * nside] bitmask of pixels
 
+        Notes:
+        -----
+
+        Uses MANGA_DRP3PIXMASK bit values:
+           DEADFIBER - set if a dead fiber would have contributed to pixel
+           LOWCOV - set if variance would be higher than twice median
+                    were all fiber-exposures equally noisy
+           NOCOV - set if no coverage by any fiber
+           DONOTUSE - set if LOWCOV and/or NOCOV set
 """
         flagdeadfiber = sdss_flagval('MANGA_DRP3PIXMASK', 'DEADFIBER')
         flaglocov = sdss_flagval('MANGA_DRP3PIXMASK', 'LOWCOV')
         flagnocov = sdss_flagval('MANGA_DRP3PIXMASK', 'NOCOV')
         flagnouse = sdss_flagval('MANGA_DRP3PIXMASK', 'DONOTUSE')
-        flag3dreject = sdss_flagval('MANGA_DRP2PIXMASK', '3DREJECT')
-        mask_dead, mask_lowcov, mask_nocov, mask_dnu = [np.zeros(self.nside ** 2) for i in range(4)]
+        (mask_dead, mask_lowcov, mask_nocov,
+         mask_dnu) = [np.zeros(self.nside**2) for i in range(4)]
 
         index_nocov = np.where(w0.sum(axis=0) == 0)[0]
         mask_nocov[index_nocov] = flagnocov
         mask_dnu[index_nocov] = flagnouse
-
-        #         index_goodfibers=np.where(flux_ivar[:,iWave])
-        #         ngood=w0[index_goodfibers].sum(axis=0)
-        #         mask_lowcov[np.where(ngood<0.5*ngood.max())]=flaglocov
-        #         mask_dnu[np.where(ngood<0.5*ngood.max())]=flagnouse
 
         cov = np.diag(weights.dot(weights.T))
         cov = cov / np.median(cov[np.where(cov)])
@@ -709,13 +706,11 @@ class Reconstruct(object):
         mask_lowcov[indices] = flaglocov
         mask_dnu[indices] = flagnouse
 
-        #         index_goodfibers=np.where(flux_ivar[:,iWave])
-        #         ngood = ((weights[index_goodfibers]!=0).sum(axis=0))
-        #         mask_lowcov[np.where(ngood<0.30*ngood.max())]=flaglocov
-        #         mask_dnu[np.where(ngood<0.30*ngood.max())]=flagnouse
-
-        index_deadfibers = np.where(np.bitwise_and(np.uint32(flagdeadfiber), np.uint32(flux_mask[:, iWave])))
-        mask_dead = ((w0[index_deadfibers] != 0).sum(axis=0) != 0) * flagdeadfiber
+        index_deadfibers = np.where(np.bitwise_and(np.uint32(flagdeadfiber),
+                                                   np.uint32(flux_mask[:,
+                                                                       iWave])))
+        mask_dead = (((w0[index_deadfibers] != 0).sum(axis=0) != 0) *
+                     flagdeadfiber)
 
         maskimg = np.uint32(mask_nocov)
         maskimg = np.bitwise_or(maskimg, np.uint32(mask_lowcov))
@@ -737,19 +732,18 @@ class Reconstruct(object):
             if keyword == 'simulation': plot reconstruction from simulated flux
             else plot reconstruction from real flux
 
-        vmax,vmin: maximum and minimum of plot
-            can be set as desired. defaulted vmax is set as maximum of flux, vmin is set as 0.
-
-
+        vmax, vmin: float
+            maximum and minimum of plot
+            default vmax is set to maximum of flux
+            default vmin is set to 0.
 """
         if keyword == 'simulation':
             target = self.cube_psf[iWave, :, :]
         else:
             target = self.cube[iWave, :, :]
             keyword = ''
-        map = target
         if (vmax is None):
-            vmax = map.max() * 1.02
+            vmax = target.max() * 1.02
         extent = (self.xmin, self.xmax, self.ymin, self.ymax)
         plt.figure(figsize=(6.5, 5.))
         font = {'family': 'sans-serif',
@@ -763,7 +757,7 @@ class Reconstruct(object):
         plt.colorbar(label='flux')
 
     def set_band(self):
-        """ set average result for each band simulation and RSS and its FWHM
+        """Set average results for each band include FWHM estimate
 
         Notes:
         -----
@@ -772,69 +766,61 @@ class Reconstruct(object):
 
         Sets attributes:
 
-         .GPSF/RPSF/IPSF/ZPSF - ndarray of np.float32 [nside, nside] simulation image for each broadband
-         .GIMG/RIMG/IIMG/ZIMG - ndarray of np.float32 [nside, nside] real image for each broadband
-         .GFWHM/RFWHM/IFWHM/ZFWHM - float, np.float32,FWHM for each simulation image
-
+         .GPSF/RPSF/IPSF/ZPSF - ndarray of np.float32
+            [nside, nside] simulation image for each broadband
+         .GIMG/RIMG/IIMG/ZIMG - ndarray of np.float32
+             [nside, nside] real image for each broadband
+         .GFWHM/RFWHM/IFWHM/ZFWHM - float, np.float32
+             FWHM for each simulation image
 """
-
-        if self.psf_slices:
-            self.GPSF = self.cube_psf[0, :, :]
-            self.RPSF = self.cube_psf[1, :, :]
-            self.IPSF = self.cube_psf[2, :, :]
-            self.ZPSF = self.cube_psf[3, :, :]
-        else:
-            self.GPSF = self.PSFaverage('g', self.wave, self.cube_psf)
-            self.RPSF = self.PSFaverage('r', self.wave, self.cube_psf)
-            self.IPSF = self.PSFaverage('i', self.wave, self.cube_psf)
-            self.ZPSF = self.PSFaverage('z', self.wave, self.cube_psf)
+        self.GPSF = self.PSFaverage('g', self.wave, self.cube_psf)
+        self.RPSF = self.PSFaverage('r', self.wave, self.cube_psf)
+        self.IPSF = self.PSFaverage('i', self.wave, self.cube_psf)
+        self.ZPSF = self.PSFaverage('z', self.wave, self.cube_psf)
         self.GIMG = self.PSFaverage('g', self.wave, self.cube)
         self.RIMG = self.PSFaverage('r', self.wave, self.cube)
         self.IIMG = self.PSFaverage('i', self.wave, self.cube)
         self.ZIMG = self.PSFaverage('z', self.wave, self.cube)
-        filename = os.path.join(os.getenv('MNSA_DIR'),
-                            'python', 'data', 'kernel_database.fits')
-        kernelfile = fits.open(filename)
-        self.GFWHM = kernelfile[1].data[self.chi2_index(self.GPSF)[0]]
-        self.RFWHM = kernelfile[1].data[self.chi2_index(self.RPSF)[0]]
-        self.IFWHM = kernelfile[1].data[self.chi2_index(self.IPSF)[0]]
-        self.ZFWHM = kernelfile[1].data[self.chi2_index(self.ZPSF)[0]]
-        kernelfile.close()
+        self.GFWHM = self.fit_fwhm(self.GPSF)
+        self.RFWHM = self.fit_fwhm(self.RPSF)
+        self.IFWHM = self.fit_fwhm(self.IPSF)
+        self.ZFWHM = self.fit_fwhm(self.ZPSF)
+        return
 
-    def chi2_index(self, cube, xcen=None, ycen=None):
-        """
-        Find the index of radial fitting
-    """
-        if (xcen is None):
-            xcen = 0.
-        if (ycen is None):
-            ycen = 0.
-        fit_model = np.zeros([self.kernelbase.shape[0], self.nside, self.nside])
-        kernelvalue2 = np.zeros([3 * self.nkernel, 3 * self.nkernel])
+    def fit_fwhm(self, image, xcen=None, ycen=None):
+        """Fit FWHM to an image using radial kernel as a model
+"""
+        seeings = self.kernel.seeing
 
-        index_p = int((self.nkernel + self.nkernelbase) / 2)
-        index_m = int((self.nkernel - self.nkernelbase) / 2)
-        start = int((self.nkernel - 1) / 2 - (self.nside - 1) / 2 * self.dimage / self.dkernel)
-        gap = int(self.dimage / self.dkernel)
-        for i in range(self.kernelbase.shape[0]):
-            kernelvalue = np.zeros([self.nkernel, self.nkernel])
-            kernelvalue[index_m:index_p, index_m:index_p] = self.kernelbase[i]
-            if xcen or ycen:
-                kernelvalue2[self.nkernel:2 * self.nkernel, self.nkernel:2 * self.nkernel] = kernelvalue
-                dx = int(ycen / self.dkernel)
-                dy = int(xcen / self.dkernel)
-                kernelvalue = kernelvalue2[self.nkernel - dx:2 * self.nkernel - dx,
-                              self.nkernel - dy:2 * self.nkernel - dy]
-            fit_model[i] = kernelvalue[start::gap, start::gap]
+        nx = image.shape[0]
+        ny = image.shape[1]
 
-        A = np.zeros(self.kernelbase.shape[0])
-        chi2 = np.zeros_like(A)
-        for i in range(self.kernelbase.shape[0]):
-            A[i] = (fit_model[i] * cube).sum() / (fit_model[i] ** 2).sum()
-            chi2[i] = ((A[i] * fit_model[i] - cube) ** 2).sum()
+        if(xcen is None):
+            xcen = (np.float32(nx) * 0.5) - 0.5
+        if(ycen is None):
+            ycen = (np.float32(ny) * 0.5) - 0.5
+
+        xx = np.outer(np.arange(nx, dtype=np.float32) - xcen,
+                      np.ones(ny, dtype=np.float32))
+        yy = np.outer(np.ones(nx, dtype=np.float32),
+                      np.arange(ny, dtype=np.float32) - ycen)
+        rr = np.sqrt(xx**2 + yy**2) * self.pixelscale
+
+        chi2 = np.zeros(len(seeings), dtype=np.float32)
+        for i, seeing in enumerate(seeings):
+            model = self.kernel.radial(seeing=seeing, radii=rr.flatten())
+            model = model * self.pixelscale**2
+
+            A = ((model * image.flatten()).sum() /
+                 (model ** 2).sum())
+            chi2[i] = ((A * model - image.flatten()) ** 2).sum()
 
         ind = np.argmin(chi2)
-        return ind, A[ind]
+        seeing = seeings[ind]
+
+        fwhm = self.kernel.fwhm(seeing=seeing)
+
+        return(fwhm)
 
     def PSFaverage(self, color=None, wave=None, PSF=None):
         """ calculate FWHM for given image
@@ -845,7 +831,7 @@ class Reconstruct(object):
         color : str, the color of band, can choose 'g'/'r'/'i'/'z'
 
         wave : ndarray of np.float32
-            the spectrum of flux
+            the wavelengths for the cube
 
         PSF : ndarray of np.float32 [nside,nside,nWave]
             the spectrum of cube
@@ -863,16 +849,332 @@ class Reconstruct(object):
         band2 = np.arange(band0[-1, 0], 11000, 25)
         weight1 = np.zeros(band1.shape)
         weight2 = np.zeros(band2.shape)
-        band = np.concatenate((np.concatenate((band1, band0[:, 0]), axis=0), band2), axis=0)
-        weight = np.concatenate((np.concatenate((weight1, band0[:, 1]), axis=0), weight2), axis=0)
+        band = np.concatenate((np.concatenate((band1, band0[:, 0]), axis=0),
+                               band2), axis=0)
+        weight = np.concatenate((np.concatenate((weight1, band0[:, 1]), axis=0),
+                                 weight2), axis=0)
         fun_band = interpolate.interp1d(band, weight)
         band_value = fun_band(wave)
 
         n = PSF.shape[1]
         nWave = len(wave)
-        PSF_ave = (matlib.repmat(band_value, n ** 2, 1).T * (PSF.reshape(nWave, n ** 2))).reshape(nWave, n, n).sum(
-            axis=0) / band_value.sum()
+        PSF_ave = (matlib.repmat(band_value, n**2, 1).T *
+                   (PSF.reshape(nWave, n**2))).reshape(nWave, n, n).sum(axis=0) / band_value.sum()
         return PSF_ave
+
+    def write(self, filename=None):
+        """Write to a FITS file as MaNGA cube form
+
+        Parameters:
+        ----------
+        filename: str
+            the name of fits file
+"""
+
+        # Headers
+        card_GFWHM = fits.Card('GFWHM', self.GFWHM,
+                               'Reconstructed FWHM in g-band (arcsec)')
+        card_RFWHM = fits.Card('RFWHM', self.RFWHM,
+                               'Reconstructed FWHM in r-band (arcsec)')
+        card_IFWHM = fits.Card('IFWHM', self.IFWHM,
+                               'Reconstructed FWHM in i-band (arcsec)')
+        card_ZFWHM = fits.Card('ZFWHM', self.ZFWHM,
+                               'Reconstructed FWHM in z-band (arcsec)')
+        card_FWHM_list = [card_GFWHM, card_RFWHM, card_IFWHM, card_ZFWHM]
+
+        card_BSCALE = fits.Card('BSCALE', 1.00000, 'Intensity unit scaling')
+        card_BZERO = fits.Card('BZERO', 0.00000, 'Intensity zeropoint')
+        card_BSCALE_2 = fits.Card('BSCALE', 1.00000, 'Flux unit scaling')
+        card_BZERO_2 = fits.Card('BZERO', 0.00000, 'Flux zeropoint')
+
+        card_WCS_1 = fits.Card('CRPIX1', (self.nside + 1) / 2,
+                               'Reference pixel (1-indexed)')
+        card_WCS_2 = fits.Card('CRPIX2', (self.nside + 1) / 2,
+                               'Reference pixel (1-indexed)')
+        card_WCS_3 = fits.Card('CRVAL1',
+                               self.rss.data['FLUX'].header['IFURA'])
+        card_WCS_4 = fits.Card('CRVAL2',
+                               self.rss.data['FLUX'].header['IFUDEC'])
+        card_WCS_5 = fits.Card('CD1_1',
+                               round(- self.length / self.nside / 3600, 9))
+        card_WCS_6 = fits.Card('CD2_2',
+                               round(self.length / self.nside / 3600, 9))
+        card_WCS_7 = fits.Card('CTYPE1', 'RA---TAN')
+        card_WCS_8 = fits.Card('CTYPE2', 'DEC--TAN')
+        card_WCS_9 = fits.Card('CUNIT1', 'deg')
+        card_WCS_10 = fits.Card('CUNIT2', 'deg')
+        card_WCS_list = [card_WCS_1, card_WCS_2, card_WCS_3, card_WCS_4,
+                         card_WCS_5, card_WCS_6, card_WCS_7, card_WCS_8,
+                         card_WCS_9, card_WCS_10]
+
+        # Primary
+        hp = fits.PrimaryHDU(header=self.rss.data[0].header)
+        hp.header['BUNIT'] = ('1E-17 erg/s/cm^2/Ang/spaxel',
+                              'Specific intensity (per spaxel)')
+        hp.header['MASKNAME'] = ('MANGA_DRP3PIXMASK',
+                                 'Bits in sdssMaskbits.par used by mask extension')
+        hp = self._insert_cardlist(hdu=hp, insertpoint='EBVGAL',
+                                   cardlist=card_FWHM_list, after=True)
+        if 'BSCALE' not in list(hp.header.keys()):
+            hp.header.insert('BUNIT', card_BSCALE, after=False)
+        if 'BZERO' not in list(hp.header.keys()):
+            hp.header.insert('BUNIT', card_BZERO, after=False)
+
+        # Flux
+        cubehdr = fits.ImageHDU(name='FLUX', data=self.cube,
+                                header=self.rss.data['FLUX'].header)
+        cubehdr.header['BUNIT'] = ('1E-17 erg/s/cm^2/Ang/spaxel',
+                                   'Specific intensity (per spaxel)')
+        cubehdr.header['MASKNAME'] = ('MANGA_DRP3PIXMASK',
+                                      'Bits in sdssMaskbits.par used by mask extension')
+        cubehdr.header['HDUCLAS1'] = 'CUBE'
+        cubehdr.header.rename_keyword('CTYPE1', 'CTYPE3')
+        cubehdr.header.rename_keyword('CRPIX1', 'CRPIX3')
+        cubehdr.header.rename_keyword('CRVAL1', 'CRVAL3')
+        cubehdr.header.rename_keyword('CD1_1', 'CD3_3')
+        cubehdr.header.rename_keyword('CUNIT1', 'CUNIT3')
+        cubehdr = self._insert_cardlist(hdu=cubehdr, insertpoint='EBVGAL',
+                                        cardlist=card_FWHM_list, after=True)
+        cubehdr = self._insert_cardlist(hdu=cubehdr, insertpoint='CUNIT3',
+                                        cardlist=card_WCS_list, after=True)
+        if 'BSCALE' not in list(cubehdr.header.keys()):
+            cubehdr.header.insert('BUNIT', card_BSCALE, after=False)
+        if 'BZERO' not in list(cubehdr.header.keys()):
+            cubehdr.header.insert('BUNIT', card_BZERO, after=False)
+
+        try:
+            card_flux_fail = fits.Card('FAILSLIC', str(self.slice_fail),
+                                       'slices failed to converge')
+            cubehdr.header.insert('ZFWHM', card_flux_fail, after=True)
+        except:
+            pass
+
+        # IVAR
+        ivar_hdr = fits.ImageHDU(name='IVAR', data=self.cube_ivar,
+                                 header=self.rss.data['IVAR'].header)
+        ivar_hdr.header['HDUCLAS1'] = 'CUBE'
+
+        # MASK
+        mask_hdr = fits.ImageHDU(name='MASK', data=self.cube_mask,
+                                 header=self.rss.data['MASK'].header)
+        mask_hdr.header['HDUCLAS1'] = 'CUBE'
+
+        # DISP
+        disp_hdr = fits.ImageHDU(name='DISP', data=self.disp,
+                                 header=self.rss.data['DISP'].header)
+
+        # PREDISP
+        predisp_hdr = fits.ImageHDU(name='PREDISP', data=self.predisp,
+                                    header=self.rss.data['PREDISP'].header)
+
+        # IMG & PSF for each band
+        card_BUNIT = fits.Card('BUNIT', 'nanomaggies/pixel')
+        loc = ['IFURA', 'IFUDEC', 'OBJRA', 'OBJDEC']
+        card_loc_list = self._set_cardlist(cubehdr, loc) + [card_BSCALE_2,
+                                                            card_BZERO_2,
+                                                            card_BUNIT]
+
+        GIMG_hdr = fits.ImageHDU(name='GIMG', data=self.GIMG)
+        GIMG_hdr = self._insert_cardlist(hdu=GIMG_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_GFWHM],
+                                         after=False)
+
+        RIMG_hdr = fits.ImageHDU(name='RIMG', data=self.RIMG)
+        RIMG_hdr = self._insert_cardlist(hdu=RIMG_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_RFWHM],
+                                         after=False)
+
+        IIMG_hdr = fits.ImageHDU(name='IIMG', data=self.IIMG)
+        IIMG_hdr = self._insert_cardlist(hdu=IIMG_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_IFWHM],
+                                         after=False)
+
+        ZIMG_hdr = fits.ImageHDU(name='ZIMG', data=self.GIMG)
+        ZIMG_hdr = self._insert_cardlist(hdu=ZIMG_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_ZFWHM],
+                                         after=False)
+
+        GPSF_hdr = fits.ImageHDU(name='GPSF', data=self.GPSF)
+        GPSF_hdr = self._insert_cardlist(hdu=GPSF_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_GFWHM],
+                                         after=False)
+
+        RPSF_hdr = fits.ImageHDU(name='RPSF', data=self.RPSF)
+        RPSF_hdr = self._insert_cardlist(hdu=RPSF_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_RFWHM],
+                                         after=False)
+
+        IPSF_hdr = fits.ImageHDU(name='IPSF', data=self.IPSF)
+        IPSF_hdr = self._insert_cardlist(hdu=IPSF_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_IFWHM],
+                                         after=False)
+
+        ZPSF_hdr = fits.ImageHDU(name='ZPSF', data=self.GPSF)
+        ZPSF_hdr = self._insert_cardlist(hdu=ZPSF_hdr, insertpoint='EXTNAME',
+                                         cardlist=card_WCS_list +
+                                         card_loc_list + [card_ZFWHM],
+                                         after=False)
+
+        # CORR
+        CORR_hdr = []
+        for i in range(4):
+            corr = self._table_correlation(correlation=self.cube_corr[i].toarray(), thresh=1E-14)
+            corr.header.append(fits.Card('BBWAVE', self.bbwave[i],
+                                         'Wavelength (Angstroms)'))
+            corr.header.append(fits.Card('BBINDEX', self.bbindex[i],
+                                         'Slice number'))
+            corr.header.append(fits.Card('COVTYPE', 'Correlation'))
+            corr.header.append(fits.Card('COVSHAPE', '(%s,%s)' %
+                                         (self.nimage, self.nimage)))
+            CORR_hdr.append(corr)
+        CORR_hdr[0].header.append(fits.Card('EXTNAME', 'GCORREL'))
+        CORR_hdr[1].header.append(fits.Card('EXTNAME', 'RCORREL'))
+        CORR_hdr[2].header.append(fits.Card('EXTNAME', 'ICORREL'))
+        CORR_hdr[3].header.append(fits.Card('EXTNAME', 'ZCORREL'))
+
+        hduRSS = []
+        for i in range(1, len(self.rss.data)):
+            if ((self.rss.data[i].header['XTENSION'] == 'IMAGE') and
+                (len(self.rss.data[i].data) == len(self.rss.data['WAVE'].data))):
+                hduRSS.append(self.rss.data[i])
+
+        try:
+            # PSF
+            PSF_hdr = fits.ImageHDU(name='PSF', data=self.cube_psf,
+                                    header=cubehdr.header)
+            hdu = fits.HDUList([hp, cubehdr, PSF_hdr, ivar_hdr, mask_hdr,
+                                disp_hdr, predisp_hdr] + hduRSS +
+                               [self.rss.data['OBSINFO'],
+                                GIMG_hdr, RIMG_hdr, IIMG_hdr, ZIMG_hdr,
+                                GPSF_hdr, RPSF_hdr, IPSF_hdr, ZPSF_hdr] +
+                               CORR_hdr)
+        except:
+            hdu = fits.HDUList([hp, cubehdr, ivar_hdr, mask_hdr,
+                                self.rss.data['WAVE'],
+                                self.rss.data['SPECRES'],
+                                self.rss.data['SPECRESD'],
+                                self.rss.data['OBSINFO'],
+                                GIMG_hdr, RIMG_hdr, IIMG_hdr, ZIMG_hdr,
+                                GPSF_hdr, RPSF_hdr, IPSF_hdr, ZPSF_hdr] +
+                               CORR_hdr)
+
+        # Doesn't actually gzip??
+        if filename and len(filename) > 8 and filename[-8:] == 'fits.gz':
+            data = filename
+        else:
+            data = filename + ".fits.gz".format(filename=filename)
+        hdu.writeto(data, overwrite=True, checksum=True)
+
+        hdu.close()
+        return
+
+    def _insert_cardlist(self, hdu=None, insertpoint=None, cardlist=None,
+                         after=False):
+        """insert a cardlist into the header of a FITS hdu
+
+        Parameters:
+        ----------
+        hdu: FITS hdu
+
+        insertpoint: int
+            The index into the list of header keywords before which
+            the new keyword should be inserted, or the name of a
+            keyword before which the new keyword should be inserted.
+            Can also accept a (keyword, index) tuple for inserting
+            around duplicate keywords.
+
+        cardlist: list
+            list of header cards to be inserted. Header
+            cards will be inserted as the order of the list
+
+        after: bool
+            If set to True, insert after the specified index or
+            keyword, rather than before it. Defaults to False.
+
+        Return:
+        --------
+
+        hdu: fits file that have the cards inserted
+
+        """
+        for i in range(len(cardlist)):
+            if after:
+                hdu.header.insert(insertpoint, cardlist[i], after=after)
+                insertpoint = cardlist[i].keyword
+            else:
+                hdu.header.insert(insertpoint, cardlist[i], after=after)
+        return hdu
+
+    def _set_cardlist(self, hdu=None, keyword_list=None):
+        """ Extract header card list from a FITS hdu
+
+        Parameters:
+        ----------
+        hdu: FITS hdu
+
+        keyword_list: list
+            keywords to be extracted, including value and comments
+
+        Return:
+        --------
+        cardlist: list
+            cards of FITS headers
+"""
+        cardlist = []
+        for index, keyword in enumerate(keyword_list):
+            cardlist.append(fits.Card(keyword, hdu.header[keyword],
+                                      hdu.header.comments[keyword]))
+        return cardlist
+
+    def _table_correlation(self, correlation=None, thresh=1E-12):
+        """create a BinTableHDU for the correlation in sparse matrix form
+
+        Parameters:
+        ----------
+        correlation: ndarray of float32
+           [nside*nside,nside*nside] correlation matrix 
+
+        thresh: float32
+            threshold for the correlation entries to be stored.
+
+        Return:
+        --------
+        hdu: BinTableHDU that includes the information of the correlation matrix
+
+        Note:
+        --------
+
+        Five columns of the table are value, the location (C1,c2) of
+        the first point in the grid, the location (C1,c2) of the
+        second point in the grid.
+
+"""
+        nside = int(np.sqrt(correlation.shape[0]))
+        index_G = np.where(np.abs(correlation) > thresh)
+        corr_G = correlation[index_G]
+        triangle = np.where(index_G[1] >= index_G[0])[0]
+        index_G = np.array([index_G[0][triangle], index_G[1][triangle]])
+        corr_G = corr_G[triangle]
+        i_c1, i_c2, j_c1, j_c2 = [[] for i in range(4)]
+        for i in range(len(corr_G)):
+            i_c2.append(index_G[0, i] // nside)
+            i_c1.append(index_G[0, i] % nside)
+            j_c2.append(index_G[1, i] // nside)
+            j_c1.append(index_G[1, i] % nside)
+        i1 = fits.Column(name='INDXI_C1', array=np.array(i_c1), format='J')
+        i2 = fits.Column(name='INDXI_C2', array=np.array(i_c2), format='J')
+        j1 = fits.Column(name='INDXJ_C1', array=np.array(j_c1), format='J')
+        j2 = fits.Column(name='INDXJ_C2', array=np.array(j_c2), format='J')
+        value = fits.Column(name='RHOIJ', array=np.array(corr_G), format='D')
+        hdu = fits.BinTableHDU.from_columns([i1, i2, j1, j2, value])
+        return hdu
 
 
 class ReconstructShepard(Reconstruct):
@@ -899,58 +1201,11 @@ class ReconstructShepard(Reconstruct):
     waveindex : int, np.int32
         indices of wavelengths to reconstruct (default None)
 
-    Methods:
-    -------
-
-    set_rss() : Acquire the RSS data
-
-    set_image_grid(dimage) : Set up the spatial grid for the cube
-
-    set_kernel(fwhm) : Create the kernel estimation from accessing to data base
-
-    set_flux_rss() : Set the flux used for reconstruction from RSS
-
-    set_flux_psf(xcen=0., ycen=0.,alpha=1,noise=None) : Set the flux used for reconstruction to a PSF
-
-    set_weights() : Set the weights for mapping spectra to cube
-
-    create_weights() : Calculate the weights for mapping spectra to cube
-
-    normalize_weights(w) : Normalize the weights
-
-    set_cube() : Calculates and sets cube for both RSS and simulation
-
-    calculate_cube(flux,flux_ivar,flux_mask): Calculate the result for given flux, flux_ivar and flux_mask
-
-    covar() : Calculate covariance matrix for a slice of the cube
-
-    mask(): Calculate mask matrix for a slice of the cube
-
-    plot_slice() : Plots a slice of the cube
-
-    FWHM(xi=None, yi=None, PSF=None, xcen=0, ycen=0): calculate FWHM for given reconstructed image
-
     Notes:
     ------
 
-    Additional attributes are set by the methods, as documented.
-
     Unless waveindex is set, uses all wavelengths.
-
-    Typical usage would be (for a limited number of wavelengths):
-
-     import reconstruction
-     r = reconstruction.Reconstruct(plate=8485, ifu=3701, waveindex=[1000, 2000])
-     r.set_rss() # Gets and reads in the RSS file (sets .rss attribute)
-     r.set_image_grid() # Creates the output image spatial grid
-     r.set_kernel() # Sets the kernel for every wavelength and exposure
-     r.set_flux_rss() # Sets up to use the RSS fluxes (sets .flux, .flux_ivar)
-     r.set_flux_psf(xcen=0.5, ycen=1.5, alpha=1,noise=5) # Puts fake data into PSF fluxes (sets .flux_psf, .flux_psf_ivar)
-     r.set_weights() # Sets the weights (sets .weights)
-     r.set_cube() # Sets the weights (sets .cube, .cube_ivar .cube_mask)
-     r.plot_slice(0)
 """
-
     def create_weights(self, xsample=None, ysample=None,
                        ivar=None, waveindex=None, shepard_sigma=0.7):
         """Calculate weights for Shepards method
@@ -1000,7 +1255,7 @@ class ReconstructShepard(Reconstruct):
         return (w0, wwT)
 
 
-class ReconstructG(Reconstruct):
+class ReconstructCRR(Reconstruct):
     """Reconstruction of cubes from linear least square method
 
     Attributes:
@@ -1024,61 +1279,23 @@ class ReconstructG(Reconstruct):
     waveindex : int, np.int32
         indices of wavelengths to reconstruct (default None)
 
-    Methods:
-    -------
-
-
-    set_rss() : Acquire the RSS data
-
-    set_image_grid(dimage) : Set up the spatial grid for the cube
-
-    set_kernel(fwhm) : Create the kernel estimation from accessing to data base
-
-    set_flux_rss() : Set the flux used for reconstruction from RSS
-
-    set_flux_psf(xcen=0., ycen=0.,alpha=1,noise=None) : Set the flux used for reconstruction to a PSF
-
-    set_weights() : Set the weights for mapping spectra to cube
-
-    create_weights() : Calculate the weights for mapping spectra to cube
-
-    normalize_weights(w) : Normalize the weights
-
-    set_cube() : Calculates and sets cube for both RSS and simulation
-
-    calculate_cube(flux,flux_ivar,flux_mask): Calculate the result for given flux, flux_ivar and flux_mask
-
-    covar() : Calculate covariance matrix for a slice of the cube
-
-    mask(): Calculate mask matrix for a slice of the cube
-
-    plot_slice() : Plots a slice of the cube
-
-    FWHM(xi=None, yi=None, PSF=None, xcen=0, ycen=0): calculate FWHM for given reconstructed image
-
     Notes:
     ------
 
     Additional attributes are set by the methods, as documented.
 
     Unless waveindex is set, uses all wavelengths.
-
-    Typical usage would be (for a limited number of wavelengths):
-
-     import reconstruction
-     r = reconstruction.Reconstruct(plate=8485, ifu=3701, waveindex=[1000, 2000])
-     r.set_rss() # Gets and reads in the RSS file (sets .rss attribute)
-     r.set_image_grid() # Creates the output image spatial grid
-     r.set_kernel() # Sets the kernel for every wavelength and exposure
-     r.set_flux_rss() # Sets up to use the RSS fluxes (sets .flux, .flux_ivar)
-     r.set_flux_psf(xcen=0.5, ycen=1.5, alpha=1,noise=5) # Puts fake data into PSF fluxes (sets .flux_psf, .flux_psf_ivar)
-     r.set_weights() # Sets the weights (sets .weights)
-     r.set_cube() # Sets the weights (sets .cube, .cube_ivar .cube_mask)
-     r.plot_slice(0)
-
 """
+    def __init__(self, plate=None, ifu=None, release='DR15', waveindex=None,
+                 pixelscale=0.75, dkernel=0.05, verbose=True, lam=1.e-4):
+        super().__init__(plate=plate, ifu=ifu, release=release,
+                         waveindex=waveindex, pixelscale=pixelscale,
+                         dkernel=dkernel, verbose=verbose)
+        self.lam = lam
+        return
 
-    def set_Amatrix(self, xsample=None, ysample=None, ivar=None, waveindex=None, beta=1):
+    def set_Amatrix(self, xsample=None, ysample=None, ivar=None,
+                    waveindex=None):
         """Calculate kernel matrix for linear least square method
 
         Parameters:
@@ -1089,11 +1306,6 @@ class ReconstructG(Reconstruct):
 
         ysample : ndarray of np.float32
             Y position of samples
-
-        kernel : float, np.float32
-            kernel at each and exposure [nExp, nkernel, nkernel]
-
-        lam : regularization factor (default 1E-4)
 
         Returns:
         -------
@@ -1108,42 +1320,31 @@ class ReconstructG(Reconstruct):
 
         indices will be used to recover A matrix back to regular grid
 """
+        # Find pixels where there is at least one fiber within 1.6 arcsec.
         nsample = len(xsample)
         dx = np.outer(xsample, np.ones(self.nimage)) - np.outer(np.ones(nsample), self.x2i.flatten())
         dy = np.outer(ysample, np.ones(self.nimage)) - np.outer(np.ones(nsample), self.y2i.flatten())
         dr = np.sqrt(dx ** 2 + dy ** 2)
         ifit = np.where(dr.min(axis=0) <= 1.6)[0]
-
+        nfit = len(ifit)
         dr = dr[:, ifit]
+        dr = dr.reshape((self.nExp, self.nfiber, nfit))
 
-        dr = dr.flatten()
-        fwhm = self.fwhm * beta
-        dfwhm = (matlib.repmat(fwhm[waveindex], self.nfiber * len(ifit), 1).flatten('F'))
+        # Create A matrix, zeroing out any very low kernel values
+        A = np.zeros((self.nExp, self.nfiber * nfit), dtype=np.float64)
+        for iExp in np.arange(self.nExp, dtype=np.int32):
+            radii = dr[iExp, :, :].flatten()
+            kv = self.kernel.radial(seeing=self.seeing[waveindex, iExp],
+                                    radii=radii) * self.pixelscale**2
+            indices = np.where(kv > 1.e-4)[0]
+            A[iExp, indices] = kv[indices]
 
-        radius_lim = 4
-        indices = np.where(dr.flatten() < radius_lim)[0]
-
-        dd = np.zeros([len(indices), 2])
-        dd[:, 0] = dfwhm.flatten()[indices]
-        dd[:, 1] = dr.flatten()[indices]
-
-        ifwhm = np.arange(0.5, 2.5, 0.01)
-        fwhmmin = int(fwhm.min() * 100) - 50
-        fwhmmax = int(fwhm.max() * 100) - 50
-        ifwhm = ifwhm[max(fwhmmin - 3, 0):min(fwhmmax + 3, 200)]
-
-        ir = np.arange(0, 5.5, 0.05)
-
-        Afull = interpolate.interpn((ifwhm, ir), self.kernel_radial[max(fwhmmin - 3, 0):min(fwhmmax + 3, 200), :], dd,
-                                    method='linear', bounds_error=False, fill_value=0.) * (
-                                                                                          self.dimage / self.dkernel) ** 2
-        Afull2 = np.zeros(len(dr.flatten()))
-        Afull2[indices] = Afull
-        A = Afull2.reshape(self.nExp * self.nfiber, len(ifit))
-
+        # Now shape it right
+        A = A.reshape(self.nExp * self.nfiber, nfit)
         return (ifit, A)
 
-    def create_weights(self, xsample=None, ysample=None, ivar=None, waveindex=None, lam=0, beta=1):
+    def create_weights(self, xsample=None, ysample=None, ivar=None,
+                       waveindex=None):
         """Calculate weights for linear least square method
 
         Parameters:
@@ -1161,8 +1362,6 @@ class ReconstructG(Reconstruct):
         kernel : float, np.float32
             kernel at each and exposure [nExp, nkernel, nkernel]
 
-        lam : regularization factor (default 1E-4)
-
         Returns:
         -------
         w0 : ndarray of np.float32
@@ -1175,21 +1374,22 @@ class ReconstructG(Reconstruct):
         -----
 
 """
-        self.ifit, A = self.set_Amatrix(xsample, ysample, ivar, waveindex, beta)
-        self.nfit = len(A[0])
+        self.ifit, A = self.set_Amatrix(xsample, ysample, ivar, waveindex)
         ivar = (ivar != 0)
-        [U, D, VT] = np.linalg.svd(np.dot(np.diag(np.sqrt(ivar)), A), full_matrices=False)
+        [U, D, VT] = np.linalg.svd(np.dot(np.diag(np.sqrt(ivar)), A),
+                                   full_matrices=False)
         Dinv = 1 / D
 
-        self.lam = lam
         for i in range(len(D)):
             if D[i] < 1E-6:
                 Dinv[i] = 0
-        filt = 1 / (1 + lam ** 2 * Dinv ** 2)
+        filt = 1 / (1 + self.lam**2 * Dinv**2)
 
-        A_plus = np.dot(np.dot(VT.T, np.dot(np.diag(filt), np.diag(Dinv))), U.T)
+        A_plus = np.dot(np.dot(VT.T, np.dot(np.diag(filt), np.diag(Dinv))),
+                        U.T)
 
-        Q = (np.dot(np.dot(VT.transpose(), np.dot(np.diag(1 / filt), np.diag(D))), VT))
+        Q = (np.dot(np.dot(VT.transpose(), np.dot(np.diag(1 / filt),
+                                                  np.diag(D))), VT))
         sl = Q.sum(axis=1)
         Rl = (Q.T / sl.T).T
         where_are_NaNs = np.isnan(Rl)
@@ -1217,448 +1417,3 @@ class ReconstructG(Reconstruct):
         output = np.zeros([self.nside ** 2, inp.shape[1]])
         output[self.ifit] = inp
         return output
-
-
-def set_base(plate=None, ifu=None, release='DR15', waveindex=None, dimage=0.75, dkernel=0.05):
-    """ set the grid and fiber fluxes
-
-        Parameters:
-        ----------
-
-        plate : int, np.int32
-            plate number
-
-        ifu : int, np.int32
-            IFU number
-
-        release : str
-            data release (default 'DR15')
-
-        waveindex : int, np.int32
-            indices of wavelengths to reconstruct (default None)
-
-        Return:
-        --------
-        base: object that includes information of grid and fiber fluxes
-
-"""
-    base = Reconstruct(plate=plate, ifu=ifu, release=release, waveindex=waveindex)
-    base.set_rss()
-    base.set_image_grid(dimage=dimage)
-    base.set_kernel(dkernel=dkernel)
-    base.set_flux_rss()
-    base.set_flux_psf()
-    return base
-
-
-def set_G(plate=None, ifu=None, release='DR15', waveindex=None, dimage=0.75, lam=0, alpha=1, beta=1, xcen=None,
-          ycen=None, noise=None, psf_slices=True):
-    """ Linear least square method for the reconstruction
-
-        Parameters:
-        ----------
-
-        plate : int, np.int32
-            plate number
-
-        ifu : int, np.int32
-            IFU number
-
-        release : str
-            data release (default 'DR15')
-
-        waveindex : int, np.int32
-            indices of wavelengths to reconstruct (default None)
-
-        dimage: default=0.75, np.float32
-            pixel size of reconstruction grid
-
-        lam: default=1E-3,np.float32
-            regularization factor
-
-        alpha: default=1,np.float32
-            scale factor to change the FWHM of actual seeing
-
-        beta: default=1,np.float32
-            scale factor to change the FWHM of assumed seeing
-
-        xcen: default=0,np.float32
-            x coordinate of the location of center for the simulation case
-
-        ycen: default=0,np.float32
-            y coordinate of the location of center for the simulation case
-
-        noise: default=0,np.float32
-             scale factor of simulated flux to generate noise
-
-        psf_slices: boolean, Ture if only to calculate pivot wavelengths
-
-        Return:
-        --------
-        base: object that includes information of grid and fiber fluxes and reconstruction image
-
-"""
-    base = ReconstructG(plate=plate, ifu=ifu, release=release, waveindex=waveindex)
-    print("rss", flush=True)
-    base.set_rss()
-    print("image grid", flush=True)
-    base.set_image_grid(dimage=dimage)
-    print("kernel", flush=True)
-    base.set_kernel()
-    print("flux rss", flush=True)
-    base.set_flux_rss()
-    print("flux psf", flush=True)
-    base.set_flux_psf(alpha=alpha, xcen=xcen, ycen=ycen, noise=noise)
-    start_time = time.time()
-    print("cube", flush=True)
-    base.set_cube(psf_slices=psf_slices, beta=beta, lam=lam)
-    stop_time = time.time()
-# if len(base.waveindex)>4000:
-# print("CRR‘s calculation time = %.2f" % (stop_time - start_time))
-    if (len(base.wave) == base.rss.data['FLUX'].data.shape[1]):
-        base.set_band()
-    return base
-
-
-def set_Shepard(plate=None, ifu=None, release='DR15', waveindex=None, dimage=0.75, alpha=1, beta=1, xcen=None,
-                ycen=None, noise=None, psf_slices=True):
-    """ Shepard's method for the reconstruction
-
-        Parameters:
-        ----------
-
-        plate : int, np.int32
-            plate number
-
-        ifu : int, np.int32
-            IFU number
-
-        release : str
-            data release (default 'DR15')
-
-        waveindex : int, np.int32
-            indices of wavelengths to reconstruct (default None)
-
-        alpha: default=1,np.float32
-            scale factor to change the FWHM of actual seeing
-
-        beta: default=1,np.float32
-            scale factor to change the FWHM of assumed seeing
-
-        xcen: default=0,np.float32
-            x coordinate of the location of center for the simulation case
-
-        ycen: default=0,np.float32
-            y coordinate of the location of center for the simulation case
-
-        noise: default=0,np.float32
-             scale factor of simulated flux to generate noise
-
-        psf_slices: boolean, Ture if only to calculate pivot wavelengths
-
-        Return:
-        --------
-        base: object that includes information of grid and fiber fluxes
-
-"""
-    base = ReconstructShepard(plate=plate, ifu=ifu, release=release, waveindex=waveindex)
-    base.set_rss()
-    base.set_image_grid(dimage=dimage)
-    base.set_kernel()
-    base.set_flux_rss()
-    base.set_flux_psf(alpha=alpha, xcen=xcen, ycen=ycen, noise=noise)
-    start_time = time.time()
-    base.set_cube(psf_slices=psf_slices)
-    stop_time = time.time()
-    if len(base.waveindex)>4000:
-        print("Shepard calculation time = %.2f" % (stop_time - start_time))
-    if (len(base.wave) == base.rss.data['FLUX'].data.shape[1]):
-        base.set_band()
-    return base
-
-
-def write(datafile, filename):
-    """ write the information for a particular plate-ifu to a FITS file as MaNGA cube form
-
-        Parameters:
-        ----------
-        datafile: object that includes all the information for MaNGA reconstruction
-
-        filename: str, the name of fits file
-
-
-        Return:
-        --------
-        hdu: FITS file that includes all the information as MaNGA cube form
-
-"""
-
-    def insert_cardlist(hdu=None, insertpoint=None, cardlist=None, after=False):
-        """ insert a cardlist into the header of a FITS hdu
-
-        Parameters:
-        ----------
-        hdu: FITS hdu
-
-        insertpoint: The index into the list of header keywords before which the new keyword should be inserted, or the name of a keyword before which the new keyword should be inserted.
-            Can also accept a (keyword, index) tuple for inserting around duplicate keywords.
-
-        cardlist: list
-            list of header cards to be inserted. Header cards will be inserted as the order of the list
-
-        after: bool, optional
-
-            If set to True, insert after the specified index or keyword, rather than before it. Defaults to False.
-
-        Return:
-        --------
-        hdu: fits file that have the cards inserted
-
-    """
-        for i in range(len(cardlist)):
-            if after:
-                hdu.header.insert(insertpoint, cardlist[i], after=after)
-                insertpoint = cardlist[i].keyword
-            else:
-                hdu.header.insert(insertpoint, cardlist[i], after=after)
-        return hdu
-
-    def set_cardlist(hdu=None, keyword_list=None):
-        """ Extract header card list from a FITS hdu
-
-        Parameters:
-        ----------
-        hdu: FITS hdu
-
-        keyword_list: list
-            keywords to be extracted, including value and comments
-
-        Return:
-        --------
-        cardlist: list,cards of FITS headers
-
-    """
-        cardlist = []
-        for index, keyword in enumerate(keyword_list):
-            cardlist.append(fits.Card(keyword, hdu.header[keyword], hdu.header.comments[keyword]))
-        return cardlist
-
-    def table_correlation(correlation=None, thresh=1E-12):
-        """ create a BinTableHDU for the correlation in sparse matrix form
-
-        Parameters:
-        ----------
-        correlation: ndarray,float32
-            correlation matrix, [nside*nside,nside*nside]
-
-        thresh: float32
-            threshold for the correlation entries to be stored.
-
-        Return:
-        --------
-        hdu: BinTableHDU that includes the information of the correlation matrix
-
-        Note:
-        --------
-        Fiven columns of the table are value, the location (C1,c2) of the first point in the grid, the location (C1,c2) of the second point in the grid.
-
-    """
-        nside = int(np.sqrt(correlation.shape[0]))
-        index_G = np.where(np.abs(correlation) > thresh)
-        corr_G = correlation[index_G]
-        triangle = np.where(index_G[1] >= index_G[0])[0]
-        index_G = np.array([index_G[0][triangle], index_G[1][triangle]])
-        corr_G = corr_G[triangle]
-        i_c1, i_c2, j_c1, j_c2 = [[] for i in range(4)]
-        for i in range(len(corr_G)):
-            i_c2.append(index_G[0, i] // nside)
-            i_c1.append(index_G[0, i] % nside)
-            j_c2.append(index_G[1, i] // nside)
-            j_c1.append(index_G[1, i] % nside)
-        i1 = fits.Column(name='INDXI_C1', array=np.array(i_c1), format='J')
-        i2 = fits.Column(name='INDXI_C2', array=np.array(i_c2), format='J')
-        j1 = fits.Column(name='INDXJ_C1', array=np.array(j_c1), format='J')
-        j2 = fits.Column(name='INDXJ_C2', array=np.array(j_c2), format='J')
-        value = fits.Column(name='RHOIJ', array=np.array(corr_G), format='D')
-        hdu = fits.BinTableHDU.from_columns([i1, i2, j1, j2, value])
-        return hdu
-
-    # Headers
-    card_GFWHM = fits.Card('GFWHM', datafile.GFWHM, 'Reconstructed FWHM in g-band (arcsec)')
-    card_RFWHM = fits.Card('RFWHM', datafile.RFWHM, 'Reconstructed FWHM in r-band (arcsec)')
-    card_IFWHM = fits.Card('IFWHM', datafile.IFWHM, 'Reconstructed FWHM in i-band (arcsec)')
-    card_ZFWHM = fits.Card('ZFWHM', datafile.ZFWHM, 'Reconstructed FWHM in z-band (arcsec)')
-    card_FWHM_list = [card_GFWHM, card_RFWHM, card_IFWHM, card_ZFWHM]
-
-    card_BSCALE = fits.Card('BSCALE', 1.00000, 'Intensity unit scaling')
-    card_BZERO = fits.Card('BZERO', 0.00000, 'Intensity zeropoint')
-    card_BSCALE_2 = fits.Card('BSCALE', 1.00000, 'Flux unit scaling')
-    card_BZERO_2 = fits.Card('BZERO', 0.00000, 'Flux zeropoint')
-
-    card_WCS_1 = fits.Card('CRPIX1', (datafile.nside + 1) / 2, 'Reference pixel (1-indexed)')
-    card_WCS_2 = fits.Card('CRPIX2', (datafile.nside + 1) / 2, 'Reference pixel (1-indexed)')
-    card_WCS_3 = fits.Card('CRVAL1', datafile.rss.data['FLUX'].header['IFURA'])
-    card_WCS_4 = fits.Card('CRVAL2', datafile.rss.data['FLUX'].header['IFUDEC'])
-    card_WCS_5 = fits.Card('CD1_1', round(-datafile.length/datafile.nside / 3600, 9))
-    card_WCS_6 = fits.Card('CD2_2', round(datafile.length/datafile.nside / 3600, 9))
-    card_WCS_7 = fits.Card('CTYPE1', 'RA---TAN')
-    card_WCS_8 = fits.Card('CTYPE2', 'DEC--TAN')
-    card_WCS_9 = fits.Card('CUNIT1', 'deg')
-    card_WCS_10 = fits.Card('CUNIT2', 'deg')
-    card_WCS_list = [card_WCS_1, card_WCS_2, card_WCS_3, card_WCS_4, card_WCS_5, card_WCS_6, card_WCS_7, card_WCS_8,
-                     card_WCS_9, card_WCS_10]
-
-    # Primary
-    hp = fits.PrimaryHDU(header=datafile.rss.data[0].header)
-    hp.header['BUNIT'] = ('1E-17 erg/s/cm^2/Ang/spaxel', 'Specific intensity (per spaxel)')
-    hp.header['MASKNAME'] = ('MANGA_DRP3PIXMASK', 'Bits in sdssMaskbits.par used by mask extension')
-    hp = insert_cardlist(hdu=hp, insertpoint='EBVGAL', cardlist=card_FWHM_list, after=True)
-    if 'BSCALE' not in list(hp.header.keys()):
-        hp.header.insert('BUNIT', card_BSCALE, after=False)
-    if 'BZERO' not in list(hp.header.keys()):
-        hp.header.insert('BUNIT', card_BZERO, after=False)
-
-    # Flux
-    cubehdr = fits.ImageHDU(name='FLUX', data=datafile.cube, header=datafile.rss.data['FLUX'].header)
-    cubehdr.header['BUNIT'] = ('1E-17 erg/s/cm^2/Ang/spaxel', 'Specific intensity (per spaxel)')
-    cubehdr.header['MASKNAME'] = ('MANGA_DRP3PIXMASK', 'Bits in sdssMaskbits.par used by mask extension')
-    cubehdr.header['HDUCLAS1'] = 'CUBE'
-    cubehdr.header.rename_keyword('CTYPE1', 'CTYPE3')
-    cubehdr.header.rename_keyword('CRPIX1', 'CRPIX3')
-    cubehdr.header.rename_keyword('CRVAL1', 'CRVAL3')
-    cubehdr.header.rename_keyword('CD1_1', 'CD3_3')
-    cubehdr.header.rename_keyword('CUNIT1', 'CUNIT3')
-    cubehdr = insert_cardlist(hdu=cubehdr, insertpoint='EBVGAL', cardlist=card_FWHM_list, after=True)
-    cubehdr = insert_cardlist(hdu=cubehdr, insertpoint='CUNIT3', cardlist=card_WCS_list, after=True)
-    if 'BSCALE' not in list(cubehdr.header.keys()):
-        cubehdr.header.insert('BUNIT', card_BSCALE, after=False)
-    if 'BZERO' not in list(cubehdr.header.keys()):
-        cubehdr.header.insert('BUNIT', card_BZERO, after=False)
-    try:
-        card_flux_fail = fits.Card('FAILSLIC', str(datafile.slice_fail), 'slices failed to converge')
-        cubehdr.header.insert('ZFWHM', card_flux_fail, after=True)
-    except:
-        pass
-
-    # IVAR
-    ivar_hdr = fits.ImageHDU(name='IVAR', data=datafile.cube_ivar, header=datafile.rss.data['IVAR'].header)
-    ivar_hdr.header['HDUCLAS1'] = 'CUBE'
-
-    # MASK
-    mask_hdr = fits.ImageHDU(name='MASK', data=datafile.cube_mask, header=datafile.rss.data['MASK'].header)
-    mask_hdr.header['HDUCLAS1'] = 'CUBE'
-
-    # DISP
-    disp_hdr = fits.ImageHDU(name='DISP', data=datafile.disp, header=datafile.rss.data['DISP'].header)
-
-    # PREDISP
-    predisp_hdr = fits.ImageHDU(name='PREDISP', data=datafile.predisp, header=datafile.rss.data['PREDISP'].header)
-
-    # IMG & PSF for each band
-    card_BUNIT = fits.Card('BUNIT', 'nanomaggies/pixel')
-    loc = ['IFURA', 'IFUDEC', 'OBJRA', 'OBJDEC']
-    card_loc_list = set_cardlist(cubehdr, loc) + [card_BSCALE_2, card_BZERO_2, card_BUNIT]
-
-    GIMG_hdr = fits.ImageHDU(name='GIMG', data=datafile.GIMG)
-    GIMG_hdr = insert_cardlist(hdu=GIMG_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_GFWHM], after=False)
-
-    RIMG_hdr = fits.ImageHDU(name='RIMG', data=datafile.RIMG)
-    RIMG_hdr = insert_cardlist(hdu=RIMG_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_RFWHM], after=False)
-
-    IIMG_hdr = fits.ImageHDU(name='IIMG', data=datafile.IIMG)
-    IIMG_hdr = insert_cardlist(hdu=IIMG_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_IFWHM], after=False)
-
-    ZIMG_hdr = fits.ImageHDU(name='ZIMG', data=datafile.GIMG)
-    ZIMG_hdr = insert_cardlist(hdu=ZIMG_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_ZFWHM], after=False)
-
-    GPSF_hdr = fits.ImageHDU(name='GPSF', data=datafile.GPSF)
-    GPSF_hdr = insert_cardlist(hdu=GPSF_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_GFWHM], after=False)
-
-    RPSF_hdr = fits.ImageHDU(name='RPSF', data=datafile.RPSF)
-    RPSF_hdr = insert_cardlist(hdu=RPSF_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_RFWHM], after=False)
-
-    IPSF_hdr = fits.ImageHDU(name='IPSF', data=datafile.IPSF)
-    IPSF_hdr = insert_cardlist(hdu=IPSF_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_IFWHM], after=False)
-
-    ZPSF_hdr = fits.ImageHDU(name='ZPSF', data=datafile.GPSF)
-    ZPSF_hdr = insert_cardlist(hdu=ZPSF_hdr, insertpoint='EXTNAME',
-                               cardlist=card_WCS_list + card_loc_list + [card_ZFWHM], after=False)
-
-    # CORR
-    CORR_hdr = []
-    for i in range(4):
-        corr = table_correlation(correlation=datafile.cube_corr[i].toarray(), thresh=1E-14)
-        corr.header.append(fits.Card('BBWAVE', datafile.bbwave[i], 'Wavelength (Angstroms)'))
-        corr.header.append(fits.Card('BBINDEX', datafile.bbindex[i], 'Slice number'))
-        corr.header.append(fits.Card('COVTYPE', 'Correlation'))
-        corr.header.append(fits.Card('COVSHAPE', '(%s,%s)' % (datafile.nimage, datafile.nimage)))
-        CORR_hdr.append(corr)
-    CORR_hdr[0].header.append(fits.Card('EXTNAME', 'GCORREL'))
-    CORR_hdr[1].header.append(fits.Card('EXTNAME', 'RCORREL'))
-    CORR_hdr[2].header.append(fits.Card('EXTNAME', 'ICORREL'))
-    CORR_hdr[3].header.append(fits.Card('EXTNAME', 'ZCORREL'))
-
-    hduRSS = []
-    for i in range(1, len(datafile.rss.data)):
-        if datafile.rss.data[i].header['XTENSION'] == 'IMAGE' and len(datafile.rss.data[i].data) == len(
-                datafile.rss.data['WAVE'].data):
-            hduRSS.append(datafile.rss.data[i])
-
-    try:
-        # PSF
-        PSF_hdr = fits.ImageHDU(name='PSF', data=datafile.cube_psf, header=cubehdr.header)
-        hdu = fits.HDUList([hp, cubehdr, PSF_hdr, ivar_hdr, mask_hdr, disp_hdr, predisp_hdr] + hduRSS +
-                           [datafile.rss.data['OBSINFO'],
-                            GIMG_hdr, RIMG_hdr, IIMG_hdr, ZIMG_hdr, GPSF_hdr, RPSF_hdr, IPSF_hdr, ZPSF_hdr] + CORR_hdr)
-    except:
-        hdu = fits.HDUList([hp, cubehdr, ivar_hdr, mask_hdr,
-                            datafile.rss.data['WAVE'], datafile.rss.data['SPECRES'], datafile.rss.data['SPECRESD'],
-                            datafile.rss.data['OBSINFO'],
-                            GIMG_hdr, RIMG_hdr, IIMG_hdr, ZIMG_hdr, GPSF_hdr, RPSF_hdr, IPSF_hdr, ZPSF_hdr] + CORR_hdr)
-
-    if filename and len(filename)>8 and filename[-8:]=='fits.gz':
-        data = filename
-    else:
-        data = filename + ".fits.gz".format(filename=filename)
-    hdu.writeto(data, clobber=True, checksum=True)
-
-    hdu.close()
-
-    return hdu
-
-if __name__ == '__main__':
-    # print('input: plate-ifu,CRR,Shepard,pixelsize')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    parent_dir_path = os.path.dirname(dir_path)
-    parent_parent_dir_path = os.path.dirname(parent_dir_path)
-
-    input = sys.argv
-    if len(input)<2:
-        raise ValueError('plateifu should be given for generating cubes')
-    plateifu = input[1]
-    [plate,ifu] = plateifu.split('-')
-    plate = int(plate)
-    ifu = int(ifu)
-    pixelsize = 0.75
-    if len(input)>4:
-        pixelsize = input[4]
-    if len(input)>3 and input[3]==False:
-        pass
-    else:
-        print(plate,ifu)
-        SpectrumShep=set_Shepard(plate=plate, ifu=ifu, release='DR15',waveindex=None,dimage=pixelsize,psf_slices=True)
-        saveaddress = parent_parent_dir_path+'/files/Shepard_fitsfile/manga-'+plateifu+'-LOGCUBE'
-        Shepard_cube=write(SpectrumShep, saveaddress)
-    if len(input)>2 and input[2]==False:
-        pass
-    else:
-        SpectrumG=set_G(plate=plate, ifu=ifu, release='DR15',waveindex=None,lam=1E-3,dimage=pixelsize,psf_slices=True)
-        saveaddress = parent_parent_dir_path+'files/CRR_fitsfile/manga-'+plateifu+'-LOGCUBE'
-        G_cube=write(SpectrumG, saveaddress)

@@ -19,84 +19,27 @@ import sys
 import copy
 import numpy as np
 import scipy.interpolate as interpolate
-import scipy.optimize as optimize
 import fitsio
 import mnsa.utils.configuration as configuration
 import crr.reconstruct as reconstruct
 import crr.sigma
+import crr.mem
 import astropy.wcs as wcs
-import unwise_psf.unwise_psf as unwise_psf
-
-galex_psf = None
-galex_psf_interp = None
-
-galex_image = 0.
 
 
-def psf(x, y, i):
-    cx = np.float32(galex_psf.shape[1] // 2)
-    cy = np.float32(galex_psf.shape[0] // 2)
+def psf_func(x, y, i):
+    cx = np.float32(psf.shape[1] // 2)
+    cy = np.float32(psf.shape[0] // 2)
     lx = x * 0.75 / 1.50
     ly = y * 0.75 / 1.50
-    return(galex_psf_interp(lx + cx, ly + cy, grid=False).flatten())
-
-
-def mem_function(u, A, f, llambda):
-    Ar = (A.dot(u) - f)
-    As = (Ar**2).sum()
-    Bs = (u * np.log(u)).sum()
-    val = As + llambda * Bs
-    grad = 2. * A.T.dot(Ar) + llambda * (1. + np.log(u))
-    return (val, grad)
-
-
-def mem_fit(lnlambda, r, flux):
-    llambda = np.exp(lnlambda)
-    S_M0 = np.ones(r.nx * r.ny)
-    bounds = zip([1.e-12] * (len(S_M0)),
-                 [None] * (len(S_M0)))
-    bounds = [x for x in bounds]
-    results = optimize.minimize(mem_function, S_M0,
-                                args=(r.A, flux, llambda),
-                                method='L-BFGS-B', jac=True,
-                                bounds=bounds)
-    return(results)
-
-
-def mem_lambda_function(lnlambda, r, flux, ivar):
-    results = mem_fit(lnlambda, r, flux)
-    recon = r.A.dot(results.x)
-    chi2 = ((recon - flux)**2 * ivar).sum()
-    val = chi2 - len(recon)
-    print(val)
-    return(val)
-
-
-def mem_all(r, flux, ivar):
-    if(0):
-        bracket = [np.log(1.e-20), np.log(1.e+25)]
-        try:
-            rootresults = optimize.root_scalar(mem_lambda_function,
-                                               args=(r, flux, ivar),
-                                               method='brentq',
-                                               bracket=bracket)
-            lnl = rootresults.root
-        except ValueError:
-            if(mem_lambda_function(bracket[1], r, flux, ivar) < 0.):
-                lnl = bracket[1] 
-            if(mem_lambda_function(bracket[0], r, flux, ivar) > 0.):
-                lnl = bracket[0]
-
-    lnl = 3.
-    results = mem_fit(lnl, r, flux)
-    return(results.x.reshape(r.ny, r.nx), lnl)
+    return(psf_interp(lx + cx, ly + cy, grid=False).flatten())
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Creates WISE image at MaNGA resolution')
+        description='Creates GALEX image at MaNGA sampling')
 
     parser.add_argument('-v', '--version', dest='version',
                         type=str, default='v0',
@@ -106,9 +49,26 @@ if __name__ == '__main__':
                         type=str, required=True,
                         help='plate-ifu for MaNGA observations')
 
+    parser.add_argument('-s', '--invvar-from-image', dest='invvar_from_image',
+                        action='store_true', required=False, default=False,
+                        help='use invvar calculated from image')
+
+    parser.add_argument('-m', '--model', dest='save_model',
+                        action='store_true', required=False, default=False,
+                        help='save model')
+
+    parser.add_argument('-f', '--force-model', dest='force_model',
+                        action='store_true', required=False, default=False,
+                        help='force model')
+
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
+    force_model = args.force_model
+    save_model = args.save_model
+    invvar_from_image = np.bool(args.invvar_from_image)
+
+    pad = 12
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
@@ -116,12 +76,27 @@ if __name__ == '__main__':
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['GALEX']['bands'].split()
 
-    plateifu_dir = os.path.join(os.getenv('MNSA_DATA'),
-                                version, str(plate), str(ifu))
-    native_dir = os.path.join(plateifu_dir, 'native')
+    resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                 version, 'resampled',
+                                 '{p:05}'.format(p=plate),
+                                 '{pifu}'.format(pifu=plateifu))
 
-    manga_file = os.path.join(native_dir,
-                              '{plateifu}-manga-logcube-crr.fits.gz')
+    model_dir = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'model',
+                             '{p:05}'.format(p=plate),
+                             '{pifu}'.format(pifu=plateifu))
+
+    imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'imaging',
+                               '{p:05}'.format(p=plate),
+                               plateifu)
+
+    manga_dir = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'manga', 'redux',
+                             '{p}'.format(p=plate),
+                             'stack')
+    manga_file = os.path.join(manga_dir,
+                              'manga-{plateifu}-LOGCUBE.fits.gz')
     manga_file = manga_file.format(plateifu=plateifu)
 
     hdr_out_orig = fitsio.read_header(manga_file, ext='FLUX')
@@ -131,23 +106,35 @@ if __name__ == '__main__':
 
         hdr_out = copy.deepcopy(hdr_out_orig)
 
-        # Hack here because we don't know the coadd_id
-        coadd_id = '0000m031'
-        galex_psf = unwise_psf.get_unwise_psf(1, coadd_id)
-        galex_psf = galex_psf / galex_psf.sum()
-        xpsf = np.arange(galex_psf.shape[1])
-        ypsf = np.arange(galex_psf.shape[0])
-        galex_psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf,
-                                                           galex_psf)
+        # Read the GALEX PSF
+        psf_file = os.path.join(imaging_dir,
+                                '{plateifu}-custom-psf-{band}.fits.fz')
+        psf_file = psf_file.format(plateifu=plateifu, band=band)
+        print("Reading PSF: {f}".format(f=psf_file))
+        psf = fitsio.read(psf_file)
+        psf = psf / psf.sum()
+        xpsf = np.arange(psf.shape[1])
+        ypsf = np.arange(psf.shape[0])
+        psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, psf)
 
-        # Read the WISE data
-        galex_file = os.path.join(native_dir,
-                                  '{plateifu}-galex-image-{band}.fits.fz')
-        galex_file = galex_file.format(plateifu=plateifu, band=band)
+        # Read the GALEX data
+        image_file = os.path.join(imaging_dir,
+                                  '{plateifu}-custom-image-{band}.fits.fz')
+        image_file = image_file.format(plateifu=plateifu, band=band)
+        print("Reading image: {f}".format(f=image_file))
+        image, hdr_in = fitsio.read(image_file, header=True)
 
-        image, hdr_in = fitsio.read(galex_file, header=True)
-        sig = crr.sigma.sigma(image)
-        invvar = np.zeros(image.shape, dtype=np.float32) + 1. / sig**2
+        if(invvar_from_image is False):
+            invvar_file = os.path.join(imaging_dir,
+                                       '{plateifu}-custom-invvar-{band}.fits.fz')
+            invvar_file = invvar_file.format(plateifu=plateifu, band=band)
+            print("Reading invvar: {f}".format(f=invvar_file))
+            invvar = fitsio.read(invvar_file)
+            sig = 1. / np.sqrt(np.median(invvar))
+        else:
+            sig = crr.sigma.sigma(image)
+            print("Setting constant invvar based on sigma={sig:.3e}".format(sig=sig))
+            invvar = np.zeros(image.shape, dtype=np.float32) + 1. / sig**2
 
         hdr_in['NAXIS1'] = image.shape[0]
         hdr_in['NAXIS2'] = image.shape[1]
@@ -156,43 +143,45 @@ if __name__ == '__main__':
         wcs_in = wcs.WCS(header=hdr_in)
         wcs_out = wcs.WCS(header=hdr_out, naxis=[1, 2])
 
-        # Create a reconstruct object in order to calculate which
-        # input pixels influence the output
-        rall = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out)
-        rall.set_grid()
-        rall.psf = psf
-        rall.set_Amatrix()
-        coverage = rall.A.sum(axis=1).reshape(image.shape)
-        coverage = coverage / coverage.max()
-        trim = coverage > 3.e-2
+        model_file = os.path.join(model_dir, '{plateifu}-A-{band}.fits')
+        model_file = model_file.format(plateifu=plateifu, band=band)
+        if(os.path.exists(model_file) & (force_model is False)):
+            r = reconstruct.ReconstructWCS(filename=model_file)
+        else:
+            # Create a reconstruct object in order to calculate which
+            # input pixels influence the output
+            rall = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out)
+            rall.psf = psf_func
+            rall.set_Amatrix()
+            coverage = rall.coverage()
+            trim = coverage > 3.e-3
 
-        # Create a reconstruct object with only the pixels with coverage
-        pad = 10
-        r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out, trim=trim,
-                                       pad=pad)
-        r.set_grid()
-        r.psf = psf
-        r.set_Amatrix()
-        r.tlambda = 1.e-3
-        r.set_weights(F_weights=True)
+            # Create a reconstruct object with only the pixels with coverage
+            r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out,
+                                           trim=trim, pad=pad)
+            r.psf = psf_func
+            r.set_Amatrix()
+            r.set_svd()
+
+            if(save_model):
+                os.makedirs(model_dir, exist_ok=True)
+                r.save_model(model_file)
 
         # Set the input array
-        subimage = image[trim]
-        subinvvar = invvar[trim]
+        subimage = image[r.trim]
+        subinvvar = invvar[r.trim]
 
-        scale = (0.75 / 1.50)**2
+        r.set_weights()
+        image_G = r.apply_weights(subimage.flatten())
+        var_G = np.diag(r.weights.dot(r.weights.T) * sig**2).reshape((r.nx, r.ny))
+        ivar_G = 1. / var_G
 
-        image_G = r.apply_weights(subimage.flatten()) * scale
-
-        image_mem, lnl = mem_all(r, subimage.flatten(), subinvvar.flatten())
-        image_mem = image_mem * scale
-
-        galex_manga_file = os.path.join(plateifu_dir, 'manga',
-                                        '{plateifu}-galex-{band}.fits')
+        galex_manga_file = os.path.join(resampled_dir,
+                                        '{plateifu}-{band}.fits')
         galex_manga_file = galex_manga_file.format(plateifu=plateifu,
                                                    band=band)
-        hdr_out['LNL_MEM'] = lnl
-        fitsio.write(galex_manga_file, image_mem[pad:-pad, pad:-pad],
-                     header=hdr_out, clobber=True)
+        os.makedirs(resampled_dir, exist_ok=True)
         fitsio.write(galex_manga_file, image_G[pad:-pad, pad:-pad],
+                     header=hdr_out, clobber=True)
+        fitsio.write(galex_manga_file, ivar_G[pad:-pad, pad:-pad],
                      header=hdr_out, clobber=False)

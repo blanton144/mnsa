@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_dlis_batch
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import numpy as np
+import fitsio
+import subprocess
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Runs mn_dlis.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-s', '--start', dest='start',
+                        type=np.int32, help='start index', default=-1)
+
+    parser.add_argument('-e', '--end', dest='end',
+                        type=np.int32, help='end index', default=-1)
+
+    args = parser.parse_args()
+    version = args.version
+    drp_start = args.start
+    drp_end = args.end
+
+    drpfile = os.path.join(os.getenv('MNSA_DATA'),
+                           'samples',
+                           version, 'drpall-{v}.fits'.format(v=version))
+    drpall = fitsio.read(drpfile)
+
+    if(drp_start < 0):
+        drp_start = 0
+    if(drp_end < 0):
+        drp_end = len(drpall) - 1
+
+    for i in range(drp_start, drp_end + 1):
+        plateifu = drpall['plateifu'][i]
+        print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
+        subprocess.call(['mn_dlis', '-p', plateifu, '-v', version])
+        

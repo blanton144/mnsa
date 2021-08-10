@@ -13,6 +13,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import os
+import sys
 import argparse
 import mnsa.manga as manga
 
@@ -28,10 +30,11 @@ if __name__ == '__main__':
                         help='MNSA configuration version')
 
     parser.add_argument('-p', '--plate-ifu', dest='plateifu',
-                        type=str, help='plate-ifu for MaNGA observations')
+                        required=True, type=str,
+                        help='plate-ifu for MaNGA observations')
 
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
 
-    manga.mnsa_native(plateifu=plateifu, version=version)
+    manga.crr(plateifu=plateifu, version=version)

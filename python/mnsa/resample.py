@@ -9,8 +9,9 @@ class Resample(object):
 
     Assumes a nearly constant PSF and pixelscale, and same orientation of output and input.
 """
-    def __init__(self, image=None, input_header=None):
+    def __init__(self, image=None, invvar=None, input_header=None):
         self.image = image
+        self.invvar = invvar
         self.input_header = input_header
         self.input_wcs = wcs.WCS(header=self.input_header)
         self.input_pixscale = self._find_pixscale(self.input_wcs,
@@ -94,17 +95,24 @@ class Resample(object):
         y = np.outer(np.arange(nyo, dtype=np.float32),
                      np.ones(nxo, dtype=np.float32))
 
-        ra, dec = self.output_wcs.all_pix2world(x.flatten(), y.flatten(), 0,
-                                                ra_dec_order=True)
+        invvar_fixed = self.invvar
+        
+        iz = np.where(invvar_fixed <= 0.)[0]
+        if(len(iz) > 0):
+            invvar_fixed[iz] = np.median(self.invvar)
+        var = 1. / invvar_fixed
+        var_smoothed = signal.fftconvolve(var, self.output_psf_resampled**2,
+                                          mode='same')
 
-        xo, yo = self.input_wcs.all_world2pix(ra, dec, 0, ra_dec_order=True)
-
-        import matplotlib.pyplot as plt
-        plt.imshow(image_smoothed)
-        plt.scatter(xo, yo, s=2)
+        # Find output pixel locations in input pixel grid
+        rao, deco = self.output_wcs.all_pix2world(x.flatten(), y.flatten(), 0,
+                                                  ra_dec_order=True)
+        xoi, yoi = self.input_wcs.all_world2pix(rao, deco, 0, ra_dec_order=True)
 
         image_interp = interpolate.RectBivariateSpline(xi, yi, image_smoothed)
+        var_interp = interpolate.RectBivariateSpline(xi, yi, var_smoothed)
 
-        image_downsampled = image_interp(xo, yo, grid=False).reshape(nxo, nyo)
+        image_downsampled = image_interp(xoi, yoi, grid=False).reshape(nxo, nyo)
+        var_downsampled = var_interp(xoi, yoi, grid=False).reshape(nxo, nyo)
 
-        return(image_downsampled)
+        return(image_downsampled, var_downsampled)

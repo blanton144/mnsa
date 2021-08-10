@@ -47,12 +47,24 @@ if __name__ == '__main__':
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['DLIS']['bands'].split()
 
-    plateifu_dir = os.path.join(os.getenv('MNSA_DATA'),
-                                version, str(plate), str(ifu))
-    native_dir = os.path.join(plateifu_dir, 'native')
+    resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                 version, 'resampled',
+                                 '{p:05}'.format(p=plate),
+                                 '{pifu}'.format(pifu=plateifu))
+    if(not os.path.exists(resampled_dir)):
+        os.makedirs(resampled_dir)
 
-    manga_file = os.path.join(native_dir,
-                              '{plateifu}-manga-logcube-crr.fits.gz')
+    imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'imaging',
+                               '{p:05}'.format(p=plate),
+                               plateifu)
+
+    manga_dir = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'manga', 'redux',
+                             '{p}'.format(p=plate),
+                             'stack')
+    manga_file = os.path.join(manga_dir,
+                              'manga-{plateifu}-LOGCUBE.fits.gz')
     manga_file = manga_file.format(plateifu=plateifu)
 
     hdr_out_orig = fitsio.read_header(manga_file, ext='FLUX')
@@ -61,18 +73,26 @@ if __name__ == '__main__':
     for band in bands:
         hdr_out = copy.deepcopy(hdr_out_orig)
 
-        dlis_file = os.path.join(native_dir,
-                                 '{plateifu}-dlis-image-{band}.fits.fz')
+        dlis_file = os.path.join(imaging_dir,
+                                 '{plateifu}-custom-image-{band}.fits.fz')
         dlis_file = dlis_file.format(plateifu=plateifu, band=band)
 
         image, hdr_in = fitsio.read(dlis_file, header=True)
 
-        r = resample.Resample(image=image, input_header=hdr_in)
+        invvar_file = os.path.join(imaging_dir,
+                                 '{plateifu}-custom-invvar-{band}.fits.fz')
+        invvar_file = invvar_file.format(plateifu=plateifu, band=band)
+
+        invvar = fitsio.read(invvar_file, header=False)
+
+        r = resample.Resample(image=image, invvar=invvar, input_header=hdr_in)
         r.set_output_header(hdr_out)
         r.set_output_psf(psf_out)
-        image_down = r.downsample()
+        image_down, var_down = r.downsample()
+        ivar_down = 1. / var_down
 
-        dlis_manga_file = os.path.join(plateifu_dir, 'manga',
-                                       '{plateifu}-dlis-{band}.fits')
+        dlis_manga_file = os.path.join(resampled_dir,
+                                       '{plateifu}-{band}.fits')
         dlis_manga_file = dlis_manga_file.format(plateifu=plateifu, band=band)
         fitsio.write(dlis_manga_file, image_down, header=hdr_out, clobber=True)
+        fitsio.write(dlis_manga_file, ivar_down, header=hdr_out, clobber=False)
