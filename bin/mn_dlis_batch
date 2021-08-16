@@ -56,4 +56,3 @@ if __name__ == '__main__':
         plateifu = drpall['plateifu'][i]
         print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
         subprocess.call(['mn_dlis', '-p', plateifu, '-v', version])
-        
