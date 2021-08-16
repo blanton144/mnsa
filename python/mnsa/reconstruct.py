@@ -1286,8 +1286,9 @@ class ReconstructCRR(Reconstruct):
 
     Unless waveindex is set, uses all wavelengths.
 """
-    def __init__(self, plate=None, ifu=None, release='DR15', waveindex=None,
-                 pixelscale=0.75, dkernel=0.05, verbose=True, lam=1.e-4):
+    def __init__(self, plate=None, ifu=None, release='DR15',
+                 waveindex=None, pixelscale=0.75, dkernel=0.05,
+                 verbose=True, lam=1.e-4):
         super().__init__(plate=plate, ifu=ifu, release=release,
                          waveindex=waveindex, pixelscale=pixelscale,
                          dkernel=dkernel, verbose=verbose)

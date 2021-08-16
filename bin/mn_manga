@@ -37,4 +37,4 @@ if __name__ == '__main__':
     version = args.version
     plateifu = args.plateifu
 
-    manga.crr(plateifu=plateifu, version=version)
+    manga.crr(plateifu=plateifu, version=version, clobber=False)

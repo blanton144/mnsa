@@ -4,7 +4,7 @@ import mnsa.reconstruct as reconstruct
 import mnsa.utils.configuration as configuration
 
 
-def crr(plateifu=None, version=None):
+def crr(plateifu=None, version=None, clobber=True):
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
@@ -21,6 +21,11 @@ def crr(plateifu=None, version=None):
     manga_file = os.path.join(manga_dir,
                               'manga-{plateifu}-LOGCUBE')
     manga_file = manga_file.format(plateifu=plateifu)
+
+    if((os.path.exists(manga_file + '.fits.gz') is True)
+       & (clobber is False)):
+        print("Result exists in {manga_file}".format(manga_file=manga_file))
+        return
 
     os.makedirs(manga_dir, exist_ok=True)
 
