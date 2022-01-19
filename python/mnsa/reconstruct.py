@@ -13,9 +13,9 @@ import mnsa.kernel
 import os
 
 # Set Marvin configuration so it gets everything local
-marvin.config.setRelease('DR15')
+marvin.config.setRelease('DR17')
 marvin.config.mode = 'local'
-marvin.config.download = True
+marvin.config.download = False
 
 
 # Rough grid length in arcsec to use for each IFU size
@@ -188,25 +188,28 @@ class Reconstruct(object):
     def run(self):
         """Perform all steps to create a cube"""
         if(self.verbose):
-            print("Importing RSS fluxes.")
+            print("{plateifu}: Importing RSS fluxes.".format(plateifu=self.plateifu), flush=True)
         self.set_rss()
         if(self.verbose):
-            print("Creating output grid.")
+            print("{plateifu}: Creating output grid.".format(plateifu=self.plateifu), flush=True)
         self.set_image_grid()
         if(self.verbose):
-            print("Setting up kernel.")
+            print("{plateifu}: Setting up kernel.".format(plateifu=self.plateifu), flush=True)
         self.set_kernel()
         if(self.verbose):
-            print("Constructing data flux and ivar arrays to use.")
+            print("{plateifu}: Constructing data flux and ivar arrays to use.".format(plateifu=self.plateifu), flush=True)
         self.set_flux_rss()
         if(self.verbose):
-            print("Constructing PSF model flux array.")
+            print("{plateifu}: Constructing PSF model flux array.".format(plateifu=self.plateifu), flush=True)
         self.set_flux_psf()
         if(self.verbose):
-            print("Calculate cube.")
+            print("{plateifu}: Calculate cube.".format(plateifu=self.plateifu), flush=True)
         self.calculate_cube()
         if (len(self.wave) == self.rss.data['FLUX'].data.shape[1]):
             self.set_band()
+            self.imgs_set = True
+        else:
+            self.imgs_set = False
         return
 
     def set_rss(self):
@@ -428,15 +431,12 @@ class Reconstruct(object):
             self.flux_ivar = self.flux_ivar[:, self.waveindex]
             self.flux_mask = self.flux_mask[:, self.waveindex]
 
-        try:
-            self.flux_disp = self.rss.data['DISP'].data
-            self.flux_predisp = self.rss.data['PREDISP'].data
-            if (self.waveindex is not None):
-                self.flux_disp = self.flux_disp[:, self.waveindex]
-                self.flux_predisp = self.flux_predisp[:, self.waveindex]
-            self.lsf_exist = True
-        except:
-            self.lsf_exist = False
+        self.flux_disp = self.rss.data['LSFPOST'].data
+        self.flux_predisp = self.rss.data['LSFPRE'].data
+        if (self.waveindex is not None):
+            self.flux_disp = self.flux_disp[:, self.waveindex]
+            self.flux_predisp = self.flux_predisp[:, self.waveindex]
+        self.lsf_exist = True
 
         return
 
@@ -557,16 +557,18 @@ class Reconstruct(object):
             self.predisp = np.zeros([nWave, self.nside, self.nside],
                                     dtype=np.float32)
 
-        print(nWave)
+        if(self.verbose):
+            print("{plateifu}: nWave={nWave}".format(plateifu=self.plateifu, nWave=nWave), flush=True)
         for iWave in np.arange(nWave):
-            print(iWave, flush=True)
+            if(self.verbose):
+                print("{plateifu}: iWave={iWave}".format(plateifu=self.plateifu, iWave=iWave), flush=True)
             try:
                 w0, weights = self.create_weights(xsample=self.xpos[0:self.nExp * self.nfiber, iWave],
                                                   ysample=self.ypos[0:self.nExp * self.nfiber, iWave],
                                                   ivar=self.flux_ivar[:, iWave],
                                                   waveindex=iWave)
             except np.linalg.LinAlgError:
-                print('failing to converge', iWave)
+                print('{plateifu}: iWave={iWave} failing to converge'.format(plateifu=self.plateifu, iWave=iWave), flush=True)
                 self.slice_fail.append(iWave)
             self.w0 = w0
             fcube = ((weights.dot(self.flux[:, iWave])).reshape(self.nside,
@@ -959,13 +961,13 @@ class Reconstruct(object):
                                  header=self.rss.data['MASK'].header)
         mask_hdr.header['HDUCLAS1'] = 'CUBE'
 
-        # DISP
-        disp_hdr = fits.ImageHDU(name='DISP', data=self.disp,
-                                 header=self.rss.data['DISP'].header)
+        # SPECRES
+        disp_hdr = fits.ImageHDU(name='SPECRES', data=self.disp,
+                                 header=self.rss.data['SPECRES'].header)
 
-        # PREDISP
-        predisp_hdr = fits.ImageHDU(name='PREDISP', data=self.predisp,
-                                    header=self.rss.data['PREDISP'].header)
+        # PRESPECRES
+        predisp_hdr = fits.ImageHDU(name='PRESPECRES', data=self.predisp,
+                                    header=self.rss.data['PRESPECRES'].header)
 
         # IMG & PSF for each band
         card_BUNIT = fits.Card('BUNIT', 'nanomaggies/pixel')
@@ -974,54 +976,64 @@ class Reconstruct(object):
                                                             card_BZERO_2,
                                                             card_BUNIT]
 
-        GIMG_hdr = fits.ImageHDU(name='GIMG', data=self.GIMG)
-        GIMG_hdr = self._insert_cardlist(hdu=GIMG_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_GFWHM],
-                                         after=False)
+        if(self.imgs_set):
+            GIMG_hdr = fits.ImageHDU(name='GIMG', data=self.GIMG)
+            GIMG_hdr = self._insert_cardlist(hdu=GIMG_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_GFWHM],
+                                             after=False)
 
-        RIMG_hdr = fits.ImageHDU(name='RIMG', data=self.RIMG)
-        RIMG_hdr = self._insert_cardlist(hdu=RIMG_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_RFWHM],
-                                         after=False)
+            RIMG_hdr = fits.ImageHDU(name='RIMG', data=self.RIMG)
+            RIMG_hdr = self._insert_cardlist(hdu=RIMG_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_RFWHM],
+                                             after=False)
 
-        IIMG_hdr = fits.ImageHDU(name='IIMG', data=self.IIMG)
-        IIMG_hdr = self._insert_cardlist(hdu=IIMG_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_IFWHM],
-                                         after=False)
-
-        ZIMG_hdr = fits.ImageHDU(name='ZIMG', data=self.GIMG)
-        ZIMG_hdr = self._insert_cardlist(hdu=ZIMG_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_ZFWHM],
-                                         after=False)
-
-        GPSF_hdr = fits.ImageHDU(name='GPSF', data=self.GPSF)
-        GPSF_hdr = self._insert_cardlist(hdu=GPSF_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_GFWHM],
-                                         after=False)
-
-        RPSF_hdr = fits.ImageHDU(name='RPSF', data=self.RPSF)
-        RPSF_hdr = self._insert_cardlist(hdu=RPSF_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_RFWHM],
-                                         after=False)
-
-        IPSF_hdr = fits.ImageHDU(name='IPSF', data=self.IPSF)
-        IPSF_hdr = self._insert_cardlist(hdu=IPSF_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_IFWHM],
-                                         after=False)
-
-        ZPSF_hdr = fits.ImageHDU(name='ZPSF', data=self.GPSF)
-        ZPSF_hdr = self._insert_cardlist(hdu=ZPSF_hdr, insertpoint='EXTNAME',
-                                         cardlist=card_WCS_list +
-                                         card_loc_list + [card_ZFWHM],
-                                         after=False)
-
+            IIMG_hdr = fits.ImageHDU(name='IIMG', data=self.IIMG)
+            IIMG_hdr = self._insert_cardlist(hdu=IIMG_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_IFWHM],
+                                             after=False)
+            
+            ZIMG_hdr = fits.ImageHDU(name='ZIMG', data=self.GIMG)
+            ZIMG_hdr = self._insert_cardlist(hdu=ZIMG_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_ZFWHM],
+                                             after=False)
+            
+            GPSF_hdr = fits.ImageHDU(name='GPSF', data=self.GPSF)
+            GPSF_hdr = self._insert_cardlist(hdu=GPSF_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_GFWHM],
+                                             after=False)
+            
+            RPSF_hdr = fits.ImageHDU(name='RPSF', data=self.RPSF)
+            RPSF_hdr = self._insert_cardlist(hdu=RPSF_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_RFWHM],
+                                             after=False)
+            
+            IPSF_hdr = fits.ImageHDU(name='IPSF', data=self.IPSF)
+            IPSF_hdr = self._insert_cardlist(hdu=IPSF_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_IFWHM],
+                                             after=False)
+            
+            ZPSF_hdr = fits.ImageHDU(name='ZPSF', data=self.GPSF)
+            ZPSF_hdr = self._insert_cardlist(hdu=ZPSF_hdr, insertpoint='EXTNAME',
+                                             cardlist=card_WCS_list +
+                                             card_loc_list + [card_ZFWHM],
+                                             after=False)
+        else:
+            GIMG_hdr = fits.ImageHDU(name='GIMG', data=np.zeros(0, dtype=int))
+            RIMG_hdr = fits.ImageHDU(name='RIMG', data=np.zeros(0, dtype=int))
+            IIMG_hdr = fits.ImageHDU(name='IIMG', data=np.zeros(0, dtype=int))
+            ZIMG_hdr = fits.ImageHDU(name='ZIMG', data=np.zeros(0, dtype=int))
+            GPSF_hdr = fits.ImageHDU(name='GPSF', data=np.zeros(0, dtype=int))
+            RPSF_hdr = fits.ImageHDU(name='RPSF', data=np.zeros(0, dtype=int))
+            IPSF_hdr = fits.ImageHDU(name='IPSF', data=np.zeros(0, dtype=int))
+            ZPSF_hdr = fits.ImageHDU(name='ZPSF', data=np.zeros(0, dtype=int))
+            
         # CORR
         CORR_hdr = []
         for i in range(4):
@@ -1070,6 +1082,8 @@ class Reconstruct(object):
             data = filename
         else:
             data = filename + ".fits.gz".format(filename=filename)
+
+        print(hdu, flush=True)
         hdu.writeto(data, overwrite=True, checksum=True)
 
         hdu.close()

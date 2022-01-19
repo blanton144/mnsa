@@ -23,7 +23,7 @@ import multiprocessing
 
 
 def call_crr(indx):
-    print("Doing cube: {plateifu}".format(plateifu=drp['plateifu'][indx]))
+    print("Doing cube: {plateifu}".format(plateifu=drp['plateifu'][indx]), flush=True)
     manga.crr(plateifu=drp['plateifu'][indx], version=version, clobber=False)
     return
 

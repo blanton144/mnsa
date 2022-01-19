@@ -19,6 +19,12 @@ import sys
 import numpy as np
 import fitsio
 import subprocess
+import multiprocessing
+
+def call_galex(i):
+    plateifu = drpall['plateifu'][i]
+    print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
+    subprocess.call(['mn_galex', '-p', plateifu, '-v', version])
 
 
 if __name__ == '__main__':
@@ -52,8 +58,9 @@ if __name__ == '__main__':
     if(drp_end < 0):
         drp_end = len(drpall) - 1
 
-    for i in range(drp_start, drp_end + 1):
-        plateifu = drpall['plateifu'][i]
-        print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
-        subprocess.call(['mn_galex', '-p', plateifu, '-v', version])
+    drpall = drpall[drp_start:drp_end + 1]
+
+    iall = np.arange(len(drpall), dtype=np.int32)
+    with multiprocessing.Pool() as pool:
+        pool.map(call_galex, iall)
         

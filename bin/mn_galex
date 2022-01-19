@@ -23,7 +23,6 @@ import fitsio
 import mnsa.utils.configuration as configuration
 import crr.reconstruct as reconstruct
 import crr.sigma
-import crr.mem
 import astropy.wcs as wcs
 
 
