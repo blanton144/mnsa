@@ -5,7 +5,7 @@ import scipy.interpolate as interpolate
 import os
 
 
-def band(self, band=None, wave=None, cube=None):
+def image(band=None, wave=None, cube=None):
     """ calculate FWHM for given image
 
     Parameters:
@@ -42,8 +42,8 @@ def band(self, band=None, wave=None, cube=None):
     band_value = fun_band(wave) 
 
     nWave = len(wave)
-    dwave = wave[1:nWave - 1] - wave[0:nWave - 2]
-    dwave = np.append(dwave, np.array(dwave[-1]))
+    dwave = wave[1:nWave] - wave[0:nWave - 1]
+    dwave = np.append(dwave, np.array([dwave[-1]]))
 
     n = cube.shape[1]
     m = cube.shape[2]
@@ -52,11 +52,11 @@ def band(self, band=None, wave=None, cube=None):
 
     abspec_Hz = 3631.e-23 * np.ones(nWave)  # erg / cm^2 / s / Hz
     cspeed = 3e+18   # A/s = A Hz
-    abspec_A = (abspec_Hz * cspeed) / wave**2  # erg / cm^2 / s / Hz
-    abspec_A_norm = abspec_A * 1.e+17  # 10^{-17} erg / cm^2 / s / Hz
-    abspec_A_norm = abspec_A_norm * 1.e+9  # To produce nanomaggies
+    abspec_A = (abspec_Hz * cspeed) / wave**2  # erg / cm^2 / s / A
+    abspec_A_norm = abspec_A * 1.e+17  # 10^{-17} erg / cm^2 / s / A
+    abspec_A_norm = abspec_A_norm * 1.e-9  # To produce nanomaggies
     denom_val = (band_value * dwave * abspec_A_norm).sum()
-    denom = np.ones(n, m) * denom_val
+    denom = np.ones((n, m)) * denom_val
 
     image = numer / denom
 

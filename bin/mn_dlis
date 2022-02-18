@@ -36,9 +36,14 @@ if __name__ == '__main__':
                         type=str, required=True,
                         help='plate-ifu for MaNGA observations')
 
+    parser.add_argument('-k', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
+    clobber = args.clobber
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
@@ -47,9 +52,14 @@ if __name__ == '__main__':
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['DLIS']['bands'].split()
 
+    if('expand' in cfg['DLIS']):
+        expand = np.int32(cfg['DLIS']['expand'])
+    else:
+        expand = 1
+
     resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
                                  version, 'resampled',
-                                 '{p:05}'.format(p=plate),
+                                 '{p}'.format(p=plate),
                                  '{pifu}'.format(pifu=plateifu))
     if(not os.path.exists(resampled_dir)):
         os.makedirs(resampled_dir)
@@ -71,7 +81,28 @@ if __name__ == '__main__':
     psf_out = fitsio.read(manga_file, ext='RPSF')
 
     for band in bands:
+        dlis_manga_file = os.path.join(resampled_dir,
+                                       'resampled-{plateifu}-{band}.fits')
+        dlis_manga_file = dlis_manga_file.format(plateifu=plateifu, band=band)
+
+        if(clobber is False):
+            if(os.path.exists(dlis_manga_file)):
+                print("File exists already for {f}".format(f=dlis_manga_file))
+                continue
+
         hdr_out = copy.deepcopy(hdr_out_orig)
+        naxis1 = (np.int32(hdr_out['NAXIS1']) + 1) * expand - 1
+        naxis2 = (np.int32(hdr_out['NAXIS2']) + 1) * expand - 1
+        if(naxis1 <= 63):
+            naxis1 = 63
+        if(naxis2 <= 63):
+            naxis2 = 63
+        crpix1 = naxis1 // 2
+        crpix2 = naxis2 // 2
+        hdr_out['NAXIS1'] = naxis1
+        hdr_out['NAXIS2'] = naxis2
+        hdr_out['CRPIX1'] = crpix1
+        hdr_out['CRPIX2'] = crpix2
 
         dlis_file = os.path.join(imaging_dir,
                                  '{plateifu}-custom-image-{band}.fits.fz')
@@ -91,8 +122,5 @@ if __name__ == '__main__':
         image_down, var_down = r.downsample()
         ivar_down = 1. / var_down
 
-        dlis_manga_file = os.path.join(resampled_dir,
-                                       '{plateifu}-{band}.fits')
-        dlis_manga_file = dlis_manga_file.format(plateifu=plateifu, band=band)
         fitsio.write(dlis_manga_file, image_down, header=hdr_out, clobber=True)
         fitsio.write(dlis_manga_file, ivar_down, header=hdr_out, clobber=False)

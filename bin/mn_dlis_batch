@@ -21,10 +21,15 @@ import fitsio
 import subprocess
 import multiprocessing
 
+clobber = False
+
 def call_dlis(i):
     plateifu = drpall['plateifu'][i]
     print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
-    subprocess.call(['mn_dlis', '-p', plateifu, '-v', version])
+    if(clobber):
+        subprocess.call(['mn_dlis', '-p', plateifu, '-v', version, '-k'])
+    else:
+        subprocess.call(['mn_dlis', '-p', plateifu, '-v', version])
 
 
 if __name__ == '__main__':
@@ -43,10 +48,15 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', dest='end',
                         type=np.int32, help='end index', default=-1)
 
+    parser.add_argument('-k', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
     args = parser.parse_args()
     version = args.version
     drp_start = args.start
     drp_end = args.end
+    clobber = args.clobber
 
     drpfile = os.path.join(os.getenv('MNSA_DATA'),
                            'samples',

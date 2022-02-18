@@ -51,6 +51,10 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='save model')
 
+    parser.add_argument('-k', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
     parser.add_argument('-f', '--force-model', dest='force_model',
                         action='store_true', required=False, default=False,
                         help='force regeneration of model')
@@ -60,6 +64,7 @@ if __name__ == '__main__':
     plateifu = args.plateifu
     force_model = args.force_model
     save_model = args.save_model
+    clobber = args.clobber
 
     pad = 12
 
@@ -69,14 +74,19 @@ if __name__ == '__main__':
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['WISE']['bands'].split()
 
+    if('expand' in cfg['WISE']):
+        expand = np.int32(cfg['WISE']['expand'])
+    else:
+        expand = 1
+
     resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
                                  version, 'resampled',
-                                 '{p:05}'.format(p=plate),
+                                 '{p}'.format(p=plate),
                                  '{pifu}'.format(pifu=plateifu))
 
     model_dir = os.path.join(os.getenv('MNSA_DATA'),
                              version, 'model',
-                             '{p:05}'.format(p=plate),
+                             '{p}'.format(p=plate),
                              '{pifu}'.format(pifu=plateifu))
 
     imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
@@ -97,7 +107,30 @@ if __name__ == '__main__':
 
     for band in bands:
 
+        wise_manga_file = os.path.join(resampled_dir,
+                                       'resampled-{plateifu}-{band}.fits')
+        wise_manga_file = wise_manga_file.format(plateifu=plateifu,
+                                                 band=band)
+
+        # skip if we have made this file already
+        if(clobber is False):
+            if(os.path.exists(wise_manga_file)):
+                print("File exists already for {f}".format(f=wise_manga_file))
+                continue
+
         hdr_out = copy.deepcopy(hdr_out_orig)
+        naxis1 = (np.int32(hdr_out['NAXIS1']) + 1) * expand - 1
+        naxis2 = (np.int32(hdr_out['NAXIS2']) + 1) * expand - 1
+        if(naxis1 <= 63):
+            naxis1 = 63
+        if(naxis2 <= 63):
+            naxis2 = 63
+        crpix1 = naxis1 // 2
+        crpix2 = naxis2 // 2
+        hdr_out['NAXIS1'] = naxis1
+        hdr_out['NAXIS2'] = naxis2
+        hdr_out['CRPIX1'] = crpix1
+        hdr_out['CRPIX2'] = crpix2
 
         # Read the WISE PSF
         psf_file = os.path.join(imaging_dir,
@@ -108,9 +141,15 @@ if __name__ == '__main__':
         psf = psf / psf.sum()
         xpsf = np.arange(psf.shape[1])
         ypsf = np.arange(psf.shape[0])
+        xxpsf = np.outer(np.ones(psf.shape[0]), xpsf) 
+        yypsf = np.outer(ypsf, np.ones(psf.shape[1]))
+        rrpsf = np.sqrt((xxpsf - (psf.shape[1] // 2))**2 +
+                        (yypsf - (psf.shape[0] // 2))**2)
+        psf = psf * (rrpsf < 10.)  # based on where PSF gets noisy
+        psf = psf / psf.sum()
         psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, psf)
 
-        # Read the GALEX data
+        # Read the WISE data
         image_file = os.path.join(imaging_dir,
                                   '{plateifu}-custom-image-{band}.fits.fz')
         image_file = image_file.format(plateifu=plateifu, band=band)
@@ -132,6 +171,8 @@ if __name__ == '__main__':
 
         model_file = os.path.join(model_dir, '{plateifu}-A-{band}.fits')
         model_file = model_file.format(plateifu=plateifu, band=band)
+        umodel_file = os.path.join(model_dir, '{plateifu}-untrimmed-A-{band}.fits')
+        umodel_file = umodel_file.format(plateifu=plateifu, band=band)
         if(os.path.exists(model_file) & (force_model is False)):
             r = reconstruct.ReconstructWCS(filename=model_file)
         else:
@@ -141,10 +182,14 @@ if __name__ == '__main__':
             rall.psf = psf_func
             rall.set_Amatrix()
             coverage = rall.coverage()
-            trim = coverage > 3.e-3
+            trim = coverage > 1.e-1
+
+            if(save_model):
+                os.makedirs(model_dir, exist_ok=True)
+                rall.save_model(umodel_file)
 
             # Create a reconstruct object with only the pixels with coverage
-            pad = 12
+            pad = 20
             r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out,
                                            trim=trim, pad=pad)
             r.psf = psf_func
@@ -159,17 +204,22 @@ if __name__ == '__main__':
         subimage = image[r.trim]
         subinvvar = invvar[r.trim]
 
+        # Set the weights
         r.set_weights()
+
+        # Apply weights to image and ivar
         image_G = r.apply_weights(subimage.flatten())
         var_G = np.diag(r.weights.dot(np.diag(subinvvar.flatten())).dot(r.weights.T)).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
-        wise_manga_file = os.path.join(resampled_dir,
-                                       '{plateifu}-{band}.fits')
-        wise_manga_file = wise_manga_file.format(plateifu=plateifu,
-                                                 band=band)
+        # Apply weights to PSF image
+        psf_samples = r.psf_samples()
+        psf_G = r.apply_weights(psf_samples)
+
         os.makedirs(resampled_dir, exist_ok=True)
         fitsio.write(wise_manga_file, image_G[pad:-pad, pad:-pad],
-                     header=hdr_out, clobber=True)
+                     header=hdr_out, extname='IMAGE', clobber=True)
         fitsio.write(wise_manga_file, ivar_G[pad:-pad, pad:-pad],
-                     header=hdr_out, clobber=False)
+                     header=hdr_out, extname='IVAR', clobber=False)
+        fitsio.write(wise_manga_file, psf_G[pad:-pad, pad:-pad],
+                     header=hdr_out, extname='PSF', clobber=False)

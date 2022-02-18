@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import mnsa.reconstruct as reconstruct
+import mnsa.bandscale as bandscale
 import mnsa.utils.configuration as configuration
 import astropy.visualization as viz
 import marvin.tools.cube
@@ -23,22 +24,36 @@ def image(plateifu=None, version=None, clobber=True):
                               'manga-{plateifu}-LOGCUBE.fits.gz')
     manga_file = manga_file.format(plateifu=plateifu)
 
-    gimage = fitsio.read(manga_file, ext='GIMG') * 4.7
-    rimage = fitsio.read(manga_file, ext='RIMG') * 5.
-    iimage = fitsio.read(manga_file, ext='IIMG') * 6.
+    gscale = 2.2
+    rscale = 1.3
+    iscale = 1.0
+    stretch = 4.8
+    Q = 2.5
+    minimum = - 0.5
 
-    viz.make_lupton_rgb(iimage, rimage, gimage, minimum=-0.1,
-                        stretch=7.0, Q=1.0,
+    wave = fitsio.read(manga_file, ext='WAVE')
+    flux = fitsio.read(manga_file, ext='FLUX')
+    gimage = bandscale.image(band='g', wave=wave, cube=flux) * gscale
+    rimage = bandscale.image(band='r', wave=wave, cube=flux) * rscale
+    iimage = bandscale.image(band='i', wave=wave, cube=flux) * iscale
+
+    viz.make_lupton_rgb(iimage, rimage, gimage, minimum=minimum,
+                        stretch=stretch, Q=Q,
                         filename=manga_file.replace('.fits.gz',
                                                     '.irg.png'))
 
     c = marvin.tools.cube.Cube(plateifu=plateifu)
-    ogimage = fitsio.read(c.filename, ext='GIMG') * 4.7 / 2.
-    orimage = fitsio.read(c.filename, ext='RIMG') * 5. / 2.
-    oiimage = fitsio.read(c.filename, ext='IIMG') * 6. / 2.
+    wave = fitsio.read(c.filename, ext='WAVE')
+    flux = fitsio.read(c.filename, ext='FLUX')
+    ogimage = bandscale.image(band='g', wave=wave, cube=flux) * gscale
+    orimage = bandscale.image(band='r', wave=wave, cube=flux) * rscale
+    oiimage = bandscale.image(band='i', wave=wave, cube=flux) * iscale
+    ogimage = ogimage * 2.25
+    orimage = orimage * 2.25
+    oiimage = oiimage * 2.25
 
-    viz.make_lupton_rgb(oiimage, orimage, ogimage, minimum=-0.1,
-                        stretch=7.0, Q=1.0,
+    viz.make_lupton_rgb(oiimage, orimage, ogimage, minimum=minimum,
+                        stretch=stretch, Q=Q,
                         filename=manga_file.replace('.fits.gz',
                                                     '.orig.irg.png'))
 

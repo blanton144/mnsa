@@ -1,7 +1,70 @@
+import os
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.signal as signal
 import astropy.wcs as wcs
+import astropy.visualization as viz
+import fitsio
+import mnsa.utils.configuration as configuration
+
+
+bandset_settings = dict()
+bandset_settings['dlis'] = {'bands':[{'name':'z', 'scale':1.0},
+                                     {'name':'r', 'scale':1.3},
+                                     {'name':'g', 'scale':2.2}],
+                            'stretch':4.8,
+                            'Q':2.5,
+                            'minimum':- 0.5}
+bandset_settings['wise'] = {'bands':[{'name':'W3', 'scale':0.05},
+                                     {'name':'W2', 'scale':1.5},
+                                     {'name':'W1', 'scale':1.8}],
+                            'stretch':10.,
+                            'Q':2.5,
+                            'minimum':- 0.5}
+
+bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':0.5},
+                                      {'name':'NUV', 'scale':5.5},
+                                      {'name':'FUV', 'scale':5.8}],
+                            'stretch':1.,
+                            'Q':2.5,
+                            'minimum':- 0.05}
+
+
+def image(plateifu=None, version=None, clobber=True,
+          bandset=None):
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+
+    release = cfg['MANGA']['release']
+    plate, ifu = [int(x) for x in plateifu.split('-')]
+
+    resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                 version, 'resampled',
+                                 str(plate), str(plateifu))
+
+    settings = bandset_settings[bandset]
+
+    images = [None, None, None]
+    for indx, band in enumerate(settings['bands']):
+        name = band['name']
+        scale = band['scale']
+
+        resampled_file = os.path.join(resampled_dir,
+                                      'resampled-{plateifu}-{name}.fits')
+        resampled_file = resampled_file.format(plateifu=plateifu,
+                                               name=name)
+
+        images[indx] = fitsio.read(resampled_file) * scale
+
+    outfile = os.path.join(resampled_dir,
+                           'resampled-{plateifu}-{bandset}.png')
+    outfile = outfile.format(bandset=bandset, plateifu=plateifu)
+        
+    viz.make_lupton_rgb(images[0], images[1], images[2],
+                        minimum=settings['minimum'],
+                        stretch=settings['stretch'], Q=settings['Q'],
+                        filename=outfile)
 
 
 class Resample(object):
@@ -90,10 +153,10 @@ class Resample(object):
         nxo = np.int32(self.output_header['NAXIS1'])
         nyo = np.int32(self.output_header['NAXIS2'])
 
-        x = np.outer(np.ones(nyo, dtype=np.float32),
-                     np.arange(nxo, dtype=np.float32))
-        y = np.outer(np.arange(nyo, dtype=np.float32),
-                     np.ones(nxo, dtype=np.float32))
+        y = np.outer(np.ones(nxo, dtype=np.float32),
+                     np.arange(nyo, dtype=np.float32))
+        x = np.outer(np.arange(nxo, dtype=np.float32),
+                     np.ones(nyo, dtype=np.float32))
 
         invvar_fixed = self.invvar
         

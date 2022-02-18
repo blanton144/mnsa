@@ -56,6 +56,10 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='save model')
 
+    parser.add_argument('-k', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
     parser.add_argument('-f', '--force-model', dest='force_model',
                         action='store_true', required=False, default=False,
                         help='force model')
@@ -65,24 +69,30 @@ if __name__ == '__main__':
     plateifu = args.plateifu
     force_model = args.force_model
     save_model = args.save_model
-    invvar_from_image = np.bool(args.invvar_from_image)
+    clobber = args.clobber
+    invvar_from_image = bool(args.invvar_from_image)
 
     pad = 12
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
 
+    if('expand' in cfg['DLIS']):
+        expand = np.int32(cfg['DLIS']['expand'])
+    else:
+        expand = 1
+
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['GALEX']['bands'].split()
 
     resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
                                  version, 'resampled',
-                                 '{p:05}'.format(p=plate),
+                                 '{p}'.format(p=plate),
                                  '{pifu}'.format(pifu=plateifu))
 
     model_dir = os.path.join(os.getenv('MNSA_DATA'),
                              version, 'model',
-                             '{p:05}'.format(p=plate),
+                             '{p}'.format(p=plate),
                              '{pifu}'.format(pifu=plateifu))
 
     imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
@@ -103,7 +113,30 @@ if __name__ == '__main__':
 
     for band in bands:
 
+        galex_manga_file = os.path.join(resampled_dir,
+                                        'resampled-{plateifu}-{band}.fits')
+        galex_manga_file = galex_manga_file.format(plateifu=plateifu,
+                                                   band=band)
+
+        # skip if we have made this file already
+        if(clobber is False):
+            if(os.path.exists(galex_manga_file)):
+                print("File exists already for {f}".format(f=galex_manga_file))
+                continue
+
         hdr_out = copy.deepcopy(hdr_out_orig)
+        naxis1 = (np.int32(hdr_out['NAXIS1']) + 1) * expand - 1
+        naxis2 = (np.int32(hdr_out['NAXIS2']) + 1) * expand - 1
+        if(naxis1 <= 63):
+            naxis1 = 63
+        if(naxis2 <= 63):
+            naxis2 = 63
+        crpix1 = naxis1 // 2
+        crpix2 = naxis2 // 2
+        hdr_out['NAXIS1'] = naxis1
+        hdr_out['NAXIS2'] = naxis2
+        hdr_out['CRPIX1'] = crpix1
+        hdr_out['CRPIX2'] = crpix2
 
         # Read the GALEX PSF
         psf_file = os.path.join(imaging_dir,
@@ -114,6 +147,12 @@ if __name__ == '__main__':
         psf = psf / psf.sum()
         xpsf = np.arange(psf.shape[1])
         ypsf = np.arange(psf.shape[0])
+        xxpsf = np.outer(np.ones(psf.shape[0]), xpsf) 
+        yypsf = np.outer(ypsf, np.ones(psf.shape[1]))
+        rrpsf = np.sqrt((xxpsf - (psf.shape[1] // 2))**2 +
+                        (yypsf - (psf.shape[0] // 2))**2)
+        psf = psf * (rrpsf < 30.)  # based on where PSF gets noisy
+        psf = psf / psf.sum()
         psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, psf)
 
         # Read the GALEX data
@@ -144,6 +183,8 @@ if __name__ == '__main__':
 
         model_file = os.path.join(model_dir, '{plateifu}-A-{band}.fits')
         model_file = model_file.format(plateifu=plateifu, band=band)
+        umodel_file = os.path.join(model_dir, '{plateifu}-untrimmed-A-{band}.fits')
+        umodel_file = umodel_file.format(plateifu=plateifu, band=band)
         if(os.path.exists(model_file) & (force_model is False)):
             r = reconstruct.ReconstructWCS(filename=model_file)
         else:
@@ -154,6 +195,10 @@ if __name__ == '__main__':
             rall.set_Amatrix()
             coverage = rall.coverage()
             trim = coverage > 3.e-3
+
+            if(save_model):
+                os.makedirs(model_dir, exist_ok=True)
+                rall.save_model(umodel_file)
 
             # Create a reconstruct object with only the pixels with coverage
             r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out,
@@ -175,12 +220,8 @@ if __name__ == '__main__':
         var_G = np.diag(r.weights.dot(r.weights.T) * sig**2).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
-        galex_manga_file = os.path.join(resampled_dir,
-                                        '{plateifu}-{band}.fits')
-        galex_manga_file = galex_manga_file.format(plateifu=plateifu,
-                                                   band=band)
         os.makedirs(resampled_dir, exist_ok=True)
         fitsio.write(galex_manga_file, image_G[pad:-pad, pad:-pad],
-                     header=hdr_out, clobber=True)
+                     header=hdr_out, extname='IMAGE', clobber=True)
         fitsio.write(galex_manga_file, ivar_G[pad:-pad, pad:-pad],
-                     header=hdr_out, clobber=False)
+                     header=hdr_out, extname='IVAR', clobber=False)
