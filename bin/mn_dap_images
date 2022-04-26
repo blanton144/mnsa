@@ -17,16 +17,32 @@ import argparse
 import os
 import sys
 import numpy as np
-import mnsa.manga as manga
+import mnsa.mnsa as mnsa
 import fitsio
 import multiprocessing
 
-clobber = False
 
-
-def call_crr(indx):
-    print("Doing cube: {plateifu}".format(plateifu=drp['plateifu'][indx]), flush=True)
-    manga.crr(plateifu=drp['plateifu'][indx], version=version, clobber=clobber)
+def create_image(indx):
+    plateifu = drp['plateifu'][indx]
+    print("Doing cube: {plateifu}".format(plateifu=plateifu), flush=True)
+    m = mnsa.MNSA(version=version, plateifu=plateifu, dr17=dr17)
+    try:
+        m.read_cube()
+        m.read_maps()
+    except:
+        print("Could not read cube and map.")
+        return
+    outdir = os.path.join(os.getenv('MNSA_DATA'), version,
+                          'pngs', str(m.plate), str(m.ifu))
+    os.makedirs(outdir, exist_ok=True)
+    imagetype = 'Ha-O3-Grey'
+    if(dr17 is False):
+        outfile = os.path.join(outdir, 'mnsa-{plateifu}-{it}.png')
+        outfile = outfile.format(plateifu=plateifu, it=imagetype)
+    else:
+        outfile = os.path.join(outdir, 'dr17-{plateifu}-{it}.png')
+        outfile = outfile.format(plateifu=plateifu, it=imagetype)
+    m.image(imagetype='Ha-O3-Grey', filename=outfile)
     return
 
 
@@ -46,15 +62,16 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', dest='end',
                         type=np.int32, help='end index', default=-1)
 
-    parser.add_argument('-c', '--clobber', dest='clobber',
-                        action='store_true', required=False, default=False,
-                        help='clobber existing files')
+    parser.add_argument('-o', '--old', dest='dr17',
+                        required=False, help='dr17',
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args()
     version = args.version
     drp_start = args.start
     drp_end = args.end
-    clobber = args.clobber
+    dr17 = args.dr17
 
     drpfile = os.path.join(os.getenv('MNSA_DATA'),
                            'samples', '{version}',
@@ -72,4 +89,4 @@ if __name__ == '__main__':
 
     iall = np.arange(len(drp), dtype=np.int32)
     with multiprocessing.Pool() as pool:
-        pool.map(call_crr, iall)
+        pool.map(create_image, iall)

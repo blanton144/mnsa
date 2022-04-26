@@ -1,0 +1,83 @@
+<html><head>
+<style>
+    table, th, tr, td {border: 1px solid black}
+</style>
+<body>
+
+<table style="border: 1px solid black;" cellspacing=0px>
+	<tbody>
+		<tr>
+			<td> Total DRP</td> <td>{{ntotal}}</td>
+		</tr>
+		<tr>
+			<td> MaNGA Cube Done</td> <td>{{nmanga_cube_done}} of {{nmanga_cube_mnsa}}</td>
+		</tr>
+		<tr>
+			<td> DLIS Done</td> <td>{{ndlis_resampled_done}} of {{ndlis_coadd_done}}</td>
+		</tr>
+		<tr>
+			<td> WISE Done</td> <td>{{nwise_resampled_done}} of {{nwise_coadd_done}}</td>
+		</tr>
+		<tr>
+			<td> GALEX Done</td> <td>{{ngalex_resampled_done}} of {{ngalex_coadd_done}}</td>
+		</tr>
+	</tbody>
+</table>
+
+<table style="border: 1px solid black;" cellspacing=0px>
+    <thead>
+        <tr>
+            <th>plate-ifu</th> <th>MaNGA Cube</th> <th>GALEX</th>
+						<th>DLIS</th>  <th>WISE</th>
+        </tr>
+    </thead>
+		<tbody>
+			{% for i in range(0, ntotal - 1) %}
+			<tr>
+				<td><a href="plateifu.html?plate={{plate[i]}}&ifu={{ifu[i]}}">
+						{{plateifu[i]}}</a></td>
+				{% if manga_cube_done[i] == "True" %} 
+				<td style="background-color:green">DONE</td>
+				{% elif manga_cube_mnsa[i] == "False"  %}
+				<td style="background-color:grey">BAD DATA</td>
+				{% else %}
+				<td style="background-color:RED">NOT</td>
+				{% endif %}
+
+				{% if galex_resampled_done[i] == "True" %} 
+				<td style="background-color:green">DONE</td>
+				{% elif manga_cube_mnsa[i] == "False"  %}
+				<td style="background-color:grey">BAD DATA</td>
+				{% elif galex_coadd_empty[i] == "True" %} 
+				<td style="background-color:grey">NO DATA</td>
+				{% elif galex_coadd_done[i] == "False" %} 
+				<td style="background-color:grey">NO COADD</td>
+				{% else %}
+				<td style="background-color:RED">NOT</td>
+				{% endif %}
+
+				{% if dlis_resampled_done[i] == "True" %} 
+				<td style="background-color:green">DONE</td>
+				{% elif manga_cube_mnsa[i] == "False"  %}
+				<td style="background-color:grey">BAD DATA</td>
+				{% elif dlis_coadd_done[i] == "False" %} 
+				<td style="background-color:grey">NO COADD</td>
+				{% else %}
+				<td style="background-color:RED">NOT</td>
+				{% endif %}
+
+				{% if wise_resampled_done[i] == "True" %} 
+				<td style="background-color:green">DONE</td>
+				{% elif manga_cube_mnsa[i] == "False"  %}
+				<td style="background-color:grey">BAD DATA</td>
+				{% elif wise_coadd_done[i] == "False" %} 
+				<td style="background-color:grey">NO COADD</td>
+				{% else %}
+				<td style="background-color:RED">NOT</td>
+				{% endif %}
+			</tr>
+			{% endfor %}
+     </tbody}
+</table>
+</body>
+</html>

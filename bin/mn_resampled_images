@@ -17,16 +17,28 @@ import argparse
 import os
 import sys
 import numpy as np
-import mnsa.manga as manga
+import mnsa.resample as resample
 import fitsio
 import multiprocessing
 
-clobber = False
 
-
-def call_crr(indx):
+def create_image(indx):
     print("Doing cube: {plateifu}".format(plateifu=drp['plateifu'][indx]), flush=True)
-    manga.crr(plateifu=drp['plateifu'][indx], version=version, clobber=clobber)
+    try:
+        resample.image(plateifu=drp['plateifu'][indx], version=version,
+                       clobber=True, bandset='dlis')
+    except OSError:
+        print("Could not find DLIS images for {plateifu}".format(plateifu=drp['plateifu'][indx]))
+    try:
+        resample.image(plateifu=drp['plateifu'][indx], version=version,
+                       clobber=True, bandset='wise')
+    except OSError:
+        print("Could not find WISE images for {plateifu}".format(plateifu=drp['plateifu'][indx]))
+    try:
+        resample.image(plateifu=drp['plateifu'][indx], version=version,
+                       clobber=True, bandset='galex')
+    except OSError:
+        print("Could not find GALEX images for {plateifu}".format(plateifu=drp['plateifu'][indx]))
     return
 
 
@@ -46,15 +58,10 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', dest='end',
                         type=np.int32, help='end index', default=-1)
 
-    parser.add_argument('-c', '--clobber', dest='clobber',
-                        action='store_true', required=False, default=False,
-                        help='clobber existing files')
-
     args = parser.parse_args()
     version = args.version
     drp_start = args.start
     drp_end = args.end
-    clobber = args.clobber
 
     drpfile = os.path.join(os.getenv('MNSA_DATA'),
                            'samples', '{version}',
@@ -72,4 +79,4 @@ if __name__ == '__main__':
 
     iall = np.arange(len(drp), dtype=np.int32)
     with multiprocessing.Pool() as pool:
-        pool.map(call_crr, iall)
+        pool.map(create_image, iall)

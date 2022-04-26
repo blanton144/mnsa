@@ -1,0 +1,216 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_done
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import jinja2
+import numpy as np
+import mnsa.manga as manga
+import mnsa.utils.configuration as configuration
+import fitsio
+import json
+import multiprocessing
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-n', '--no-clobber', dest='noclobber',
+                        action='store_true',
+                        required=False, default=False,
+                        help='use existing fits output to make html')
+
+    args = parser.parse_args()
+    version = args.version
+    noclobber = args.noclobber
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+    daptype = cfg['MANGA']['daptype']
+
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader("mnsa"),
+        autoescape=jinja2.select_autoescape()
+    )
+
+    donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+                            'mn-{version}-done.fits'.format(version=version))
+
+    if((not os.path.exists(donefile)) or (not noclobber)):
+
+        drpfile = os.path.join(os.getenv('MNSA_DATA'),
+                               'samples', '{version}',
+                               'drpall-v3_1_1.fits')
+        drpfile = drpfile.format(version=version)
+        drp = fitsio.read(drpfile)
+
+        samplefile = os.path.join(os.getenv('MNSA_DATA'),
+                                  'samples', '{version}',
+                                  'drpall-{version}.fits')
+        samplefile = samplefile.format(version=version)
+        sample = fitsio.read(samplefile)
+
+        done_dtype = [('plateifu', np.unicode, 20),
+                      ('plate', np.unicode, 20),
+                      ('ifu', np.unicode, 20),
+                      ('manga_cube_mnsa', bool),
+                      ('wise_coadd_done', bool),
+                      ('dlis_coadd_done', bool),
+                      ('galex_coadd_empty', bool),
+                      ('galex_coadd_done', bool),
+                      ('manga_cube_done', bool),
+                      ('wise_resampled_done', bool),
+                      ('dlis_resampled_done', bool),
+                      ('galex_resampled_done', bool),
+                      ('dap_done', bool)]
+        done = np.zeros(len(drp), dtype=done_dtype)
+        
+        bands = dict()
+        bands['wise_resampled'] = ['W1', 'W2', 'W3', 'W4']
+        bands['dlis_resampled']  = ['g', 'r', 'z']
+        bands['galex_resampled']  = ['FUV', 'NUV']
+
+        coadd_bands = dict()
+        coadd_bands['wise_coadd'] = bands['wise_resampled']
+        coadd_bands['dlis_coadd']  = bands['dlis_resampled']
+        coadd_bands['galex_coadd']  = bands['galex_resampled']
+        
+        for i, cdrp in enumerate(drp):
+            plate = cdrp['plate']
+            plateifu = cdrp['plateifu']
+            ifu = cdrp['ifudsgn']
+            done['plateifu'][i] = plateifu
+            done['plate'][i] = str(plate)
+            done['ifu'][i] = str(cdrp['ifudsgn'])
+
+            if(plateifu in sample['plateifu']):
+                done['manga_cube_mnsa'][i] = True
+
+            manga_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                     version, 'manga', 'redux', version,
+                                     str(plate), 'stack')
+            manga_file = os.path.join(manga_dir,
+                                      'manga-{plateifu}-LOGCUBE.fits.gz')
+            manga_file = manga_file.format(plateifu=plateifu)
+            if(os.path.exists(manga_file)):
+                done['manga_cube_done'][i] = 1
+
+            resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                         version, 'resampled',
+                                         str(plate), str(plateifu))
+        
+            for survey in bands:
+                cbands = bands[survey]
+                cdone = True
+                for band in cbands:
+                    resampled_file = os.path.join(resampled_dir,
+                                                  'resampled-{plateifu}-{band}.fits')
+                    resampled_file = resampled_file.format(plateifu=plateifu,
+                                                           band=band)
+                    if(not os.path.exists(resampled_file)):
+                        cdone = False
+                done['{survey}_done'.format(survey=survey)][i] = cdone
+
+
+            coadd_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                     version, 'imaging',
+                                     '{p:05}'.format(p=plate),
+                                     str(plateifu))
+        
+            for survey in coadd_bands:
+                cbands = coadd_bands[survey]
+                cdone = True
+                if(survey == 'galex_coadd'):
+                    cempty = False
+                for band in cbands:
+                    coadd_file = os.path.join(coadd_dir,
+                                              '{plateifu}-custom-image-{band}.fits.fz')
+                    coadd_file = coadd_file.format(plateifu=plateifu,
+                                                   band=band)
+                    if(not os.path.exists(coadd_file)):
+                        cdone = False
+                        break
+                    coadd_file = os.path.join(coadd_dir,
+                                              '{plateifu}-custom-invvar-{band}.fits.fz')
+                    coadd_file = coadd_file.format(plateifu=plateifu,
+                                                   band=band)
+                    if(not os.path.exists(coadd_file)):
+                        cdone = False
+                        break
+                    else:
+                        if(survey == 'galex_coadd'):
+                            invvar = fitsio.read(coadd_file)
+                            if((invvar.max() == 0.) &
+                               (invvar.min() == 0.)):
+                                cempty = True
+                                cdone = False
+                                break
+                done['{survey}_done'.format(survey=survey)][i] = cdone
+                if(survey == 'galex_coadd'):
+                    done['{survey}_empty'.format(survey=survey)][i] = cempty
+
+            dap_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                   version, 'manga', 'analysis',
+                                   version, version, daptype,
+                                   str(plate), str(ifu))
+            dap_file = os.path.join(dap_dir, 'manga-{p}-{t}-{d}.fits.gz')
+            dap_cube = dap_file.format(p=plateifu, d=daptype,
+                                       t='LOGCUBE')
+            dap_maps = dap_file.format(p=plateifu, d=daptype,
+                                       t='MAPS')
+            if(os.path.exists(dap_cube) &
+               os.path.exists(dap_maps)):
+                done['dap_done'][i] = True
+            else:
+                done['dap_done'][i] = False
+
+        # Fix galex cases
+        iempty = np.where(done['galex_coadd_empty'])[0]
+        done['galex_resampled_done'][iempty] = False
+            
+        fitsio.write(donefile, done, clobber=True)
+    else:
+        done = fitsio.read(donefile)
+
+    donedict = dict()
+    for name in done.dtype.names:
+        donedict[name] = [str(x) for x in done[name]]
+
+    donedict['ntotal'] = len(done)
+    donedict['nmanga_cube_mnsa'] = done['manga_cube_mnsa'].sum()
+    donedict['nmanga_cube_done'] = done['manga_cube_done'].sum()
+    donedict['ndlis_resampled_done'] = done['dlis_resampled_done'].sum()
+    donedict['nwise_resampled_done'] = done['wise_resampled_done'].sum()
+    donedict['ngalex_resampled_done'] = done['galex_resampled_done'].sum()
+    donedict['ndlis_coadd_done'] = done['dlis_coadd_done'].sum()
+    donedict['nwise_coadd_done'] = done['wise_coadd_done'].sum()
+    donedict['ngalex_coadd_done'] = done['galex_coadd_done'].sum()
+
+    template = env.get_template('mn-done-template.html')
+    page = template.render(donedict)
+
+    html_file = os.path.join(os.getenv('MNSA_DATA'), version,
+                             'mn-done.html')
+    fp = open(html_file, 'w')
+    fp.write(page)
+    fp.close()

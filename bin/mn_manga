@@ -33,8 +33,13 @@ if __name__ == '__main__':
                         required=True, type=str,
                         help='plate-ifu for MaNGA observations')
 
+    parser.add_argument('-c', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
+    clobber = args.clobber
 
-    manga.crr(plateifu=plateifu, version=version, clobber=False)
+    manga.crr(plateifu=plateifu, version=version, clobber=clobber)

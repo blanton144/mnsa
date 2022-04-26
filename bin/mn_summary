@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_summary
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import numpy as np
+import mnsa.manga as manga
+import fitsio
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-n', '--no-clobber', dest='noclobber',
+                        action='store_true',
+                        required=False, default=False,
+                        help='use existing fits output to make html')
+
+    args = parser.parse_args()
+    version = args.version
+    noclobber = args.noclobber
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mn-{version}-summary.fits'.format(version=version))
+
+    if((not os.path.exists(sumfile)) or (not noclobber)):
+
+        donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+                                'mn-{version}-done.fits'.format(version=version))
+
+        done = fitsio.read(donefile)
+
+        drpfile = os.path.join(os.getenv('MNSA_DATA'),
+                               'samples', '{version}',
+                               'drpall-v3_1_1.fits')
+        drpfile = drpfile.format(version=version)
+
+        samplefile = os.path.join(os.getenv('MNSA_DATA'),
+                                  'samples', '{version}',
+                                  'drpall-{version}.fits')
+        samplefile = drpfile.format(version=version)
+        
+        drp = fitsio.read(drpfile)
+        sample = fitsio.read(samplefile)
+
+        sum_dtype = drp.dtype.descr
+        exclude = ['plate', 'ifu', 'plateifu']
+        for x in done.dtype.descr:
+            if (x[0] not in exclude):
+                sum_dtype.append(x)
+
+        summary = np.zeros(len(drp), dtype=sum_dtype)
+        for n in summary.dtype.names:
+            if(n in drp.dtype.names):
+                summary[n] = drp[n]
+            if(n in done.dtype.names):
+                summary[n] = done[n]
+
+        fitsio.write(sumfile, summary, clobber=True)
+
+
+    

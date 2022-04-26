@@ -71,6 +71,7 @@ if __name__ == '__main__':
 
     manga_dir = os.path.join(os.getenv('MNSA_DATA'),
                              version, 'manga', 'redux',
+                             version,
                              '{p}'.format(p=plate),
                              'stack')
     manga_file = os.path.join(manga_dir,

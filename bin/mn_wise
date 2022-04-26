@@ -51,7 +51,7 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='save model')
 
-    parser.add_argument('-k', '--clobber', dest='clobber',
+    parser.add_argument('-c', '--clobber', dest='clobber',
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
 
@@ -96,6 +96,7 @@ if __name__ == '__main__':
 
     manga_dir = os.path.join(os.getenv('MNSA_DATA'),
                              version, 'manga', 'redux',
+                             version,
                              '{p}'.format(p=plate),
                              'stack')
     manga_file = os.path.join(manga_dir,
@@ -115,7 +116,7 @@ if __name__ == '__main__':
         # skip if we have made this file already
         if(clobber is False):
             if(os.path.exists(wise_manga_file)):
-                print("File exists already for {f}".format(f=wise_manga_file))
+                print("plate-ifu {p}: File exists already for {f}".format(f=wise_manga_file, p=plateifu), flush=True)
                 continue
 
         hdr_out = copy.deepcopy(hdr_out_orig)
@@ -136,7 +137,12 @@ if __name__ == '__main__':
         psf_file = os.path.join(imaging_dir,
                                 '{plateifu}-custom-psf-{band}.fits.fz')
         psf_file = psf_file.format(plateifu=plateifu, band=band)
-        print("Reading PSF: {f}".format(f=psf_file))
+
+        if(os.path.exists(psf_file) is False):
+            print("plate-ifu {p}: Skipping case where WISE PSF missing: {p}".format(p=plateifu), flush=True)
+            continue 
+
+        print("plate-ifu {p}: Reading PSF: {f}".format(f=psf_file, p=plateifu), flush=True)
         psf = fitsio.read(psf_file)
         psf = psf / psf.sum()
         xpsf = np.arange(psf.shape[1])
@@ -153,13 +159,13 @@ if __name__ == '__main__':
         image_file = os.path.join(imaging_dir,
                                   '{plateifu}-custom-image-{band}.fits.fz')
         image_file = image_file.format(plateifu=plateifu, band=band)
-        print("Reading image: {f}".format(f=image_file))
+        print("plate-ifu {p}: Reading image: {f}".format(f=image_file, p=plateifu), flush=True)
         image, hdr_in = fitsio.read(image_file, header=True)
 
         invvar_file = os.path.join(imaging_dir,
                                    '{plateifu}-custom-invvar-{band}.fits.fz')
         invvar_file = invvar_file.format(plateifu=plateifu, band=band)
-        print("Reading invvar: {f}".format(f=invvar_file))
+        print("plate-ifu {p}: Reading invvar: {f}".format(f=invvar_file, p=plateifu), flush=True)
         invvar = fitsio.read(invvar_file)
 
         hdr_in['NAXIS1'] = image.shape[0]
@@ -178,8 +184,11 @@ if __name__ == '__main__':
         else:
             # Create a reconstruct object in order to calculate which
             # input pixels influence the output
+            print("plate-ifu {p}: Making big reconstruction to evaluate coverage".format(p=plateifu), flush=True)
             rall = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out)
             rall.psf = psf_func
+
+            print("plate-ifu {p}: Setting big A matrix".format(p=plateifu), flush=True)
             rall.set_Amatrix()
             coverage = rall.coverage()
             trim = coverage > 1.e-1
@@ -188,12 +197,19 @@ if __name__ == '__main__':
                 os.makedirs(model_dir, exist_ok=True)
                 rall.save_model(umodel_file)
 
+            rall = 0
+
             # Create a reconstruct object with only the pixels with coverage
             pad = 20
+            print("plate-ifu {p}: Making final reconstruction".format(p=plateifu), flush=True)
             r = reconstruct.ReconstructWCS(inwcs=wcs_in, outwcs=wcs_out,
                                            trim=trim, pad=pad)
             r.psf = psf_func
+
+            print("plate-ifu {p}: Setting final A matrix".format(p=plateifu), flush=True)
             r.set_Amatrix()
+
+            print("plate-ifu {p}: Performing SVD".format(p=plateifu), flush=True)
             r.set_svd()
 
             if(save_model):
@@ -201,15 +217,19 @@ if __name__ == '__main__':
                 r.save_model(model_file)
 
         # Set the input array
-        subimage = image[r.trim]
-        subinvvar = invvar[r.trim]
+        subimage = np.float32(image[r.trim])
+        subinvvar = np.float32(invvar[r.trim])
 
         # Set the weights
+        print("plate-ifu {p}: Setting weights".format(p=plateifu), flush=True)
         r.set_weights()
 
         # Apply weights to image and ivar
+        print("plate-ifu {p}: Applying weights to image".format(p=plateifu), flush=True)
         image_G = r.apply_weights(subimage.flatten())
-        var_G = np.diag(r.weights.dot(np.diag(subinvvar.flatten())).dot(r.weights.T)).reshape((r.nx, r.ny))
+
+        print("plate-ifu {p}: Applying weights to invvar".format(p=plateifu), flush=True)
+        var_G = np.diag(r.weights.dot(np.diag((1. / subinvvar).flatten())).dot(r.weights.T)).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
         # Apply weights to PSF image
@@ -223,3 +243,5 @@ if __name__ == '__main__':
                      header=hdr_out, extname='IVAR', clobber=False)
         fitsio.write(wise_manga_file, psf_G[pad:-pad, pad:-pad],
                      header=hdr_out, extname='PSF', clobber=False)
+
+        r = 0

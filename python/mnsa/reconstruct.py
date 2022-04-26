@@ -962,11 +962,11 @@ class Reconstruct(object):
         mask_hdr.header['HDUCLAS1'] = 'CUBE'
 
         # SPECRES
-        disp_hdr = fits.ImageHDU(name='SPECRES', data=self.disp,
+        disp_hdr = fits.ImageHDU(name='LSFPOST', data=self.disp,
                                  header=self.rss.data['SPECRES'].header)
 
         # PRESPECRES
-        predisp_hdr = fits.ImageHDU(name='PRESPECRES', data=self.predisp,
+        predisp_hdr = fits.ImageHDU(name='LSFPRE', data=self.predisp,
                                     header=self.rss.data['PRESPECRES'].header)
 
         # IMG & PSF for each band

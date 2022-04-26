@@ -6,7 +6,7 @@ import os
 
 
 def image(band=None, wave=None, cube=None):
-    """ calculate FWHM for given image
+    """Calculate image from cube
 
     Parameters:
     ----------

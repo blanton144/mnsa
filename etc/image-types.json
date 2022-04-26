@@ -1,0 +1,16 @@
+{"Ha-O3-Grey":
+ {"images": {"Ha": {"file": "maps", "ext": "EMLINE_GFLUX", "channel": "Ha-6564"},
+						 "O3": {"file": "maps", "ext": "EMLINE_GFLUX", "channel": "OIII-5008"},
+						 "r":  {"file": "cube", "ext": "RIMG", "channel": ""}},
+	"R": {"r": 1.9, "Ha": 0.9},
+	"G": {"r": 1.9, "O3": 1.5},
+	"B": {"r": 1.9},
+	"Rscale": 0.4, 
+	"Gscale": 0.4, 
+	"Bscale": 0.4, 
+	"stretch": 2.0,
+	"Q": 5.0,
+	"minimum": 0.0
+ }
+}
+	

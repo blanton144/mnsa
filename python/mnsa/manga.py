@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import mnsa.mnsa as mnsa
 import mnsa.reconstruct as reconstruct
 import mnsa.bandscale as bandscale
 import mnsa.utils.configuration as configuration
@@ -10,19 +11,8 @@ import fitsio
 
 def image(plateifu=None, version=None, clobber=True):
 
-    mnsa_config = configuration.MNSAConfig(version=version)
-    cfg = mnsa_config.cfg
-
-    release = cfg['MANGA']['release']
-    plate, ifu = [int(x) for x in plateifu.split('-')]
-
-    manga_dir = os.path.join(os.getenv('MNSA_DATA'),
-                             version, 'manga', 'redux',
-                             str(plate), 'stack')
-
-    manga_file = os.path.join(manga_dir,
-                              'manga-{plateifu}-LOGCUBE.fits.gz')
-    manga_file = manga_file.format(plateifu=plateifu)
+    m = mnsa.MNSA(version=version, plateifu=plateifu)
+    m.read_cube()
 
     gscale = 2.2
     rscale = 1.3
@@ -31,16 +21,15 @@ def image(plateifu=None, version=None, clobber=True):
     Q = 2.5
     minimum = - 0.5
 
-    wave = fitsio.read(manga_file, ext='WAVE')
-    flux = fitsio.read(manga_file, ext='FLUX')
+    wave = m.cube['WAVE'].read()
+    flux = m.cube['FLUX'].read()
     gimage = bandscale.image(band='g', wave=wave, cube=flux) * gscale
     rimage = bandscale.image(band='r', wave=wave, cube=flux) * rscale
     iimage = bandscale.image(band='i', wave=wave, cube=flux) * iscale
 
     viz.make_lupton_rgb(iimage, rimage, gimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=manga_file.replace('.fits.gz',
-                                                    '.irg.png'))
+                        filename=m.manga_irg_png)
 
     c = marvin.tools.cube.Cube(plateifu=plateifu)
     wave = fitsio.read(c.filename, ext='WAVE')
@@ -54,8 +43,8 @@ def image(plateifu=None, version=None, clobber=True):
 
     viz.make_lupton_rgb(oiimage, orimage, ogimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=manga_file.replace('.fits.gz',
-                                                    '.orig.irg.png'))
+                        filename=m.manga_irg_png.replace('irg.png',
+                                                         'orig.irg.png'))
 
 
     return
@@ -73,7 +62,7 @@ def crr(plateifu=None, version=None, clobber=True):
 
     manga_dir = os.path.join(os.getenv('MNSA_DATA'),
                              version, 'manga', 'redux',
-                             str(plate), 'stack')
+                             version, str(plate), 'stack')
 
     manga_file = os.path.join(manga_dir,
                               'manga-{plateifu}-LOGCUBE')

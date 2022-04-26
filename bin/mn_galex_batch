@@ -27,7 +27,7 @@ def call_galex(i):
     plateifu = drpall['plateifu'][i]
     print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
     if(clobber):
-        subprocess.call(['mn_galex', '-p', plateifu, '-v', version, '-k'])
+        subprocess.call(['mn_galex', '-p', plateifu, '-v', version, '-c'])
     else:
         subprocess.call(['mn_galex', '-p', plateifu, '-v', version])
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--end', dest='end',
                         type=np.int32, help='end index', default=-1)
 
-    parser.add_argument('-k', '--clobber', dest='clobber',
+    parser.add_argument('-c', '--clobber', dest='clobber',
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
 
@@ -71,6 +71,6 @@ if __name__ == '__main__':
     drpall = drpall[drp_start:drp_end + 1]
 
     iall = np.arange(len(drpall), dtype=np.int32)
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(4) as pool:
         pool.map(call_galex, iall)
         

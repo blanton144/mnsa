@@ -12,22 +12,22 @@ bandset_settings = dict()
 bandset_settings['dlis'] = {'bands':[{'name':'z', 'scale':1.0},
                                      {'name':'r', 'scale':1.3},
                                      {'name':'g', 'scale':2.2}],
-                            'stretch':4.8,
-                            'Q':2.5,
-                            'minimum':- 0.5}
-bandset_settings['wise'] = {'bands':[{'name':'W3', 'scale':0.05},
-                                     {'name':'W2', 'scale':1.5},
-                                     {'name':'W1', 'scale':1.8}],
-                            'stretch':10.,
-                            'Q':2.5,
-                            'minimum':- 0.5}
+                            'stretch':5.,
+                            'Q':1.5,
+                            'minimum':- 0.1}
+bandset_settings['wise'] = {'bands':[{'name':'W3', 'scale':0.005},
+                                     {'name':'W2', 'scale':0.10},
+                                     {'name':'W1', 'scale':0.10}],
+                            'stretch':2.,
+                            'Q':3.5,
+                            'minimum':- 0.1}
 
-bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':0.5},
-                                      {'name':'NUV', 'scale':5.5},
-                                      {'name':'FUV', 'scale':5.8}],
-                            'stretch':1.,
-                            'Q':2.5,
-                            'minimum':- 0.05}
+bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':1.0},
+                                      {'name':'NUV', 'scale':40.5},
+                                      {'name':'FUV', 'scale':40.8}],
+                            'stretch':2.,
+                            'Q':7.5,
+                            'minimum':- 0.001}
 
 
 def image(plateifu=None, version=None, clobber=True,

@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_plateifu_jsons
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import json
+import numpy as np
+import fitsio
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    drpfile = os.path.join(os.getenv('MNSA_DATA'),
+                           'samples', '{version}',
+                           'drpall-{version}.fits')
+    drpfile = drpfile.format(version=version)
+
+    drp = fitsio.read(drpfile)
+
+    plates = [str(x) for x in np.unique(drp['plate'])]
+
+    json_str = json.dumps(plates)
+
+    plates_json_file = os.path.join(os.getenv('MNSA_DATA'),
+                                    '{version}',
+                                    'plates.json')
+    plates_json_file = plates_json_file.format(version=version)
+    fp = open(plates_json_file, "w")
+    fp.write("var plates = {json_str};".format(json_str=json_str))
+    fp.close()
+
+    names = ['mangaid', 'ifura', 'ifudec',
+             'mngtarg1', 'mngtarg2', 'mngtarg3', 
+             'nexp', 'seemed', 'z', 'nsa_nsaid',
+             'nsa_z', 'nsa_zdist', 'nsa_elpetro_absmag',
+             'nsa_elpetro_ba', 'nsa_elpetro_th50_r', 'nsa_elpetro_phi']
+
+    names = ['mangaid', 'ifura', 'ifudec']
+
+    plateifus = dict()
+    for cdrp in drp:
+        plateifu = dict()
+        for n in names:
+            plateifu[n] = str(cdrp[n])
+        plateifus[cdrp['plateifu']] = plateifu
+
+    json_str = json.dumps(plateifus)
+
+    plateifus_json_file = os.path.join(os.getenv('MNSA_DATA'),
+                                       '{version}',
+                                       'plateifus.json')
+    plateifus_json_file = plateifus_json_file.format(version=version)
+    fp = open(plateifus_json_file, "w")
+    fp.write("var plateifus = {json_str};".format(json_str=json_str))
+    fp.close()
