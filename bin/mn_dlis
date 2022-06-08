@@ -16,7 +16,6 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
-import copy
 import numpy as np
 import fitsio
 import mnsa.utils.configuration as configuration
@@ -36,7 +35,7 @@ if __name__ == '__main__':
                         type=str, required=True,
                         help='plate-ifu for MaNGA observations')
 
-    parser.add_argument('-k', '--clobber', dest='clobber',
+    parser.add_argument('-c', '--clobber', dest='clobber',
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
 
@@ -52,17 +51,17 @@ if __name__ == '__main__':
     plate, ifu = [int(x) for x in plateifu.split('-')]
     bands = cfg['DLIS']['bands'].split()
 
-    if('expand' in cfg['DLIS']):
-        expand = np.int32(cfg['DLIS']['expand'])
-    else:
-        expand = 1
-
     resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
                                  version, 'resampled',
                                  '{p}'.format(p=plate),
                                  '{pifu}'.format(pifu=plateifu))
-    if(not os.path.exists(resampled_dir)):
-        os.makedirs(resampled_dir)
+
+    mask_file = os.path.join(resampled_dir,
+                             'resampled-{plateifu}-mask.fits')
+    mask_file = mask_file.format(plateifu=plateifu)
+    if(not os.path.exists(mask_file)):
+        print("Need mask file to exist first: {m}".format(m=mask_file))
+        sys.exit(1)
 
     imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
                                version, 'imaging',
@@ -78,10 +77,16 @@ if __name__ == '__main__':
                               'manga-{plateifu}-LOGCUBE.fits.gz')
     manga_file = manga_file.format(plateifu=plateifu)
 
-    hdr_out_orig = fitsio.read_header(manga_file, ext='FLUX')
+    if(not os.path.exists(manga_file)):
+        print("MaNGA file not found: {m}".format(m=manga_file))
+        sys.exit(1)
+
     psf_out = fitsio.read(manga_file, ext='RPSF')
 
     for band in bands:
+        # Read in the header again in case it was altered below
+        hdr_out = fitsio.read_header(mask_file, ext='MASK')
+
         dlis_manga_file = os.path.join(resampled_dir,
                                        'resampled-{plateifu}-{band}.fits')
         dlis_manga_file = dlis_manga_file.format(plateifu=plateifu, band=band)
@@ -91,29 +96,23 @@ if __name__ == '__main__':
                 print("File exists already for {f}".format(f=dlis_manga_file))
                 continue
 
-        hdr_out = copy.deepcopy(hdr_out_orig)
-        naxis1 = (np.int32(hdr_out['NAXIS1']) + 1) * expand - 1
-        naxis2 = (np.int32(hdr_out['NAXIS2']) + 1) * expand - 1
-        if(naxis1 <= 63):
-            naxis1 = 63
-        if(naxis2 <= 63):
-            naxis2 = 63
-        crpix1 = naxis1 // 2
-        crpix2 = naxis2 // 2
-        hdr_out['NAXIS1'] = naxis1
-        hdr_out['NAXIS2'] = naxis2
-        hdr_out['CRPIX1'] = crpix1
-        hdr_out['CRPIX2'] = crpix2
-
         dlis_file = os.path.join(imaging_dir,
                                  '{plateifu}-custom-image-{band}.fits.fz')
         dlis_file = dlis_file.format(plateifu=plateifu, band=band)
+
+        if(not os.path.exists(dlis_file)):
+            print("DLIS file not found: {m}".format(m=dlis_file))
+            sys.exit(1)
 
         image, hdr_in = fitsio.read(dlis_file, header=True)
 
         invvar_file = os.path.join(imaging_dir,
                                  '{plateifu}-custom-invvar-{band}.fits.fz')
         invvar_file = invvar_file.format(plateifu=plateifu, band=band)
+
+        if(not os.path.exists(invvar_file)):
+            print("DLIS invvar file not found: {m}".format(m=invvar_file))
+            sys.exit(1)
 
         invvar = fitsio.read(invvar_file, header=False)
 
@@ -123,5 +122,9 @@ if __name__ == '__main__':
         image_down, var_down = r.downsample()
         ivar_down = 1. / var_down
 
-        fitsio.write(dlis_manga_file, image_down, header=hdr_out, clobber=True)
-        fitsio.write(dlis_manga_file, ivar_down, header=hdr_out, clobber=False)
+        fitsio.write(dlis_manga_file, image_down, extname='IMAGE',
+                     header=hdr_out, clobber=True)
+        fitsio.write(dlis_manga_file, ivar_down, extname='IVAR',
+                     header=hdr_out, clobber=False)
+        fitsio.write(dlis_manga_file, psf_out, extname='PSF',
+                     header=hdr_out, clobber=False)
