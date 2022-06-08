@@ -1,0 +1,176 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_resample_mask
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import copy
+import numpy as np
+import scipy.ndimage as ndimage
+import astropy.wcs as wcs
+import fitsio
+import mnsa
+import mnsa.utils.configuration as configuration
+
+
+# Retain only relevant header information
+def strip_hdr(hdr=None):
+    """Strip header of irrelevancies"""
+    hdr_stripped = list()
+    wcs_out = wcs.WCS(header=hdr, naxis=[1, 2])
+    for card in wcs_out.to_header().cards:
+        hdr_stripped.append({'name':card.keyword,
+                             'value':card.value,
+                             'comment':card.comment})
+    hdr_stripped.append({'name': 'PLATEID',
+                         'value': plate,
+                         'comment': 'Plate of MaNGA observation'})
+    hdr_stripped.append({'name': 'IFUDSGN',
+                        'value': ifu,
+                        'comment': 'IFU of MaNGA observation'})
+    hdr_stripped.append({'name': 'MANGAID',
+                         'value': hdr['MANGAID'],
+                         'comment': 'MaNGA ID number'})
+    hdr_stripped.append({'name': 'MNSAVER',
+                         'value': mnsa.__version__,
+                         'comment': 'MNSA software version'})
+    hdr_stripped.append({'name': 'MNSACFG',
+                         'value': version,
+                         'comment': 'MNSA configuration version'})
+
+    return(hdr_stripped)
+
+    
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Creates header and mask for MNSA resampling.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    parser.add_argument('-c', '--clobber', dest='clobber',
+                        action='store_true', required=False,
+                        default=False, help='clobber existing files')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+    clobber = args.clobber
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+
+    pixscale = np.float32(cfg['General']['pixscale'])
+    plate, ifu = [int(x) for x in plateifu.split('-')]
+
+    if('expand' in cfg['General']):
+        expand = np.int32(cfg['General']['expand'])
+    else:
+        expand = 1
+
+    mask_threshold = np.float32(cfg['General']['mask_threshold'])
+
+    resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                 version, 'resampled',
+                                 '{p}'.format(p=plate),
+                                 '{pifu}'.format(pifu=plateifu))
+    if(not os.path.exists(resampled_dir)):
+        os.makedirs(resampled_dir)
+
+    manga_dir = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'manga', 'redux',
+                             version,
+                             '{p}'.format(p=plate),
+                             'stack')
+    manga_file = os.path.join(manga_dir,
+                              'manga-{plateifu}-LOGCUBE.fits.gz')
+    manga_file = manga_file.format(plateifu=plateifu)
+
+    hdr_manga = fitsio.read_header(manga_file, ext='FLUX')
+    ivar = fitsio.read(manga_file, ext='IVAR')
+    mask_manga = ((ivar > 0).sum(axis=0) > mask_threshold)
+    mask_manga = np.int32(ndimage.binary_fill_holes(mask_manga))
+
+    mask_file = os.path.join(resampled_dir,
+                             'resampled-{plateifu}-mask.fits')
+    mask_file = mask_file.format(plateifu=plateifu)
+
+    if(clobber is False):
+        if(os.path.exists(mask_file)):
+            print("File exists already for {f}".format(f=mask_file))
+            sys.exit(0)
+
+    hdr_out = copy.deepcopy(hdr_manga)
+    naxis1_manga = np.int32(hdr_out['NAXIS1'])
+    naxis2_manga = np.int32(hdr_out['NAXIS2'])
+    crpix1_manga = np.int32(hdr_out['CRPIX1'])
+    crpix2_manga = np.int32(hdr_out['CRPIX2'])
+    naxis1 = (naxis1_manga + 1) * expand - 1
+    naxis2 = (naxis2_manga + 1) * expand - 1
+    if(naxis1 <= 101):
+        naxis1 = 101
+    if(naxis2 <= 101):
+        naxis2 = 101
+    crpix1 = naxis1 // 2 + 1
+    crpix2 = naxis2 // 2 + 1
+    hdr_out['NAXIS1'] = naxis1
+    hdr_out['NAXIS2'] = naxis2
+    hdr_out['CRPIX1'] = crpix1
+    hdr_out['CRPIX2'] = crpix2
+
+    # Retain only relevant header information
+    hdr_stripped = strip_hdr(hdr=hdr_out)
+    hdr_manga_stripped = strip_hdr(hdr=hdr_manga)
+
+    # Set up indexing between MaNGA and resampled images
+    x1_manga = np.arange(naxis1_manga, dtype=int)
+    y1_manga = np.arange(naxis2_manga, dtype=int)
+    x_manga, y_manga = np.meshgrid(x1_manga, y1_manga,
+                                   indexing='ij')
+
+    x1_manga2full = x1_manga + crpix1 - crpix1_manga
+    y1_manga2full = y1_manga + crpix2 - crpix2_manga
+    x_manga2full, y_manga2full = np.meshgrid(x1_manga2full,
+                                             y1_manga2full,
+                                             indexing='ij')
+    
+    x_full2manga = np.zeros((naxis1, naxis2), dtype=int) - 1
+    y_full2manga = np.zeros((naxis1, naxis2), dtype=int) - 1
+    x_full2manga[x_manga2full, y_manga2full] = x_manga
+    y_full2manga[x_manga2full, y_manga2full] = y_manga
+
+    # Create mask
+    mask = np.zeros((naxis1, naxis2), dtype=int)
+    mask[x_manga2full, y_manga2full] = mask_manga
+
+    fitsio.write(mask_file, mask, extname='MASK',
+                 header=hdr_stripped, clobber=True)
+    fitsio.write(mask_file, mask_manga, extname='MASK_MANGA',
+                 header=hdr_manga_stripped, clobber=False)
+    fitsio.write(mask_file, x_full2manga, extname='X_MANGA',
+                 header=hdr_stripped, clobber=False)
+    fitsio.write(mask_file, y_full2manga, extname='Y_MANGA',
+                 header=hdr_stripped, clobber=False)
+    fitsio.write(mask_file, x_manga2full, extname='X',
+                 header=hdr_manga_stripped, clobber=False)
+    fitsio.write(mask_file, y_manga2full, extname='Y',
+                 header=hdr_manga_stripped, clobber=False)
+    
