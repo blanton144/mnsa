@@ -82,6 +82,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     psf_out = fitsio.read(manga_file, ext='RPSF')
+    psf_out = np.float32(psf_out)
+
+    mask_hdus = ['MASK', 'MASK_MANGA', 'X_MANGA', 'Y_MANGA', 'X', 'Y']
 
     for band in bands:
         # Read in the header again in case it was altered below
@@ -128,3 +131,7 @@ if __name__ == '__main__':
                      header=hdr_out, clobber=False)
         fitsio.write(dlis_manga_file, psf_out, extname='PSF',
                      header=hdr_out, clobber=False)
+
+        for mask_hdu in mask_hdus:
+            d, h = fitsio.read(mask_file, ext=mask_hdu, header=True)
+            fitsio.write(dlis_manga_file, d, extname=mask_hdu, header=h, clobber=False)

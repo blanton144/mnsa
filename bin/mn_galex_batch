@@ -25,7 +25,7 @@ clobber = False
 
 def call_galex(i):
     plateifu = drpall['plateifu'][i]
-    print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
+    print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu), flush=True)
     if(clobber):
         subprocess.call(['mn_galex', '-p', plateifu, '-v', version, '-c'])
     else:

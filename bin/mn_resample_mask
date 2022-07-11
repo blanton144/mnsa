@@ -23,6 +23,8 @@ import fitsio
 import mnsa
 import mnsa.utils.configuration as configuration
 
+expand = 1
+
 
 # Retain only relevant header information
 def strip_hdr(hdr=None):
@@ -48,6 +50,9 @@ def strip_hdr(hdr=None):
     hdr_stripped.append({'name': 'MNSACFG',
                          'value': version,
                          'comment': 'MNSA configuration version'})
+    hdr_stripped.append({'name': 'EXPAND',
+                         'value': expand,
+                         'comment': 'expansion factor'})
 
     return(hdr_stripped)
 
@@ -141,8 +146,8 @@ if __name__ == '__main__':
     hdr_manga_stripped = strip_hdr(hdr=hdr_manga)
 
     # Set up indexing between MaNGA and resampled images
-    x1_manga = np.arange(naxis1_manga, dtype=int)
-    y1_manga = np.arange(naxis2_manga, dtype=int)
+    x1_manga = np.arange(naxis1_manga, dtype=np.int32)
+    y1_manga = np.arange(naxis2_manga, dtype=np.int32)
     x_manga, y_manga = np.meshgrid(x1_manga, y1_manga,
                                    indexing='ij')
 
@@ -152,13 +157,13 @@ if __name__ == '__main__':
                                              y1_manga2full,
                                              indexing='ij')
     
-    x_full2manga = np.zeros((naxis1, naxis2), dtype=int) - 1
-    y_full2manga = np.zeros((naxis1, naxis2), dtype=int) - 1
+    x_full2manga = np.zeros((naxis1, naxis2), dtype=np.int32) - 1
+    y_full2manga = np.zeros((naxis1, naxis2), dtype=np.int32) - 1
     x_full2manga[x_manga2full, y_manga2full] = x_manga
     y_full2manga[x_manga2full, y_manga2full] = y_manga
 
     # Create mask
-    mask = np.zeros((naxis1, naxis2), dtype=int)
+    mask = np.zeros((naxis1, naxis2), dtype=np.int32)
     mask[x_manga2full, y_manga2full] = mask_manga
 
     fitsio.write(mask_file, mask, extname='MASK',

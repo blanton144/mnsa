@@ -33,10 +33,6 @@ bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':1.0},
 def image(plateifu=None, version=None, clobber=True,
           bandset=None):
 
-    mnsa_config = configuration.MNSAConfig(version=version)
-    cfg = mnsa_config.cfg
-
-    release = cfg['MANGA']['release']
     plate, ifu = [int(x) for x in plateifu.split('-')]
 
     resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
@@ -124,16 +120,17 @@ class Resample(object):
 
     def _set_output_psf_resampled(self):
         nxo, nyo = self.output_psf.shape
-        nxi = np.float64(nxo) * self.output_pixscale / self.input_pixscale
+        nxi = np.float32(nxo) * self.output_pixscale / self.input_pixscale
         nxi = (np.int32(nxi) // 2) * 2 + 1
-        nyi = np.float64(nyo) * self.output_pixscale / self.input_pixscale
+        nyi = np.float32(nyo) * self.output_pixscale / self.input_pixscale
         nyi = (np.int32(nyi) // 2) * 2 + 1
-        self.output_psf_resampled = np.zeros((nxi, nyi), dtype=np.float64)
-        xi_axis = np.arange(nxi, dtype=np.float64) - np.float64(nxi) / 2. + 0.5
-        yi_axis = np.arange(nyi, dtype=np.float64) - np.float64(nyi) / 2. + 0.5
+        self.output_psf_resampled = np.zeros((nxi, nyi), dtype=np.float32)
+        xi_axis = np.arange(nxi, dtype=np.float32) - np.float32(nxi) / 2. + 0.5
+        yi_axis = np.arange(nyi, dtype=np.float32) - np.float32(nyi) / 2. + 0.5
         xo_axis = xi_axis * self.input_pixscale / self.output_pixscale
         yo_axis = yi_axis * self.input_pixscale / self.output_pixscale
         self.output_psf_resampled = self._output_psf_interp(xo_axis, yo_axis).reshape(nxi, nyi)
+        self.output_psf_resampled = np.float32(self.output_psf_resampled)
         return
 
     def downsample(self):
@@ -175,7 +172,7 @@ class Resample(object):
         image_interp = interpolate.RectBivariateSpline(xi, yi, image_smoothed)
         var_interp = interpolate.RectBivariateSpline(xi, yi, var_smoothed)
 
-        image_downsampled = image_interp(xoi, yoi, grid=False).reshape(nxo, nyo)
-        var_downsampled = var_interp(xoi, yoi, grid=False).reshape(nxo, nyo)
+        image_downsampled = np.float32(image_interp(xoi, yoi, grid=False).reshape(nxo, nyo))
+        var_downsampled = np.float32(var_interp(xoi, yoi, grid=False).reshape(nxo, nyo))
 
         return(image_downsampled, var_downsampled)

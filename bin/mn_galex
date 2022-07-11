@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# encoding: utf-8
 #
 # @Author: Michael Blanton
 # @Date: Aug 21, 2020
@@ -116,6 +115,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
     psf_out = fitsio.read(manga_file, ext='RPSF')
+    psf_out = np.float32(psf_out)
+
+    mask_hdus = ['MASK', 'MASK_MANGA', 'X_MANGA', 'Y_MANGA', 'X', 'Y']
 
     for band in bands:
         # Read in the header again in case it was altered below
@@ -129,7 +131,7 @@ if __name__ == '__main__':
         # skip if we have made this file already
         if(clobber is False):
             if(os.path.exists(galex_manga_file)):
-                print("File exists already for {f}".format(f=galex_manga_file), flush=True)
+                print("plate-ifu {p}: File exists already for {f}".format(f=galex_manga_file, p=plateifu), flush=True)
                 continue
 
         # Read the GALEX PSF
@@ -138,10 +140,10 @@ if __name__ == '__main__':
         psf_file = psf_file.format(plateifu=plateifu, band=band)
 
         if(os.path.exists(psf_file) is False):
-            print("Skipping case where GALEX PSF missing: {p}".format(p=plateifu), flush=True)
+            print("plate-ifu {p}: Skipping case where GALEX PSF missing: {p}".format(p=plateifu), flush=True)
             continue 
 
-        print("Reading PSF: {f}".format(f=psf_file), flush=True)
+        print("plate-ifu {p}: Reading PSF: {f}".format(f=psf_file, p=plateifu), flush=True)
         psf = fitsio.read(psf_file)
         psf = psf / psf.sum()
         xpsf = np.arange(psf.shape[1])
@@ -158,14 +160,14 @@ if __name__ == '__main__':
         image_file = os.path.join(imaging_dir,
                                   '{plateifu}-custom-image-{band}.fits.fz')
         image_file = image_file.format(plateifu=plateifu, band=band)
-        print("Reading image: {f}".format(f=image_file), flush=True)
+        print("plate-ifu {p}: Reading image: {f}".format(f=image_file, p=plateifu), flush=True)
         image, hdr_in = fitsio.read(image_file, header=True)
 
         if(invvar_from_image is False):
             invvar_file = os.path.join(imaging_dir,
                                        '{plateifu}-custom-invvar-{band}.fits.fz')
             invvar_file = invvar_file.format(plateifu=plateifu, band=band)
-            print("Reading invvar: {f}".format(f=invvar_file), flush=True)
+            print("plate-ifu {p}: Reading invvar: {f}".format(f=invvar_file, p=plateifu), flush=True)
             invvar = fitsio.read(invvar_file)
             sig = 1. / np.sqrt(np.median(invvar))
         else:
@@ -221,7 +223,7 @@ if __name__ == '__main__':
 
         # Apply weights to image and ivar
         image_G = r.apply_weights(subimage.flatten())
-        var_G = np.diag(r.weights.dot(r.weights.T) * sig**2).reshape((r.nx, r.ny))
+        var_G = np.einsum('ij,j,ij->i', r.weights, 1. / subinvvar, r.weights).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
         # Apply weights to PSF image
@@ -235,5 +237,9 @@ if __name__ == '__main__':
                      header=hdr_out, extname='IVAR', clobber=False)
         fitsio.write(galex_manga_file, psf_G[pad:-pad, pad:-pad],
                      header=hdr_out, extname='PSF', clobber=False)
+
+        for mask_hdu in mask_hdus:
+            d, h = fitsio.read(mask_file, ext=mask_hdu, header=True)
+            fitsio.write(galex_manga_file, d, extname=mask_hdu, header=h, clobber=False)
 
         r = 0
