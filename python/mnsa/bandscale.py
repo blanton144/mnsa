@@ -8,7 +8,7 @@ import os
 def image(band=None, wave=None, cube=None):
     """Calculate image from cube
 
-    Parameters:
+    Parameters
     ----------
 
     band : str, 
@@ -20,7 +20,7 @@ def image(band=None, wave=None, cube=None):
     cube : ndarray of np.float32
         [Nwave, N, M] fluxes in 10^{-17} erg/cm^2/s/A
 
-    Returns:
+    Returns
     -------
 
     image : ndarray of np.float32

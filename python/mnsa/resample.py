@@ -32,6 +32,23 @@ bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':1.0},
 
 def image(plateifu=None, version=None, clobber=True,
           bandset=None):
+    """Write images for a plate-ifu
+
+    Parameters
+    ----------
+
+    plateifu : str
+        plate-ifu designation
+
+    version : str
+        version of data
+
+    clobber : bool
+        if True, clobber existing file
+
+    bandset : str
+        band set to use
+"""
 
     plate, ifu = [int(x) for x in plateifu.split('-')]
 
@@ -66,7 +83,56 @@ def image(plateifu=None, version=None, clobber=True,
 class Resample(object):
     """Resample object for resampling images
 
-    Assumes a nearly constant PSF and pixelscale, and same orientation of output and input.
+    Parameters
+    ----------
+
+    image : ndarray of float
+        native sampling image
+
+    invvar : ndarray of float
+        native sampling inverse variance
+
+    input_header : dict
+        header with native WCS 
+
+    Attributes
+    ----------
+
+    image : ndarray of float
+        native sampling image
+
+    input_header : dict
+        header with native WCS 
+
+    input_pixscale : float
+        native pixel scale in arcsec
+
+    input_wcs : astropy.wcs.WCS object
+        native WCS information
+
+    invvar : ndarray of float
+        native sampling inverse variance
+
+    output_header : dict
+        header for output
+
+    output_pixscale : float
+        output pixel scale in arcsec
+
+    output_psf : ndarray of float
+        output point spread function
+
+    output_wcs : astropy.wcs.WCS object
+        output WCS information
+
+    Notes
+    -----
+
+    In general, this is only useful if the output PSF is 
+    much bigger than the input PSF.
+
+    Assumes a nearly constant PSF and pixelscale, and same
+    orientation of output and input.
 """
     def __init__(self, image=None, invvar=None, input_header=None):
         self.image = image
@@ -81,6 +147,7 @@ class Resample(object):
         return
 
     def _find_pixscale(self, wcs, header):
+        """Find pixel scale with small offsets"""
         offset = 5.
         raref = np.float64(header['CRVAL1'])
         decref = np.float64(header['CRVAL2'])
@@ -96,6 +163,21 @@ class Resample(object):
         return(offset / xyoff)
 
     def set_output_header(self, header=None):
+        """Set the output header
+
+        Parameters
+        ----------
+
+        header : dict
+            header for output
+
+        Notes
+        -----
+
+        Sets the attributes output_header, output_wcs (to
+        the corresponding astropy.wcs.WCS object), and
+        output_pixscale (to arcsec per pixel for outputs).
+"""
         self.output_header = header
         self.output_wcs = wcs.WCS(header=self.output_header, naxis=[1, 2])
         self.output_pixscale = self._find_pixscale(self.output_wcs,
@@ -107,6 +189,7 @@ class Resample(object):
         return
 
     def _set_output_psf_interp(self):
+        """Set _output_psf_interp attribute based on output_psf"""
         nx, ny = self.output_psf.shape
         x = np.arange(nx, dtype=np.float32) - np.float32(nx) / 2. + 0.5
         y = np.arange(ny, dtype=np.float32) - np.float32(ny) / 2. + 0.5
@@ -119,6 +202,7 @@ class Resample(object):
         return
 
     def _set_output_psf_resampled(self):
+        """Set output_psf_resampled attribute based on output_psf"""
         nxo, nyo = self.output_psf.shape
         nxi = np.float32(nxo) * self.output_pixscale / self.input_pixscale
         nxi = (np.int32(nxi) // 2) * 2 + 1
@@ -134,6 +218,18 @@ class Resample(object):
         return
 
     def downsample(self):
+        """Downsample image to output sampling and PSF
+
+        Returns
+        -------
+
+        image : ndarray of float
+            downsampled image
+
+        var : ndarray of float
+            variance of downsampled image
+"""
+
         if((self.output_header is None) | (self.output_psf is None)):
             print("Must set output_header and output_psf to downsample")
 

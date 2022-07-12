@@ -18,11 +18,8 @@ import os
 import sys
 import jinja2
 import numpy as np
-import mnsa.manga as manga
 import mnsa.utils.configuration as configuration
 import fitsio
-import json
-import multiprocessing
 
 
 if __name__ == '__main__':
@@ -58,9 +55,8 @@ if __name__ == '__main__':
 
     if((not os.path.exists(donefile)) or (not noclobber)):
 
-        drpfile = os.path.join(os.getenv('MNSA_DATA'),
-                               'samples', '{version}',
-                               'drpall-v3_1_1.fits')
+        drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
+                               'v3_1_1', 'drpall-v3_1_1.fits')
         drpfile = drpfile.format(version=version)
         drp = fitsio.read(drpfile)
 

@@ -50,16 +50,14 @@ if __name__ == '__main__':
 
         done = fitsio.read(donefile)
 
-        drpfile = os.path.join(os.getenv('MNSA_DATA'),
-                               'samples', '{version}',
-                               'drpall-v3_1_1.fits')
-        drpfile = drpfile.format(version=version)
+        drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
+                               'v3_1_1', 'drpall-v3_1_1.fits')
 
         samplefile = os.path.join(os.getenv('MNSA_DATA'),
                                   'samples', '{version}',
                                   'drpall-{version}.fits')
-        samplefile = drpfile.format(version=version)
-        
+        samplefile = samplefile.format(version=version)
+
         drp = fitsio.read(drpfile)
         sample = fitsio.read(samplefile)
 

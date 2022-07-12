@@ -7,7 +7,7 @@ import scipy.interpolate
 class Kernel(object):
     """Kernel values for fiber convolved with seeing
 
-    Parameters:
+    Parameters
     ----------
 
     rough_length : float, np.float32
@@ -25,7 +25,7 @@ class Kernel(object):
     maxseeing : int, np.int32
         maximum FWHM value on FWHM grid in arcsec (default 2.5)
 
-    Attributes:
+    Attributes
     ----------
 
     rough_length : float, np.float32
@@ -91,14 +91,7 @@ class Kernel(object):
     kernel_radial : 2D ndarray of np.float32
         [nseeing, nradial] grid of radial profiles (in per arcsec units)
 
-    Methods:
-    -------
-
-    radial() :
-        Takes a FWHM and a set of radii as inputs, and returns interpolated
-        kernel values at those radii given the specified FWHM
-
-    Notes:
+    Notes
     -----
 
     All of the distance units are technically arbitrary but for use
@@ -113,7 +106,7 @@ class Kernel(object):
     sigma2 = 2 * sigma1, and has a total integral 1/9 of the narrow
     one.
 
-    Examples:
+    Examples
     --------
 
     The use of this function will typically be to set the kernel:
@@ -165,7 +158,7 @@ class Kernel(object):
     def _psf(self, seeing=None, x=None, y=None):
         """PSF values at given x and y locations
 
-        Parameters:
+        Parameters
         ----------
 
         seeing : float, float32
@@ -177,14 +170,14 @@ class Kernel(object):
         y : float32 or ndarray of float32
             y position(s)
 
-        Returns:
+        Returns
         -------
 
         vals : ndarray of float32
             value of normalized PSF at requested locations
 
-        Notes:
-        ------
+        Notes
+        -----
 
         This code assumes a double Gaussian, with one Gaussian twice
         the wide of the other and with a total integral of 1/9 the
@@ -266,7 +259,7 @@ class Kernel(object):
     def radial(self, seeing=None, radii=None):
         """Kernel values at various radii for some FWHM
 
-        Parameters:
+        Parameters
         ----------
 
         seeing : float, float32
@@ -275,7 +268,7 @@ class Kernel(object):
         radii : ndarray of float32
             radial values to evaluate
 
-        Returns:
+        Returns
         -------
 
         vals : ndarray of float32
@@ -288,22 +281,19 @@ class Kernel(object):
         return(vals)
 
     def fwhm(self, seeing=None):
-        """Kernel values at various radii for some FWHM
+        """FWHM of kernel associated with a given seeing FWHM
 
-        Parameters:
+        Parameters
         ----------
 
         seeing : float, float32
-            FWHM of seeing to assume
+            FWHM of seeing
 
-        radii : ndarray of float32
-            radial values to evaluate
-
-        Returns:
+        Returns
         -------
 
-        vals : ndarray of float32
-            kernel values at radii
+        fwhm : float
+            full-width half maximum of kernel
 """
         rs = self.r_radial
         vs = self._radial_function(seeing, rs).flatten()

@@ -21,14 +21,50 @@ class MNSA(object):
     plateifu : str
         Plate-IFU of result
 
+    dr17 : bool
+        if True, read standard DR17 versions instead of MNSA
+
+    Attributes
+    ----------
+
+    cfg : mnsa.utils.configuration.MNSAConfig object
+        configuration information for this version
+
+    cube : fitsio.FITS object
+        cube information from FITS file (initialized to None)
+
+    dr17 : bool
+        if True, read standard DR17 versions instead of MNSA
+
+    ifu : int
+        IFU number
+
+    manga_base : str
+        MaNGA file name base
+
+    maps : fitsio.FITS object
+        maps information from FITS file (initialized to None)
+
+    plate : int
+        plate number
+
+    plateifu : str
+        plate-ifu string
+
+    version : str
+        version of data to use
+
     Notes
     -----
 
-    Reads data from $MNSA_DATA/{version}.
-"""
+    Creating the object does not automatically read in the 
+    cube or maps information. This needs to be done explicitly
+    with read_cube() or read_maps().
 
+    Reads data under the directory $MNSA_DATA/{version}
+    (unless DR17 is set to true).
+"""
     def __init__(self, version=None, plateifu=None, dr17=False):
-        
         mnsa_config = configuration.MNSAConfig(version=version)
         cfg = mnsa_config.cfg
 
@@ -54,31 +90,30 @@ class MNSA(object):
                                      'stack')
                                      # 'analysis', 'v3_1_1', '3.1.0',
                                      
-        manga_file = os.path.join(manga_dir,
-                                  'manga-{plateifu}-LOGCUBE.fits.gz')
-        self.manga_file = manga_file.format(plateifu=self.plateifu)
+        manga_base = os.path.join(manga_dir,
+                                  'manga-{plateifu}-LOGCUBE')
+        self.manga_base = manga_base.format(plateifu=self.plateifu)
 
-        self.manga_irg_png = self.manga_file.replace('.fits.gz',
-                                                     '.irg.png')
+        self.cube = None
+        self.maps = None
         return
 
     def read_cube(self):
-
-        self.cube = fitsio.FITS(self.manga_file)
+        """Read FITS file into cube attribute"""
+        self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
         return
 
     def read_maps(self):
-
+        """Read FITS file into maps attribute"""
         daptype = self.cfg['MANGA']['daptype']
         dap_dir = os.path.join(os.getenv('MNSA_DATA'),
                                self.version, 'manga', 'analysis',
                                self.version, self.version, daptype,
                                str(self.plate), str(self.ifu))
         if(self.dr17):
-            dap_dir = os.path.join('/uufs', 'chpc.utah.edu',
-                                   'common', 'home', 'sdss50',
-                                   'dr17', 'manga', 'spectro',
-                                   'analysis', 'v3_1_1', '3.1.0',
+            dap_dir = os.path.join(os.getenv('MANGA_ROOT'),
+                                   'spectro', 'analysis',
+                                   'v3_1_1', '3.1.0',
                                    daptype,
                                    str(self.plate), str(self.ifu))
         dap_file = os.path.join(dap_dir, 'manga-{p}-{t}-{d}.fits.gz')
@@ -89,12 +124,56 @@ class MNSA(object):
 
     def rgb_image(self, rimage=None, gimage=None, bimage=None,
                   minimum=0., stretch=1., Q=10., filename=None):
-        
+        """Create RGB image
+
+        Parameters
+        ----------
+
+        rimage : ndarray of float
+           red image
+
+        gimage : ndarray of float
+           green image
+
+        bimage : ndarray of float
+           blue image
+
+        minimum : float
+           value of black
+
+        stretch : float
+           stretch value
+
+        Q : float
+           nonlinearity
+
+        filename : str
+           output file
+
+        Notes
+        -----
+
+        Uses astropy.viz.make_lupton_rgb
+"""
         rgb = viz.make_lupton_rgb(rimage, gimage, bimage, minimum=minimum,
                                   stretch=stretch, Q=Q, filename=filename)
         return(rgb)
 
     def read_image(self, channel=None, ext=None, file=None):
+        """Read a specific image from the cube or maps
+
+        Parameters
+        ----------
+
+        channel : str
+            channel of maps extension to return (if file == 'maps')
+
+        ext : str or int
+            name or number of extension of cube or maps
+
+        file : str
+            'maps' or 'cube', depending on which type of image wanted
+"""
         if(file == 'maps'):
             hdr = self.maps[ext].read_header()
             ichannel = -1
@@ -117,8 +196,30 @@ class MNSA(object):
         print("No file type {f}".format(f=file))
         return(None)
 
-    def image(self, imagetype=None, minimum=None, stretch=None, Q=None, 
-              rscale=None, gscale=None, bscale=None, filename=None):
+    def image(self, imagetype=None, filename=None):
+        """Make image based on cube and maps
+
+        Parameters
+        ----------
+
+        imagetype : str
+            type of image (must be specified in mnsa.imagetypes.ImageTypes)
+
+        filename : str
+            output file name
+
+        Notes
+        -----
+
+        mnsa.imagetypes.ImageTypes is a singleton with a dictionary
+        attribute "types" that contains the parameters defining
+        the image appearance.
+
+        If dr17=True, then the image is multiplied by 1.5**2
+        in order to put it on the same effective scale
+        (i.e. the same appearance for the same surface
+        brightness value).
+"""
         if(imagetype not in i.types):
             print("No such image type {i}".format(i=imagetype))
             return

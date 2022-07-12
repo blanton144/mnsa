@@ -10,6 +10,20 @@ import fitsio
 
 
 def image(plateifu=None, version=None, clobber=True):
+    """Write images for a plate-ifu
+
+    Parameters
+    ----------
+
+    plateifu : str
+        plate-ifu designation
+
+    version : str
+        version of data
+
+    clobber : bool
+        if True, clobber existing file
+"""
 
     m = mnsa.MNSA(version=version, plateifu=plateifu)
     m.read_cube()
@@ -29,7 +43,7 @@ def image(plateifu=None, version=None, clobber=True):
 
     viz.make_lupton_rgb(iimage, rimage, gimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=m.manga_irg_png)
+                        filename=m.manga_base + '.irg.png')
 
     c = marvin.tools.cube.Cube(plateifu=plateifu)
     wave = fitsio.read(c.filename, ext='WAVE')
@@ -43,14 +57,26 @@ def image(plateifu=None, version=None, clobber=True):
 
     viz.make_lupton_rgb(oiimage, orimage, ogimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=m.manga_irg_png.replace('irg.png',
-                                                         'orig.irg.png'))
-
+                        filename=m.manga_base + 'orig.irg.png')
 
     return
 
 
 def crr(plateifu=None, version=None, clobber=True):
+    """Perform CRR for a given plate-ifu
+
+    Parameters
+    ----------
+
+    plateifu : str
+        plate-ifu designation
+
+    version : str
+        version of data
+
+    clobber : bool
+        if True, clobber existing file
+"""
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
@@ -79,7 +105,7 @@ def crr(plateifu=None, version=None, clobber=True):
 
     os.makedirs(manga_dir, exist_ok=True)
 
-    print("{plateifu}: Reconstruction commencing".format(plateifu=plateifu), flush=True) 
+    print("{plateifu}: Reconstruction commencing".format(plateifu=plateifu), flush=True)
     cube = reconstruct.ReconstructCRR(plate=plate,
                                       ifu=ifu,
                                       release=release,
