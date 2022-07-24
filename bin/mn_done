@@ -8,11 +8,6 @@
 # @Copyright: Michael Blanton
 
 
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import argparse
 import os
 import sys
@@ -66,9 +61,9 @@ if __name__ == '__main__':
         samplefile = samplefile.format(version=version)
         sample = fitsio.read(samplefile)
 
-        done_dtype = [('plateifu', np.unicode, 20),
-                      ('plate', np.unicode, 20),
-                      ('ifu', np.unicode, 20),
+        done_dtype = [('plateifu', str, 20),
+                      ('plate', str, 20),
+                      ('ifu', str, 20),
                       ('manga_cube_mnsa', bool),
                       ('wise_coadd_done', bool),
                       ('dlis_coadd_done', bool),
@@ -130,7 +125,7 @@ if __name__ == '__main__':
 
             coadd_dir = os.path.join(os.getenv('MNSA_DATA'),
                                      version, 'imaging',
-                                     '{p:05}'.format(p=plate),
+                                     '{p}'.format(p=plate),
                                      str(plateifu))
         
             for survey in coadd_bands:

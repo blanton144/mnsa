@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
                                version, 'imaging',
-                               '{p:05}'.format(p=plate),
+                               '{p}'.format(p=plate),
                                plateifu)
 
     manga_dir = os.path.join(os.getenv('MNSA_DATA'),

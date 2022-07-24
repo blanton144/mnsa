@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
                                version, 'imaging',
-                               '{p:05}'.format(p=plate),
+                               '{p}'.format(p=plate),
                                plateifu)
 
     manga_dir = os.path.join(os.getenv('MNSA_DATA'),
@@ -244,7 +244,10 @@ if __name__ == '__main__':
         image_G = r.apply_weights(subimage.flatten())
 
         print("plate-ifu {p}: Applying weights to invvar".format(p=plateifu), flush=True)
-        var_G = np.einsum('ij,j,ij->i', r.weights, 1. / subinvvar, r.weights).reshape((r.nx, r.ny))
+        inz = np.where(subinvvar > 0)[0]
+        var_G = np.einsum('ij,j,ij->i', r.weights[:, inz],
+                          1. / subinvvar[inz],
+                          r.weights[:, inz]).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
         print("plate-ifu {p}: l mem={m}".format(p=plateifu, m=crr.utils.memory.memory()), flush=True)
