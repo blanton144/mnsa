@@ -22,6 +22,42 @@ marvin.config.download = False
 gridsize = {7: 12, 19: 17, 37: 22, 61: 27, 91: 32, 127: 36}
 
 
+def fit_fwhm(image, kernel, xcen=None, ycen=None, pixelscale=0.75):
+    """Fit FWHM to an image using radial kernel as a model
+"""
+    seeings = kernel.seeing
+
+    nx = image.shape[0]
+    ny = image.shape[1]
+
+    if(xcen is None):
+        xcen = (np.float32(nx) * 0.5) - 0.5
+    if(ycen is None):
+        ycen = (np.float32(ny) * 0.5) - 0.5
+
+    xx = np.outer(np.arange(nx, dtype=np.float32) - xcen,
+                  np.ones(ny, dtype=np.float32))
+    yy = np.outer(np.ones(nx, dtype=np.float32),
+                  np.arange(ny, dtype=np.float32) - ycen)
+    rr = np.sqrt(xx**2 + yy**2) * pixelscale
+
+    chi2 = np.zeros(len(seeings), dtype=np.float32)
+    for i, seeing in enumerate(seeings):
+        model = kernel.radial(seeing=seeing, radii=rr.flatten())
+        model = model * pixelscale**2
+
+        A = ((model * image.flatten()).sum() /
+             (model ** 2).sum())
+        chi2[i] = ((A * model - image.flatten()) ** 2).sum()
+
+    ind = np.argmin(chi2)
+    seeing = seeings[ind]
+
+    fwhm = kernel.fwhm(seeing=seeing)
+
+    return(fwhm)
+
+
 class Reconstruct(object):
     """Base class for reconstruction of cubes from RSS files
 
@@ -792,36 +828,8 @@ class Reconstruct(object):
     def fit_fwhm(self, image, xcen=None, ycen=None):
         """Fit FWHM to an image using radial kernel as a model
 """
-        seeings = self.kernel.seeing
-
-        nx = image.shape[0]
-        ny = image.shape[1]
-
-        if(xcen is None):
-            xcen = (np.float32(nx) * 0.5) - 0.5
-        if(ycen is None):
-            ycen = (np.float32(ny) * 0.5) - 0.5
-
-        xx = np.outer(np.arange(nx, dtype=np.float32) - xcen,
-                      np.ones(ny, dtype=np.float32))
-        yy = np.outer(np.ones(nx, dtype=np.float32),
-                      np.arange(ny, dtype=np.float32) - ycen)
-        rr = np.sqrt(xx**2 + yy**2) * self.pixelscale
-
-        chi2 = np.zeros(len(seeings), dtype=np.float32)
-        for i, seeing in enumerate(seeings):
-            model = self.kernel.radial(seeing=seeing, radii=rr.flatten())
-            model = model * self.pixelscale**2
-
-            A = ((model * image.flatten()).sum() /
-                 (model ** 2).sum())
-            chi2[i] = ((A * model - image.flatten()) ** 2).sum()
-
-        ind = np.argmin(chi2)
-        seeing = seeings[ind]
-
-        fwhm = self.kernel.fwhm(seeing=seeing)
-
+        fwhm = fit_fwhm(image, self.kernel, xcen=xcen, ycen=ycen,
+                        pixelscale=self.pixelscale)
         return(fwhm)
 
     def PSFaverage(self, color=None, wave=None, PSF=None):

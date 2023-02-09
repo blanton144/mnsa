@@ -132,9 +132,10 @@ class Kernel(object):
 """
 
     def __init__(self, rough_length=9., dkernel=0.01, nseeing=200,
-                 minseeing=0.5, maxseeing=2.5):
+                 minseeing=0.5, maxseeing=2.5, extra=None):
         self.rough_length = rough_length
         self.dkernel = dkernel
+        self.extra = extra
         self._set_kernel_grid(nseeing=nseeing, minseeing=minseeing,
                               maxseeing=maxseeing)
         self._set_kernel_radial_grid()
@@ -221,6 +222,14 @@ class Kernel(object):
             self.kernel[index, :, :] = scipy.signal.fftconvolve(self.fiber,
                                                                 psf0,
                                                                 mode='same')
+        if(self.extra is not None):
+            norm = 1. / (2. * np.pi * self.extra**2) * self.dkernel**2
+            r2k2 = self.x2k**2 + self.y2k**2
+            psf_extra = norm * np.exp(- 0.5 * r2k2 / self.extra**2)
+            for index, iseeing in enumerate(self.seeing):
+                self.kernel[index, :, :] = scipy.signal.fftconvolve(self.kernel[index, :, :],
+                                                                    psf_extra,
+                                                                    mode='same')
         return
 
     def _set_kernel_radial_grid(self):

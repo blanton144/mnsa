@@ -22,7 +22,11 @@ import fitsio
 import multiprocessing
 
 
-def create_image(indx):
+dr17_images = ['irg', 'Ha-O3-Grey']
+images = dr17_images + ['wise', 'galex', 'dlis', 'zrg-native']
+
+
+def create_images(indx):
     plateifu = drp['plateifu'][indx]
     print("Doing cube: {plateifu}".format(plateifu=plateifu), flush=True)
     m = mnsa.MNSA(version=version, plateifu=plateifu, dr17=dr17)
@@ -34,13 +38,16 @@ def create_image(indx):
         return
     outdir = m.png_dir
     os.makedirs(outdir, exist_ok=True)
-    imagetype = 'Ha-O3-Grey'
-    if(dr17 is False):
-        outfile = '{png_base}-DAP-{it}.png'
+    if(dr17):
+        for imagetype in dr17_images: 
+            outfile = '{png_base}-dr17-{it}.png'
+            outfile = outfile.format(png_base=m.png_base, it=imagetype)
+            m.image(imagetype=imagetype, filename=outfile)
     else:
-        outfile = '{png_base}-DAP-dr17-{it}.png'
-    outfile = outfile.format(png_base=m.png_base, it=imagetype)
-    m.image(imagetype='Ha-O3-Grey', filename=outfile)
+        for imagetype in images: 
+            outfile = '{png_base}-{it}.png'
+            outfile = outfile.format(png_base=m.png_base, it=imagetype)
+            m.image(imagetype=imagetype, filename=outfile)
     return
 
 
@@ -91,4 +98,4 @@ if __name__ == '__main__':
 
     iall = np.arange(len(drp), dtype=np.int32)
     with multiprocessing.Pool() as pool:
-        pool.map(create_image, iall)
+        pool.map(create_images, iall)

@@ -56,6 +56,10 @@ def image(plateifu=None, version=None, clobber=True,
                                  version, 'resampled',
                                  str(plate), str(plateifu))
 
+    png_dir = os.path.join(os.getenv('MNSA_DATA'),
+                           version, 'pngs',
+                           str(plate), str(plateifu))
+
     settings = bandset_settings[bandset]
 
     images = [None, None, None]
@@ -70,14 +74,16 @@ def image(plateifu=None, version=None, clobber=True,
 
         images[indx] = fitsio.read(resampled_file) * scale
 
-    outfile = os.path.join(resampled_dir,
-                           'resampled-{plateifu}-{bandset}.png')
+    outfile = os.path.join(png_dir,
+                           'manga-{plateifu}-resampled-{bandset}.png')
     outfile = outfile.format(bandset=bandset, plateifu=plateifu)
-        
+
     viz.make_lupton_rgb(images[0], images[1], images[2],
                         minimum=settings['minimum'],
                         stretch=settings['stretch'], Q=settings['Q'],
                         filename=outfile)
+
+    return
 
 
 class Resample(object):

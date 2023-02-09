@@ -43,7 +43,7 @@ def image(plateifu=None, version=None, clobber=True):
 
     viz.make_lupton_rgb(iimage, rimage, gimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=m.manga_base + '.irg.png')
+                        filename=m.png_base + '-LOGCUBE-irg.png')
 
     c = marvin.tools.cube.Cube(plateifu=plateifu)
     wave = fitsio.read(c.filename, ext='WAVE')
@@ -57,7 +57,7 @@ def image(plateifu=None, version=None, clobber=True):
 
     viz.make_lupton_rgb(oiimage, orimage, ogimage, minimum=minimum,
                         stretch=stretch, Q=Q,
-                        filename=m.manga_base + 'orig.irg.png')
+                        filename=m.png_base + '-LOGCUBE-dr17-irg.png')
 
     return
 
