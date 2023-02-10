@@ -47,7 +47,10 @@ def create_images(indx):
         for imagetype in images: 
             outfile = '{png_base}-{it}.png'
             outfile = outfile.format(png_base=m.png_base, it=imagetype)
-            m.image(imagetype=imagetype, filename=outfile)
+            try:
+                m.image(imagetype=imagetype, filename=outfile)
+            except:
+                print("No image made: {o}".format(o=os.path.basename(outfile)))
     return
 
 

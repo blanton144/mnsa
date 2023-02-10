@@ -1,0 +1,141 @@
+html, body, #container {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+img {
+    image-rendering:pixelated;
+}
+
+div.desi_image {
+		position: absolute;
+    top: 10px;
+    left: 250px;
+		width: 250px;
+}
+
+div.desi_image_resampled {
+		position: absolute;
+    top: 10px;
+    left: 505px;
+		width: 250px;
+}
+
+div.wise_image_resampled {
+		position: absolute;
+    top: 10px;
+    left: 760px;
+		width: 250px;
+}
+
+div.sps_spec {
+		position: absolute;
+    top: 10px;
+    left: 1010px;
+		height: 250px;
+}
+
+img.sps_spec_img {
+		height: 250px;
+}
+
+div.galex_image_resampled {
+		position: absolute;
+    top: 265px;
+    left: 760px;
+		width: 250px;
+}
+
+div.crr_image {
+		position: absolute;
+    top: 265px;
+    left: 250px;
+		width: 250px;
+}
+
+div.orig_image {
+		position: absolute;
+    top: 265px;
+    left: 505px;
+		width: 250px;
+}
+
+div.mnsa_Ha_O3_Grey {
+		position: absolute;
+    top: 520;
+    left: 250px;
+		width: 250px;
+}
+
+div.dr17_Ha_O3_Grey {
+		position: absolute;
+    top: 520;
+    left: 505px;
+		width: 250px;
+}
+
+img.image {
+		width: 250px;
+}
+
+div.plateifu_column {
+  	position: absolute;
+		top: 10px;
+		left: 10px;
+		width: 200px;
+}
+
+table.plateifu_info {
+		overflow: hidden;
+}
+
+form.plateifu_form {
+}
+
+.plateifu_autocomplete {
+  /*the container must be positioned relative:*/
+  position: relative;
+  display: inline-block;
+}
+
+input {
+  border: 1px solid transparent;
+  background-color: #f1f1f1;
+  padding: 5px;
+}
+input[type=text] {
+  background-color: #f1f1f1;
+  width: 100%;
+}
+input[type=submit] {
+  background-color: DodgerBlue;
+  color: #fff;
+}
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  /*position the autocomplete items to be the same width as the container:*/
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+.autocomplete-items div {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #fff;
+  border-bottom: 1px solid #d4d4d4;
+}
+.autocomplete-items div:hover {
+  /*when hovering an item:*/
+  background-color: #e9e9e9;
+}
+.autocomplete-active {
+  /*when navigating through the items using the arrow keys:*/
+  background-color: DodgerBlue !important;
+  color: #ffffff;
+}

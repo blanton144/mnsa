@@ -17,7 +17,6 @@ import argparse
 import os
 import sys
 import numpy as np
-import mnsa.manga as manga
 import fitsio
 
 
@@ -28,53 +27,77 @@ if __name__ == '__main__':
         description='Performs an arithmetic operation.')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='v0',
+                        type=str, default='0.3.0',
                         help='MNSA configuration version')
 
-    parser.add_argument('-n', '--no-clobber', dest='noclobber',
-                        action='store_true',
-                        required=False, default=False,
-                        help='use existing fits output to make html')
+    parser.add_argument('-a', '--aperture', dest='aperture',
+                        type=str, default='AP06',
+                        help='aperture for SPS results')
 
     args = parser.parse_args()
     version = args.version
-    noclobber = args.noclobber
+    aperture = args.aperture
 
     sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
-                           'mn-{version}-summary.fits'.format(version=version))
+                           'mnsa-{version}.fits'.format(version=version))
 
-    if((not os.path.exists(sumfile)) or (not noclobber)):
+    donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+                            'mn-{version}-done.fits'.format(version=version))
 
-        donefile = os.path.join(os.getenv('MNSA_DATA'), version,
-                                'mn-{version}-done.fits'.format(version=version))
+    photfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + '.analysis',
+                            'manga-legacyphot-{version}.fits'.format(version=version))
+    ellipse = fitsio.read(photfile, ext='ELLIPSE')
 
-        done = fitsio.read(donefile)
+    spsfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version, 'sps',
+                           'kc-params-{version}-{aperture}.fits'.format(version=version,
+                                                                        aperture=aperture))
+    sps = fitsio.read(photfile)
 
-        drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
-                               'v3_1_1', 'drpall-v3_1_1.fits')
+    done = fitsio.read(donefile)
 
-        samplefile = os.path.join(os.getenv('MNSA_DATA'),
-                                  'samples', '{version}',
-                                  'drpall-{version}.fits')
-        samplefile = samplefile.format(version=version)
+    drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
+                           'v3_1_1', 'drpall-v3_1_1.fits')
 
-        drp = fitsio.read(drpfile)
-        sample = fitsio.read(samplefile)
+    pipe3dfile = os.path.join(os.getenv('MANGA_PIPE3D'),
+                              'v3_1_1', '3.1.1',
+                              'SDSS17Pipe3D_v3_1_1.fits')
+    pipe3d = fitsio.read(pipe3dfile)
 
-        sum_dtype = drp.dtype.descr
-        exclude = ['plate', 'ifu', 'plateifu']
-        for x in done.dtype.descr:
-            if (x[0] not in exclude):
-                sum_dtype.append(x)
+    drp = fitsio.read(drpfile)
 
-        summary = np.zeros(len(drp), dtype=sum_dtype)
-        for n in summary.dtype.names:
-            if(n in drp.dtype.names):
-                summary[n] = drp[n]
-            if(n in done.dtype.names):
-                summary[n] = done[n]
+    sum_dtype = drp.dtype.descr
+    exclude = ['plate', 'ifu', 'plateifu']
+    for x in done.dtype.descr:
+        if (x[0] not in exclude):
+            sum_dtype.append(x)
+    sum_dtype.append(('ipipe3d', np.int32))
 
-        fitsio.write(sumfile, summary, clobber=True)
+    summary = np.zeros(len(drp), dtype=sum_dtype)
+    for n in summary.dtype.names:
+        if(n in drp.dtype.names):
+            summary[n] = drp[n]
+        if(n in done.dtype.names):
+            summary[n] = done[n]
 
+    summary['ipipe3d'] = - 1
+    for i, s in enumerate(summary):
+        ipipe3d = np.where(pipe3d['plateifu'] == s['plateifu'])[0]
+        if(len(ipipe3d) > 0):
+            summary['ipipe3d'][i] = ipipe3d[0]
 
-    
+    hdr = list()
+    hdr.append({'name': 'APERTURE',
+                'value': aperture,
+                'comment': 'aperture used for SPS'})
+    hdr.append({'name': 'MNSA_VER',
+                'value': version,
+                'comment': 'MNSA version'})
+
+    fitsio.write(sumfile, summary, header=hdr, extname='SUMMARY',
+                 clobber=True)
+    fitsio.write(sumfile, sps, extname='SPS',
+                 clobber=False)
+    fitsio.write(sumfile, ellipse, extname='ELLIPSE',
+                 clobber=False)

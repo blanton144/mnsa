@@ -1,0 +1,43 @@
+<html>
+<head>
+	<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+	<script src="www/plates.json"></script>
+	<script src="www/plateifus.json"></script>
+	<link rel="stylesheet" type="text/css" href="www/plateifu.css" />
+</head>
+
+<body>
+
+	<div class="plateifu_column">
+		<form method="get" autocomplete="off" class="plateifu_form" id="plateifu_form">
+			<div class="plateifu_autocomplete">
+					 Plate: <input id="plate_input" type="text" name="plate" placeholder="plate">
+			</div><br/>
+			<div class="plateifu_autocomplete">
+					 IFU: <input id="ifu_input" type="text" name="ifu" placeholder="ifu">
+			</div><br/>
+			<input type="button" onclick="setPlateIFU(plate.value, ifu.value)" value="Submit">
+		</form>
+		
+		<table class="plateifu_info" id="plateifu_table">
+			<tr> <td>Plate</td> <td id="plate"></td> </tr>
+			<tr> <td>IFU</td> <td id="ifu"></td> </tr>
+			<tr> <td>RA</td> <td id="ra"></td> </tr>
+			<tr> <td>Dec</td> <td id="dec"></td> </tr>
+		</table>
+	</div>
+
+	<div id="desi_image" class="desi_image"></div>
+	<div id="desi_image_resampled" class="desi_image_resampled"></div>
+	<div id="wise_image_resampled" class="wise_image_resampled"></div>
+	<div id="galex_image_resampled" class="galex_image_resampled"></div>
+	<div id="crr_image" class="crr_image"></div>
+	<div id="orig_image" class="orig_image"></div>
+	<div id="mnsa_Ha_O3_Grey" class="mnsa_Ha_O3_Grey"></div>
+	<div id="dr17_Ha_O3_Grey" class="dr17_Ha_O3_Grey"></div>
+	<div id="sps_spec" class="sps_spec"></div>
+
+	<script src="www/plateifu.js"></script>
+
+</body>
+</html>
