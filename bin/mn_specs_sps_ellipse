@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import kcorrect.kcorrect as kk
+import numpy as np
+import fitsio
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Reconstruct spectra from fits to ellipse photometry')
+
+    parser.add_argument('-a', '--aperture', dest='aperture',
+                        type=str, help='aperture name', required=True)
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, help='version name', required=True)
+
+    args = parser.parse_args()
+    aperture = args.aperture
+    version = args.version
+
+    print("Reading coeffs", flush=True)
+    coeffsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version, 'sps',
+                              'kc-coeffs-{v}-{a}.fits')
+    coeffsfile = coeffsfile.format(a=aperture, v=version)
+    allcoeffs = fitsio.read(coeffsfile)
+    idone = np.where(allcoeffs['do_sps'])[0]
+
+    print("Reading params", flush=True)
+    paramsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version + '.analysis', 'sps',
+                              'kc-params-{v}-{a}.fits'.format(v=version, a=aperture))
+    sps = fitsio.read(paramsfile)
+
+    kcnorthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'sps',
+                               'kc-fsps-north-{v}.fits'.format(v=version))
+
+    kcsouthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'sps',
+                               'kc-fsps-south-{v}.fits'.format(v=version))
+
+    print("Reading Kcorrect object (north)", flush=True)
+    kcn = kk.Kcorrect(filename=kcnorthfile)
+
+    print("Reading Kcorrect object (south)", flush=True)
+    kcs = kk.Kcorrect(filename=kcsouthfile)
+
+    wave = None
+    spec = None
+
+    for i in idone:
+        print(i)
+
+        plateifu = sps['plateifu'][i]
+        print(plateifu, flush=True)
+        plate, ifu = plateifu.split('-')
+
+        coeffs = allcoeffs['coeffs'][i, :]
+        redshift = sps['redshift'][i]
+
+        inz = np.where(coeffs > 0)[0]
+
+        if(sps['hemi'][i] == 'north'):
+            tmp_wave = kcn.templates.restframe_wave
+            tmp_spec = coeffs[inz].dot(kcn.templates.restframe_flux[inz, :])
+        else:
+            tmp_wave = kcs.templates.restframe_wave
+            tmp_spec = coeffs[inz].dot(kcs.templates.restframe_flux[inz, :])
+
+        # Wavelength grids should all be same
+        if(wave is None):
+            wave = tmp_wave
+
+        if(spec is None):
+            spec = np.zeros((len(sps), len(wave)), dtype=np.float32)
+
+        spec[i, :] = tmp_spec
+
+    wavehdr = list()
+    wavehdr.append({'name': 'BUNIT',
+                    'value': 'Angstrom',
+                    'comment': ''})
+
+    spechdr = list()
+    spechdr.append({'name': 'BUNIT',
+                    'value': 'erg s^{-1} cm^{-2} Angstrom^{-1}',
+                    'comment': ''})
+
+    print("Outputting specs", flush=True)
+    specfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version, 'sps',
+                            'kc-spec-{v}-{a}.fits')
+    specfile = specfile.format(a=aperture, v=version)
+    fitsio.write(specfile, wave, header=wavehdr, extname='WAVE', clobber=True)
+    fitsio.write(specfile, spec, header=spechdr, extname='FLUX', clobber=False)

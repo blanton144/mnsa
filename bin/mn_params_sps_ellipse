@@ -1,0 +1,137 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import kcorrect.kcorrect as kk
+import numpy as np
+import fitsio
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Convert SPS fit coefficients to derived parameters')
+
+    parser.add_argument('-a', '--aperture', dest='aperture',
+                        type=str, help='aperture name', required=True)
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, help='version name', required=True)
+
+    args = parser.parse_args()
+    aperture = args.aperture
+    version = args.version
+
+    print("Reading coeffs", flush=True)
+    coeffsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version, 'sps',
+                              'kc-coeffs-{v}-{a}.fits')
+    coeffsfile = coeffsfile.format(a=aperture, v=version)
+    sps = fitsio.read(coeffsfile)
+
+    idone = np.where(sps['do_sps'])[0]
+    inorth = np.where(sps['hemi'] == 'north')[0]
+    isouth = np.where(sps['hemi'] == 'south')[0]
+    nresponses = sps['maggies'].shape[1]
+    ntemplates = sps['coeffs'].shape[1]
+
+    params_dtype = np.dtype([('plateifu', str, 12),
+                             ('do_sps', bool),
+                             ('hemi', str, 5),
+                             ('redshift', np.float32),
+                             ('maggies', np.float32, nresponses),
+                             ('ivar', np.float32, nresponses),
+                             ('absmag', np.float32, nresponses),
+                             ('rmaggies', np.float32, nresponses),
+                             ('chi2', np.float32),
+                             ('dof', np.float32),
+                             ('intsfh', np.float32),
+                             ('mass', np.float32),
+                             ('sfr50', np.float32),
+                             ('sfr300', np.float32),
+                             ('sfr1000', np.float32)])
+    params = np.zeros(len(sps), dtype=params_dtype)
+    for n in sps.dtype.names:
+        if(n != 'coeffs'):
+            params[n] = sps[n]
+
+    release_params_dtype = np.dtype([('plateifu', str, 12),
+                                     ('do_sps', bool),
+                                     ('hemi', str, 5),
+                                     ('redshift', np.float32),
+                                     ('maggies', np.float32, nresponses),
+                                     ('ivar', np.float32, nresponses),
+                                     ('absmag', np.float32, nresponses),
+                                     ('rmaggies', np.float32, nresponses),
+                                     ('chi2', np.float32),
+                                     ('dof', np.float32)])
+    release_params = np.zeros(len(sps), dtype=release_params_dtype)
+
+    kcnorthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'sps',
+                               'kc-fsps-north-{v}.fits'.format(v=version))
+
+    kcsouthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'sps',
+                               'kc-fsps-south-{v}.fits'.format(v=version))
+
+    print("Reading Kcorrect object (north)", flush=True)
+    kcn = kk.Kcorrect(filename=kcnorthfile)
+
+    print("Reading Kcorrect object (south)", flush=True)
+    kcs = kk.Kcorrect(filename=kcsouthfile)
+
+    params['rmaggies'][inorth, :] = kcn.reconstruct(redshift=params['redshift'][inorth],
+                                                    coeffs=sps['coeffs'][inorth, :])
+    params['rmaggies'][isouth, :] = kcs.reconstruct(redshift=params['redshift'][isouth],
+                                                    coeffs=sps['coeffs'][isouth, :])
+
+    params['absmag'][isouth, :] = kcs.absmag(redshift=params['redshift'][isouth],
+                                             coeffs=sps['coeffs'][isouth, :],
+                                             maggies=params['maggies'][isouth, :],
+                                             ivar=params['ivar'][isouth, :])
+
+    params['absmag'][inorth, :] = kcn.absmag(redshift=params['redshift'][inorth],
+                                             coeffs=sps['coeffs'][inorth, :],
+                                             maggies=params['maggies'][inorth, :],
+                                             ivar=params['ivar'][inorth, :])
+
+    derived_north = kcn.derived(redshift=params['redshift'][inorth],
+                                coeffs=sps['coeffs'][inorth, :])
+
+    derived_south = kcs.derived(redshift=params['redshift'][isouth],
+                                coeffs=sps['coeffs'][isouth, :])
+
+    params['mass'][inorth] = derived_north['mremain']
+    params['mass'][isouth] = derived_south['mremain']
+
+    params['intsfh'][inorth] = derived_north['intsfh']
+    params['intsfh'][isouth] = derived_south['intsfh']
+
+    params['sfr50'][inorth] = derived_north['b50'] * derived_north['intsfh'] / 50e+6
+    params['sfr50'][isouth] = derived_south['b50'] * derived_south['intsfh'] / 50e+6
+
+    params['sfr300'][inorth] = derived_north['b300'] * derived_north['intsfh'] / 300e+6
+    params['sfr300'][isouth] = derived_south['b300'] * derived_south['intsfh'] / 300e+6
+
+    params['sfr1000'][inorth] = derived_north['b1000'] * derived_north['intsfh'] / 1000e+6
+    params['sfr1000'][isouth] = derived_south['b1000'] * derived_south['intsfh'] / 1000e+6
+
+    params['chi2'] = ((params['rmaggies'] - params['maggies'])**2 *
+                      params['ivar']).sum(axis=1)
+    params['dof'] = (np.int32(params['ivar'] > 0)).sum(axis=1)
+
+    for n in release_params.dtype.names:
+        release_params[n] = params[n]
+
+    print("Outputting params", flush=True)
+    paramsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version + '.analysis', 'sps',
+                              'kc-params-{v}-{a}.fits'.format(v=version, a=aperture))
+    fitsio.write(paramsfile, params, clobber=True)
+    rparamsfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'sps',
+                               'kc-params-{v}-{a}.fits'.format(v=version, a=aperture))
+    fitsio.write(rparamsfile, release_params, clobber=True)
