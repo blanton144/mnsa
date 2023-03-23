@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_summary
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import numpy as np
+import fitsio
+import astropy.io.fits as afits
+import kcorrect.response
+import mnsa.mnsa as mnsa
+
+
+def north_or_south(ra, dec):
+    """Get the hemisphere based on a simple declination cut."""
+    if dec > 32.375:
+        if ra < 45 or ra > 315:
+            run = 'south'
+        else:
+            run = 'north'
+    else:
+        run = 'south'
+    return run
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Extracts MaNGA ugriz colors.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.0',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    rd = kcorrect.response.ResponseDict()
+    rd.load_response('decam_g')
+    rd.load_response('decam_r')
+    rd.load_response('decam_i')
+    rd.load_response('decam_z')
+    rd.load_response('bass_g')
+    rd.load_response('bass_r')
+    rd.load_response('mzls_z')
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mn-{version}-summary.fits'.format(version=version))
+    summary = fitsio.read(sumfile)
+
+    legacyfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                              'manga-legacyphot-{version}.fits'.format(version=version))
+    ellipse = fitsio.read(legacyfile, ext='ELLIPSE')
+
+    colors_dtype = np.dtype([('plateifu', str, 13),
+                             ('manga_cube_done', bool),
+                             ('hemi', str, 5),
+                             ('manga_decam_g', np.float32),
+                             ('manga_decam_r', np.float32),
+                             ('manga_decam_i', np.float32),
+                             ('manga_decam_z', np.float32),
+                             ('manga_bass_g', np.float32),
+                             ('manga_bass_r', np.float32),
+                             ('manga_mzls_z', np.float32),
+                             ('manga_g', np.float32),
+                             ('manga_r', np.float32),
+                             ('manga_i', np.float32),
+                             ('manga_z', np.float32),
+                             ('resampled_g', np.float32),
+                             ('resampled_r', np.float32),
+                             ('resampled_z', np.float32)])
+    colors = np.zeros(len(summary), dtype=colors_dtype)
+
+    for indx, s in enumerate(summary):
+        print(indx, flush=True)
+        colors['plateifu'][indx] = s['plateifu']
+        colors['hemi'][indx] = north_or_south(summary['ifura'][indx],
+                                              summary['ifudec'][indx])
+        if(s['manga_cube_done']):
+            colors['manga_cube_done'][indx] = True
+            m = mnsa.MNSA(version=version, plateifu=s['plateifu'], dr17=False)
+
+            m.read_resampled_mask()
+
+            # Read mask
+            mask = m.resampled_mask['MASK_MANGA'].read()
+            mask = np.float32(mask > 0)
+            xm = m.resampled_mask['X'].read()
+            ym = m.resampled_mask['Y'].read()
+
+            if(s['dlis_resampled_done']):
+                # Read DLIS image
+                m.read_resampled(band='g')
+                m.read_resampled(band='r')
+                m.read_resampled(band='z')
+
+                gdesi = m.resampled['g']['IMAGE'].read()[xm, ym]
+                rdesi = m.resampled['r']['IMAGE'].read()[xm, ym]
+                zdesi = m.resampled['z']['IMAGE'].read()[xm, ym]
+
+                # Crate resampled fluxes in MaNGA aperture
+                colors['resampled_g'][indx] = (gdesi * mask).sum() * 1.e-9
+                colors['resampled_r'][indx] = (rdesi * mask).sum() * 1.e-9
+                colors['resampled_z'][indx] = (zdesi * mask).sum() * 1.e-9
+
+            # Read MaNGA and project onto filters
+            m.read_cube()
+            wave = m.cube['WAVE'].read()
+            flux = m.cube['FLUX'].read()
+            nwave = flux.shape[0]
+            nx = flux.shape[1]
+            ny = flux.shape[2]
+
+            flux = np.moveaxis(flux, 0, -1)
+            flux = flux.reshape((nx * ny, nwave))
+            flux = flux * 1.e-17  # convert to erg/cm^2/s/A
+
+            decam_gimg = rd['decam_g'].project(wave=wave, flux=flux)
+            decam_gimg = decam_gimg.reshape((nx, ny))
+
+            decam_rimg = rd['decam_r'].project(wave=wave, flux=flux)
+            decam_rimg = decam_rimg.reshape((nx, ny))
+
+            decam_iimg = rd['decam_i'].project(wave=wave, flux=flux)
+            decam_iimg = decam_iimg.reshape((nx, ny))
+
+            decam_zimg = rd['decam_z'].project(wave=wave, flux=flux)
+            decam_zimg = decam_zimg.reshape((nx, ny))
+
+            bass_gimg = rd['bass_g'].project(wave=wave, flux=flux)
+            bass_gimg = bass_gimg.reshape((nx, ny))
+
+            bass_rimg = rd['bass_r'].project(wave=wave, flux=flux)
+            bass_rimg = bass_rimg.reshape((nx, ny))
+
+            mzls_zimg = rd['mzls_z'].project(wave=wave, flux=flux)
+            mzls_zimg = mzls_zimg.reshape((nx, ny))
+
+            colors['manga_decam_g'][indx] = (decam_gimg * mask).sum()
+            colors['manga_decam_r'][indx] = (decam_rimg * mask).sum()
+            colors['manga_decam_i'][indx] = (decam_iimg * mask).sum()
+            colors['manga_decam_z'][indx] = (decam_zimg * mask).sum()
+            colors['manga_bass_g'][indx] = (bass_gimg * mask).sum()
+            colors['manga_bass_r'][indx] = (bass_rimg * mask).sum()
+            colors['manga_mzls_z'][indx] = (mzls_zimg * mask).sum()
+
+            if(colors['hemi'][indx] == 'south'):
+                colors['manga_g'][indx] = colors['manga_decam_g'][indx]
+                colors['manga_r'][indx] = colors['manga_decam_r'][indx]
+                colors['manga_z'][indx] = colors['manga_decam_z'][indx]
+            else:
+                colors['manga_g'][indx] = colors['manga_bass_g'][indx]
+                colors['manga_r'][indx] = colors['manga_bass_r'][indx]
+                colors['manga_z'][indx] = colors['manga_mzls_z'][indx]
+            colors['manga_i'][indx] = colors['manga_decam_i'][indx]
+
+    outdir = os.path.join(os.getenv('MNSA_DATA'), version, 'info')
+    outfile = os.path.join(outdir, 'mn-{v}-fluxes.fits'.format(v=version))
+    fitsio.write(outfile, colors, clobber=True)

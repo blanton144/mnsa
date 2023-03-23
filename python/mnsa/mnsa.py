@@ -198,6 +198,8 @@ class MNSA(object):
         -----
 """
         if(file == 'maps'):
+            if(self.maps is None):
+                self.read_maps()
             hdr = self.maps[ext].read_header()
             if(channel):
                 ichannel = -1
@@ -232,6 +234,107 @@ class MNSA(object):
 
         print("No file type {f}".format(f=file))
         return(None)
+
+    def hex_mask(self):
+        """Calculate and return 2D mask with good spectrum"""
+        if(self.cube is None):
+            self.read_cube()
+        mask = self.cube['MASK'].read()
+        nokwave = (mask == 0).sum(axis=0)
+        maxokwave = nokwave.max()
+        hex_mask = (nokwave > (maxokwave * 0.9))
+        return(hex_mask)
+
+    def ellipse_mask(self, ba=1., pa=0., sma=None, manga=True):
+        """Create elliptical mask
+
+        Parameters
+        ----------
+
+        ba : np.float32
+            axis ratio b/a for applied elliptical aperture
+
+        pa : np.float32
+            position angle (deg E of N) for applied elliptical aperture
+
+        sma : np.float32
+            semi-major axis of applied elliptical aperture (arcsec)
+
+        manga : bool
+            output manga mask
+
+        Returns
+        -------
+
+        mask : ndarray of np.bool
+            pixels to keep within ellipse        
+"""
+        if(self.resampled_mask is None):
+            self.read_resampled_mask()
+        hdr = self.resampled_mask['MASK'].read_header()
+        pixscale = np.abs(np.float32(hdr['PC1_1'])) * 3600.
+        nx = np.int32(hdr['NAXIS1'])
+        ny = np.int32(hdr['NAXIS2'])
+        x1 = np.arange(nx, dtype=np.int32) - np.float32(nx // 2)
+        y1 = np.arange(ny, dtype=np.int32) - np.float32(ny // 2)
+        x, y = np.meshgrid(x1, y1, indexing='ij')
+        parad = pa * np.pi / 180.
+        xp = x * np.cos(parad) - y * np.sin(parad)
+        yp = x * np.sin(parad) + y * np.cos(parad)
+        yp = yp / ba
+        rp = np.sqrt(xp**2 + yp**2) * pixscale
+        ellipse_mask = rp < sma
+        if(manga):
+            x_manga2full = self.resampled_mask['X'].read()
+            y_manga2full = self.resampled_mask['Y'].read()
+            ellipse_mask = ellipse_mask[x_manga2full,
+                                        y_manga2full]
+        return(ellipse_mask)
+
+    def hex_spectrum(self, ba=1., pa=0., sma=None, return_mask=False):
+        """Calculate and return total spectrum in MaNGA footprint
+
+        Parameters
+        ----------
+
+        ba : np.float32
+            axis ratio b/a for applied elliptical aperture
+
+        pa : np.float32
+            position angle (deg E of N) for applied elliptical aperture
+
+        sma : np.float32
+            semi-major axis of applied elliptical aperture (arcsec)
+
+        return_mask : bool
+            if True, return the mask used to sum the spectra
+
+        Returns
+        -------
+
+        hex_spectrum : ndarray of np.float32
+            summed spectrum across cube (masked if specified)
+
+        hex_mask : ndarray of bool
+            2D mask used
+
+        Notes
+        -----
+
+        If sma is not None, an elliptical aperture is applied
+        with the specified parameters in addition to the hexagonal
+        mask.
+"""
+        hex_mask = self.hex_mask()
+        if(sma is not None):
+            ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
+            hex_mask = hex_mask & ellipse_mask
+        flux = self.cube['FLUX'].read()
+        hex_flux = flux[:, hex_mask].sum(axis=1)
+        if(return_mask):
+            return(hex_flux, hex_mask)
+        else:
+            return(hex_flux)
 
     def image(self, imagetype=None, filename=None, invert=False,
               stretch=None, Q=None, minimum=None, Rscale=None,
@@ -344,6 +447,12 @@ class MNSA(object):
 
         filename : str
             output file name
+
+        Notes
+        -----
+
+        In DAP MAPS files, 'STELLAR_VEL' and 'EMLINE_GVEL'
+        are the stellar and gas velocity extension names.
 """
         im = self.read_image(channel=0, ext=ext, file='maps')
 

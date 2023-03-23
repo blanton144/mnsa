@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+
+# Plot aperture of IFU vs elliptical aperture sizes
+
+import os
+import sys
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+import fitsio
+
+
+ifu_size_to_diameter = {19: 12.,
+                        37: 17.,
+                        61: 22.,
+                        91: 27.,
+                        127: 32.}
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Calculate hex photometry')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    summary = fitsio.read(sumfile, ext='SUMMARY')
+    ellipse = fitsio.read(sumfile, ext='ELLIPSE')
+    sps = fitsio.read(sumfile, ext='SPS')
+
+    ifu_size = np.array([np.int32(x[0:-2]) for x in summary['ifudsgn']])
+    ifu_radius = np.array([0.5 * ifu_size_to_diameter[x]
+                           for x in ifu_size], dtype=np.float32)
+
+    iok = np.where(summary['dlis_coadd_done'])[0]
+
+    plt.scatter(ifu_radius[iok] +
+                0.2 * np.random.normal(size=len(iok)),
+                ellipse['SMA_AP02'][iok], alpha=0.05,
+                s=2, color='black')
+
+    isingle = np.where(summary['plateifu'] == '10001-12701')[0]
+
+    plt.scatter(ifu_radius[isingle],
+                ellipse['SMA_AP02'][isingle], alpha=1.0,
+                s=50, color='red')
+
+    plt.plot([0., 20.], [0., 20.], color='grey', linewidth=2)
+    plt.show()

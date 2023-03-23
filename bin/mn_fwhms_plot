@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_fwhms_plot
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import matplotlib.pyplot as plt
+import matplotlib
+import numpy as np
+import fitsio
+import mnsa.kernel as kernel
+
+matplotlib.rcParams['figure.figsize'] = [8., 8.]
+matplotlib.rcParams['font.size'] = 16
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Plots MNSA and DR17 FWHMs comparison.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-k', '--show-kernel',
+                        dest='show_kernel',
+                        action='store_true',
+                        required=False, default=False,
+                        help='show the kernel')
+
+    args = parser.parse_args()
+    version = args.version
+    show_kernel = args.show_kernel
+
+    outdir = os.path.join(os.getenv('MNSA_DATA'), version, 'info')
+
+    fwhmfile = os.path.join(outdir, 'mn-{v}-fwhms.fits'.format(v=version))
+
+    fwhm = fitsio.read(fwhmfile)
+
+    if(show_kernel):
+        k = kernel.Kernel()
+        k_shepards = kernel.Kernel(extra=0.7)
+        seeing_grid = k.seeing
+        fwhm_grid = np.array([k.fwhm(seeing=s)
+                              for s in seeing_grid],
+                             dtype=np.float32)
+        fwhm_grid_shepards = np.array([k_shepards.fwhm(seeing=s)
+                                       for s in seeing_grid],
+                                      dtype=np.float32)
+
+    ok = fwhm['rfwhm'] > 0
+
+    fig, ax = plt.subplots(2, 1, sharex=True,
+                           gridspec_kw={'hspace':0})
+
+    seeing = fwhm['seeing_mean'] * fwhm['psffac_mean'] * (5400. / 6156.)**0.2
+
+    ax[0].scatter(seeing[ok], fwhm['rfwhm'][ok], color='black',
+                  s=8, alpha=0.10)
+    ax[0].scatter([], [], color='black', s=17, label='MNSA cube')
+    ax[0].scatter(seeing[ok], fwhm['rfwhm_dr17'][ok], color='red',
+                  s=8, alpha=0.10)
+    ax[0].scatter([], [], color='red', s=17, label='DR17 cube')
+    if(show_kernel):
+        ax[0].plot(seeing_grid, fwhm_grid, linewidth=3,
+                   color='grey', label='Instrument FWHM')
+        ax[0].plot(seeing_grid, fwhm_grid_shepards, linewidth=3,
+                   color='grey', linestyle='dotted', label='Shepards FWHM')
+    ax[0].set_xlim([0.70, 2.7])
+    ax[0].set_ylim([0.04, 4.1])
+    ax[0].set_xlabel('Guider Seeing FWHM (arcsec)')
+    ax[0].set_ylabel('Reconstruction FWHM (arcsec)')
+    ax[0].legend(loc=4)
+
+    if(show_kernel):
+        rfwhm = np.array([k.fwhm(seeing=s)
+                          for s in seeing],
+                         dtype=np.float32)
+        ax[1].scatter(seeing[ok],
+                      fwhm['rfwhm_dr17'][ok] / rfwhm[ok], color='red',
+                      s=8, alpha=0.10)
+        ax[1].scatter(seeing[ok],
+                      fwhm['rfwhm'][ok] / rfwhm[ok], color='black',
+                      s=8, alpha=0.10)
+        ax[1].set_ylabel('Reconstruction / Instrument FWHM')
+    else:
+        ax[1].scatter(seeing[ok],
+                      fwhm['rfwhm_dr17'][ok] / fwhm['rfwhm'][ok], color='black',
+                      s=8, alpha=0.10)
+        ax[1].set_ylabel('DR17 FWHM / MNSA FWHM')
+    ax[1].set_xlim([0.70, 2.7])
+    ax[1].set_ylim([0.85, 1.54])
+    ax[1].set_xlabel('Adjusted Guider Seeing FWHM (arcsec)')
+
+    pngfile = os.path.join(outdir, 'mn-{v}-fwhms.png'.format(v=version))
+    plt.savefig(pngfile, dpi=150)

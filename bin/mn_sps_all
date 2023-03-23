@@ -1,0 +1,9 @@
+#!/bin/csh -f
+
+set apertures = "AP04 AP05 AP06 AP07 AP08"
+
+foreach aperture ($apertures)
+  mn_fit_sps_ellipse -a $aperture
+  mn_params_sps_ellipse -a $aperture
+  mn_specs_sps_ellipse -a $aperture
+end

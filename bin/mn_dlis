@@ -39,10 +39,15 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
 
+    parser.add_argument('-n', '--nmc', dest='nmc',
+                        type=np.int32, required=False, default=0,
+                        help='number of MCs for errors')
+
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
     clobber = args.clobber
+    nmc = args.nmc
 
     mnsa_config = configuration.MNSAConfig(version=version)
     cfg = mnsa_config.cfg
@@ -125,12 +130,32 @@ if __name__ == '__main__':
         image_down, var_down = r.downsample()
         ivar_down = 1. / var_down
 
+        if(nmc > 0):
+            print("plate-ifu {p}: Creating MC samples".format(p=plateifu),
+                  flush=True)
+            image_MC = np.zeros((nmc, image_down.shape[0], image_down.shape[1]), dtype=np.float32)
+            ok = invvar > 0
+            suberror = 1. / np.sqrt(invvar[ok])
+            for imc in np.arange(nmc, dtype=np.int32):
+                mcimage = image.copy()
+                mcimage[ok] = mcimage[ok] + (suberror *
+                                             np.random.normal(size=invvar.shape)[ok])
+                rmc = resample.Resample(image=mcimage, invvar=invvar,
+                                        input_header=hdr_in)
+                rmc.set_output_header(hdr_out)
+                rmc.set_output_psf(psf_out)
+                mcimage_down, mcvar_down = rmc.downsample()
+                image_MC[imc, :, :] = mcimage_down
+
         fitsio.write(dlis_manga_file, image_down, extname='IMAGE',
                      header=hdr_out, clobber=True)
         fitsio.write(dlis_manga_file, ivar_down, extname='IVAR',
                      header=hdr_out, clobber=False)
         fitsio.write(dlis_manga_file, psf_out, extname='PSF',
                      header=hdr_out, clobber=False)
+        if(nmc > 0):
+            fitsio.write(dlis_manga_file, image_MC, extname='MC',
+                         header=hdr_out, clobber=False)
 
         for mask_hdu in mask_hdus:
             d, h = fitsio.read(mask_file, ext=mask_hdu, header=True)

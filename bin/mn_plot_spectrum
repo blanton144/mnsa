@@ -1,0 +1,60 @@
+#!/bin/env python
+
+
+import argparse
+import os
+import sys
+import numpy as np
+import mnsa.mnsa as mnsa
+import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.rcParams['figure.figsize'] = [8., 5]
+matplotlib.rcParams['font.size'] = 16.
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-o', '--out-file', dest='outfile',
+                        type=str, default=None,
+                        required=True, help='output file name')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str,
+                        required=True, help='plate-ifu to plot')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+    outfile = args.outfile
+
+    m = mnsa.MNSA(version=version, plateifu=plateifu)
+
+    m.read_cube()
+    wave = m.cube['WAVE'].read()
+    cube_flux = m.cube['FLUX'].read()
+    nx = cube_flux.shape[1]
+    ny = cube_flux.shape[2]
+
+    cx = nx // 2
+    cy = ny // 2
+    cflux = cube_flux[:, cx - 2:cx + 3, cy - 2:cy + 3].sum(axis=1).sum(axis=1)
+
+    iok = np.where(cflux > 0)[0]
+    plt.plot(wave[iok], np.log10(cflux[iok]), color='black')
+    plt.xlabel('Observed Wavelength (Angstroms)')
+    plt.ylabel('$\\log_{10} f_\\lambda$ (erg s$^{-1}$ cm$^{-2}$ A$^{-1}$)')
+    plt.title('Plate-IFU {p}'.format(p=plateifu))
+    plt.tight_layout()
+
+    if(outfile is None):
+        plt.show()
+    else:
+        plt.savefig(outfile, dpi=300)

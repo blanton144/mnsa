@@ -51,7 +51,7 @@ function setPlateIFUImages() {
     document.getElementById("wise_image_resampled").innerHTML = wise_image_resampled;
 		galex_image_resampled = `<a href="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-galex.png"><img class="image" src="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-galex.png"/></a>`;
     document.getElementById("galex_image_resampled").innerHTML = galex_image_resampled;
-		sps_spec = `<a href="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-sps-AP06.png"><img class="sps_spec_img" src="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-sps-AP04.png"/></a>`;
+		sps_spec = `<a href="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-sps-AP06.png"><img class="sps_spec_img" src="pngs/${plate}/${plate}-${ifu}/manga-${plate}-${ifu}-sps-AP06.png"/></a>`;
     document.getElementById("sps_spec").innerHTML = sps_spec;
 }
 

@@ -45,7 +45,7 @@ if __name__ == '__main__':
         autoescape=jinja2.select_autoescape()
     )
 
-    donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+    donefile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
                             'mn-{version}-done.fits'.format(version=version))
 
     if((not os.path.exists(donefile)) or (not noclobber)):

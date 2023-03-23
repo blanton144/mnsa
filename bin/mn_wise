@@ -51,6 +51,10 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='save model')
 
+    parser.add_argument('-n', '--nmc', dest='nmc',
+                        type=np.int32, required=False, default=0,
+                        help='number of MCs for errors')
+
     parser.add_argument('-c', '--clobber', dest='clobber',
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
@@ -65,6 +69,7 @@ if __name__ == '__main__':
     force_model = args.force_model
     save_model = args.save_model
     clobber = args.clobber
+    nmc = args.nmc
 
     pad = 12
 
@@ -250,6 +255,17 @@ if __name__ == '__main__':
                           r.weights[:, inz]).reshape((r.nx, r.ny))
         ivar_G = 1. / var_G
 
+        if(nmc > 0):
+            print("plate-ifu {p}: Creating MC samples".format(p=plateifu), flush=True)
+            image_MC = np.zeros((nmc, r.nx, r.ny), dtype=np.float32)
+            ok = subinvvar > 0
+            suberror = 1. / np.sqrt(subinvvar[ok])
+            for imc in np.arange(nmc, dtype=np.int32):
+                mcimage = subimage.copy()
+                mcimage[ok] = mcimage[ok] + (suberror *
+                                             np.random.normal(size=subinvvar.shape)[ok])
+                image_MC[imc, :, :] = r.apply_weights(mcimage.flatten())
+
         print("plate-ifu {p}: l mem={m}".format(p=plateifu, m=crr.utils.memory.memory()), flush=True)
 
         # Apply weights to PSF image
@@ -265,9 +281,13 @@ if __name__ == '__main__':
                      header=hdr_out, extname='IVAR', clobber=False)
         fitsio.write(wise_manga_file, psf_G[pad:-pad, pad:-pad],
                      header=hdr_out, extname='PSF', clobber=False)
+        if(nmc > 0):
+            fitsio.write(wise_manga_file, image_MC[:, pad:-pad, pad:-pad],
+                         header=hdr_out, extname='MC', clobber=False)
 
         for mask_hdu in mask_hdus:
             d, h = fitsio.read(mask_file, ext=mask_hdu, header=True)
-            fitsio.write(wise_manga_file, d, extname=mask_hdu, header=h, clobber=False)
+            fitsio.write(wise_manga_file, d, extname=mask_hdu, header=h,
+                         clobber=False)
 
         r = 0

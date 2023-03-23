@@ -258,7 +258,7 @@ class Resample(object):
                      np.ones(nyo, dtype=np.float32))
 
         invvar_fixed = self.invvar
-        
+
         iz = np.where(invvar_fixed <= 0.)[0]
         if(len(iz) > 0):
             invvar_fixed[iz] = np.median(self.invvar)

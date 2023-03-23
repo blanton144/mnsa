@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_numbers
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import jinja2
+import numpy as np
+import fitsio
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Print out MNSA sample numbers.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.0',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader("mnsa"),
+        autoescape=jinja2.select_autoescape()
+    )
+
+    donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+                            'mn-{version}-summary.fits'.format(version=version))
+
+    done = fitsio.read(donefile)
+
+    donedict = dict()
+    donedict['ntotal'] = len(done)
+    rd = list(zip(done['ifura'], done['ifudec']))
+    donedict['ntotal_unique'] = len(set(rd))
+
+    ii = np.where(done['manga_cube_done'])[0]
+    donedict['nmanga'] = len(ii)
+    rd = list(zip(done['ifura'][ii], done['ifudec'][ii]))
+    donedict['nmanga_unique'] = len(set(rd))
+
+    ii = np.where(done['dlis_coadd_done'])[0]
+    donedict['ndlis'] = len(ii)
+    rd = list(zip(done['ifura'][ii], done['ifudec'][ii]))
+    donedict['ndlis_unique'] = len(set(rd))
+
+    ii = np.where(done['galex_coadd_done'])[0]
+    donedict['ngalex'] = len(ii)
+    rd = list(zip(done['ifura'][ii], done['ifudec'][ii]))
+    donedict['ngalex_unique'] = len(set(rd))
+
+    ii = np.where(done['wise_coadd_done'])[0]
+    donedict['nwise'] = len(ii)
+    rd = list(zip(done['ifura'][ii], done['ifudec'][ii]))
+    donedict['nwise_unique'] = len(set(rd))
+
+    ii = np.where(done['dap_done'])[0]
+    donedict['ndap'] = len(ii)
+    rd = list(zip(done['ifura'][ii], done['ifudec'][ii]))
+    donedict['ndap_unique'] = len(set(rd))
+
+    template = env.get_template('mn-numbers-template.tex')
+    page = template.render(donedict)
+
+    numbers_file = 'mn-numbers-{v}.tex'.format(v=version)
+    fp = open(numbers_file, 'w')
+    fp.write(page)
+    fp.close()

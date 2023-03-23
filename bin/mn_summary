@@ -41,7 +41,7 @@ if __name__ == '__main__':
     sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
                            'mnsa-{version}.fits'.format(version=version))
 
-    donefile = os.path.join(os.getenv('MNSA_DATA'), version,
+    donefile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
                             'mn-{version}-done.fits'.format(version=version))
 
     photfile = os.path.join(os.getenv('MNSA_DATA'),
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                            version, 'sps',
                            'kc-params-{version}-{aperture}.fits'.format(version=version,
                                                                         aperture=aperture))
-    sps = fitsio.read(photfile)
+    sps = fitsio.read(spsfile)
 
     done = fitsio.read(donefile)
 
