@@ -52,7 +52,7 @@ if __name__ == '__main__':
                         help='save model')
 
     parser.add_argument('-n', '--nmc', dest='nmc',
-                        type=np.int32, required=False, default=0,
+                        type=np.int32, required=False, default=100,
                         help='number of MCs for errors')
 
     parser.add_argument('-c', '--clobber', dest='clobber',
