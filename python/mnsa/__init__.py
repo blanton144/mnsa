@@ -4,4 +4,4 @@ import os
 
 NAME = 'mnsa'
 
-__version__ = '0.3.0dev'
+__version__ = '0.3.1'
