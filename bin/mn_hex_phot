@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+# Calculate total spectroscopy and photometry within
+# MaNGA hexagon.
+#
+# Quantities are:
+#  * MaNGA spectrum within the combination of an elliptical
+#    aperture and the hex footprint
+#  * Raw resampled image fluxes in same footprint
+#  * Aperture corrections to resampled image fluxes
+#    correcting for resolution effects.
+#  * Overall aperture correction from aperture
+#    r-band flux to full r-band flux
+#
+# In detail, the grz images do not have to be aperture
+# corrected. They are already the high resolution images
+# blurred to MaNGA resolution and resampled, and that
+# process leads to the correct aperture correction.
+#
+# The GALEX and WISE images start at lower resolution and
+# sampling. We calculate their aperture correction by
+# taking the optical image, convolving to the same resolution,
+# and evaluating the resulting fractional change in flux.
+#
+# Need to calculate errors!
+
+import os
+import sys
+import argparse
+import numpy as np
+import fitsio
+import kcorrect.utils
+import mnsa.mnsa
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Calculate hex photometry')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    summary = fitsio.read(sumfile, ext='SUMMARY')
+    ellipse = fitsio.read(sumfile, ext='ELLIPSE')
+    sps = fitsio.read(sumfile, ext='SPS')
+
+    isingle = np.where(summary['plateifu'] == plateifu)[0][0]
+    pa = ellipse['PA_MOMENT'][isingle]
+    ba = ellipse['BA_MOMENT'][isingle]
+    sma = ellipse['SMA_AP01'][isingle]
+
+    m = mnsa.mnsa.MNSA(version=version, plateifu=plateifu)
+
+    hex_spectrum, hex_spectrum_ivar = m.hex_spectrum(sma=sma, ba=ba, pa=pa)
+
+    wave = m.cube['WAVE'].read()
+
+    bands = np.array(['FUV', 'NUV', 'g', 'r', 'z', 'W1', 'W2', 'W3', 'W4'])
+
+    hex_maggies = np.zeros(len(bands), dtype=np.float32)
+    hex_maggies_ivar = np.zeros(len(bands), dtype=np.float32)
+    for i, band in enumerate(bands):
+        ma, mai = m.hex_maggies(band=band, sma=sma, ba=ba, pa=pa)
+        hex_maggies[i] = ma * 1.e-9
+        hex_maggies_ivar[i] = mai * 1.e-9
+
+    bands = ['galex_FUV', 'galex_NUV', 'decam_g',
+             'decam_r', 'decam_z', 'wise_w1', 'wise_w2',
+             'wise_w3', 'wise_w4']
+    bandwave, fl, flivar = kcorrect.utils.maggies2flambda(hex_maggies,
+                                                          hex_maggies_ivar,
+                                                          bands)
+
+    import matplotlib.pyplot as plt
+    plt.plot(wave, hex_spectrum, linewidth=1, color='grey')
+    plt.scatter(bandwave, fl * 1.e+17, s=30, zorder=20, color='red')
+    plt.show()

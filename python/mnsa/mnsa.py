@@ -133,7 +133,8 @@ class MNSA(object):
 
     def read_cube(self):
         """Read FITS file into cube attribute"""
-        self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
+        if(self.cube is None):
+            self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
         return
 
     def read_drp(self):
@@ -147,17 +148,20 @@ class MNSA(object):
 
     def read_resampled_mask(self):
         """Read resampled mask FITS file into resampled_mask attribute"""
-        self.resampled_mask = fitsio.FITS(self.resampled_base + '-mask.fits')
+        if(self.resampled_mask is None):
+            self.resampled_mask = fitsio.FITS(self.resampled_base + '-mask.fits')
         return
 
     def read_native(self, band=None, itype=None):
         """Read native image FITS file into native dict attribute"""
-        self.native[band, itype] = fitsio.FITS(self.native_base + '-{i}-{b}.fits.fz'.format(b=band, i=itype))
+        if((band, itype) not in self.native):
+            self.native[band, itype] = fitsio.FITS(self.native_base + '-{i}-{b}.fits.fz'.format(b=band, i=itype))
         return
 
     def read_resampled(self, band=None):
         """Read resampled image FITS file into resampled dict attribute"""
-        self.resampled[band] = fitsio.FITS(self.resampled_base + '-{b}.fits'.format(b=band))
+        if(band not in self.resampled):
+            self.resampled[band] = fitsio.FITS(self.resampled_base + '-{b}.fits'.format(b=band))
         return
 
     def read_maps(self):
@@ -237,8 +241,7 @@ class MNSA(object):
 
     def hex_mask(self):
         """Calculate and return 2D mask with good spectrum"""
-        if(self.cube is None):
-            self.read_cube()
+        self.read_cube()
         mask = self.cube['MASK'].read()
         nokwave = (mask == 0).sum(axis=0)
         maxokwave = nokwave.max()
@@ -269,8 +272,7 @@ class MNSA(object):
         mask : ndarray of np.bool
             pixels to keep within ellipse        
 """
-        if(self.resampled_mask is None):
-            self.read_resampled_mask()
+        self.read_resampled_mask()
         hdr = self.resampled_mask['MASK'].read_header()
         pixscale = np.abs(np.float32(hdr['PC1_1'])) * 3600.
         nx = np.int32(hdr['NAXIS1'])
@@ -315,8 +317,11 @@ class MNSA(object):
         hex_spectrum : ndarray of np.float32
             summed spectrum across cube (masked if specified)
 
+        hex_ivar : ndarray of np.float32
+            inverse variance of hex_spectrum (masked if specified)
+
         hex_mask : ndarray of bool
-            2D mask used
+            2D mask used (if return_mask set)
 
         Notes
         -----
@@ -330,11 +335,94 @@ class MNSA(object):
             ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
             hex_mask = hex_mask & ellipse_mask
         flux = self.cube['FLUX'].read()
-        hex_flux = flux[:, hex_mask].sum(axis=1)
+        ivar = self.cube['IVAR'].read()
+        mask = self.cube['MASK'].read()
+        hex_mask_expanded = np.tile(hex_mask, (flux.shape[0], 1, 1))
+        print(mask.shape)
+        print(hex_mask.shape)
+        print(hex_mask_expanded.shape)
+        ok = ((mask == 0) & (hex_mask_expanded > 0))
+        nok = np.float32(ok.sum(axis=1).sum(axis=1))
+        scale = np.float32(hex_mask.sum()) / nok
+        import matplotlib.pyplot as plt
+        plt.imshow(hex_mask)
+        plt.show()
+        print(hex_mask.sum())
+        hex_spec = flux[:, hex_mask].sum(axis=1) * scale
+        hex_ivar = 1. / (1. / ivar[:, hex_mask]).sum(axis=1) / scale**2
+        plt.plot(scale)
+        plt.show()
         if(return_mask):
-            return(hex_flux, hex_mask)
+            return(hex_spec, hex_ivar, hex_mask)
         else:
-            return(hex_flux)
+            return(hex_spec, hex_ivar)
+
+    def hex_maggies(self, band=None, ba=1., pa=0., sma=None, return_mask=False):
+        """Calculate and return a flux in the MaNGA footprint
+
+        Parameters
+        ----------
+
+        band : str
+            band to measure
+
+        ba : np.float32
+            axis ratio b/a for applied elliptical aperture
+
+        pa : np.float32
+            position angle (deg E of N) for applied elliptical aperture
+
+        sma : np.float32
+            semi-major axis of applied elliptical aperture (arcsec)
+
+        return_mask : bool
+            if True, return the mask used to sum the spectra
+
+        Returns
+        -------
+
+        hex_maggies : np.float32
+            flux across cube (masked if specified)
+
+        hex_ivar : np.float32
+            inverse variance of hex_maggies (masked if specified)
+
+        hex_mask : ndarray of bool
+            2D mask used (if return_mask set)
+
+        Notes
+        -----
+
+        If sma is not None, an elliptical aperture is applied
+        with the specified parameters in addition to the hexagonal
+        mask.
+"""
+        hex_mask = self.hex_mask()
+        if(sma is not None):
+            ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
+            hex_mask = hex_mask & ellipse_mask
+        self.read_resampled_mask()
+        self.read_resampled(band=band)
+        ix = self.resampled_mask['X'].read()
+        iy = self.resampled_mask['Y'].read()
+        im = self.resampled[band]['IMAGE'].read()
+        iv = self.resampled[band]['IVAR'].read()
+        hex_maggies = (im[ix, iy] * hex_mask).sum()
+        hex_maggies_ivar = 1. / ((1. / iv[ix, iy]) * hex_mask).sum()
+
+        toab = dict()
+        toab['W1'] = 2.699
+        toab['W2'] = 3.339
+        toab['W3'] = 5.174
+        toab['W4'] = 6.620
+        if(band in toab):
+            hex_maggies = hex_maggies * 10.**(-0.4 * toab[band])
+            hex_maggies_ivar = hex_maggies_ivar * 10.**(0.8 * toab[band])
+
+        if(return_mask):
+            return(hex_maggies, hex_maggies_ivar, hex_mask)
+        else:
+            return(hex_maggies, hex_maggies_ivar)
 
     def image(self, imagetype=None, filename=None, invert=False,
               stretch=None, Q=None, minimum=None, Rscale=None,
