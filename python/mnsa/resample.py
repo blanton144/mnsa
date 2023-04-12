@@ -9,25 +9,25 @@ import mnsa.utils.configuration as configuration
 
 
 bandset_settings = dict()
-bandset_settings['dlis'] = {'bands':[{'name':'z', 'scale':1.0},
-                                     {'name':'r', 'scale':1.3},
-                                     {'name':'g', 'scale':2.2}],
-                            'stretch':5.,
-                            'Q':1.5,
-                            'minimum':- 0.1}
-bandset_settings['wise'] = {'bands':[{'name':'W3', 'scale':0.005},
-                                     {'name':'W2', 'scale':0.10},
-                                     {'name':'W1', 'scale':0.10}],
-                            'stretch':2.,
-                            'Q':3.5,
-                            'minimum':- 0.1}
+bandset_settings['dlis'] = {'bands': [{'name': 'z', 'scale': 1.0},
+                                      {'name': 'r', 'scale': 1.3},
+                                      {'name': 'g', 'scale': 2.2}],
+                            'stretch': 5.,
+                            'Q': 1.5,
+                            'minimum': - 0.1}
+bandset_settings['wise'] = {'bands': [{'name': 'W3', 'scale': 0.005},
+                                      {'name': 'W2', 'scale': 0.10},
+                                      {'name': 'W1', 'scale': 0.10}],
+                            'stretch': 2.,
+                            'Q': 3.5,
+                            'minimum': - 0.1}
 
-bandset_settings['galex'] = {'bands':[{'name':'g', 'scale':1.0},
-                                      {'name':'NUV', 'scale':40.5},
-                                      {'name':'FUV', 'scale':40.8}],
-                            'stretch':2.,
-                            'Q':7.5,
-                            'minimum':- 0.001}
+bandset_settings['galex'] = {'bands': [{'name': 'g', 'scale': 1.0},
+                                       {'name': 'NUV', 'scale': 40.5},
+                                       {'name': 'FUV', 'scale': 40.8}],
+                            'stretch': 2.,
+                            'Q': 7.5,
+                            'minimum': - 0.001}
 
 
 def image(plateifu=None, version=None, clobber=True,
@@ -99,7 +99,7 @@ class Resample(object):
         native sampling inverse variance
 
     input_header : dict
-        header with native WCS 
+        header with native WCS
 
     Attributes
     ----------
@@ -108,7 +108,7 @@ class Resample(object):
         native sampling image
 
     input_header : dict
-        header with native WCS 
+        header with native WCS
 
     input_pixscale : float
         native pixel scale in arcsec
