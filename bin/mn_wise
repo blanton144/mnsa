@@ -121,9 +121,6 @@ if __name__ == '__main__':
         print("MaNGA file not found: {m}".format(m=manga_file))
         sys.exit(1)
 
-    psf_out = fitsio.read(manga_file, ext='RPSF')
-    psf_out = np.float32(psf_out)
-
     mask_hdus = ['MASK', 'MASK_MANGA', 'X_MANGA', 'Y_MANGA', 'X', 'Y']
 
     print("plate-ifu {p}: mem={m}".format(p=plateifu, m=crr.utils.memory.memory()), flush=True)
@@ -141,8 +138,6 @@ if __name__ == '__main__':
             if(os.path.exists(wise_manga_file)):
                 print("plate-ifu {p}: File exists already for {f}".format(f=wise_manga_file, p=plateifu), flush=True)
                 continue
-
-            
 
         # Read the WISE PSF
         psf_file = os.path.join(imaging_dir,
