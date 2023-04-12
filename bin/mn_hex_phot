@@ -22,7 +22,9 @@
 # taking the optical image, convolving to the same resolution,
 # and evaluating the resulting fractional change in flux.
 #
-# Need to calculate errors!
+# Need to calculate errors! (based on MC calculation)
+# Need to check against DR17 in terms of sky noise
+# Weighted aperture flux
 
 import os
 import sys
@@ -30,7 +32,11 @@ import argparse
 import numpy as np
 import fitsio
 import kcorrect.utils
+import kcorrect.response
+import kcorrect.template
 import mnsa.mnsa
+
+responseDict = kcorrect.response.ResponseDict()
 
 
 if __name__ == '__main__':
@@ -61,7 +67,7 @@ if __name__ == '__main__':
     isingle = np.where(summary['plateifu'] == plateifu)[0][0]
     pa = ellipse['PA_MOMENT'][isingle]
     ba = ellipse['BA_MOMENT'][isingle]
-    sma = ellipse['SMA_AP01'][isingle]
+    sma = ellipse['SMA_AP02'][isingle]
 
     m = mnsa.mnsa.MNSA(version=version, plateifu=plateifu)
 
@@ -75,8 +81,20 @@ if __name__ == '__main__':
     hex_maggies_ivar = np.zeros(len(bands), dtype=np.float32)
     for i, band in enumerate(bands):
         ma, mai = m.hex_maggies(band=band, sma=sma, ba=ba, pa=pa)
+        apcorr = m.hex_apcorr(band=band, apband='r', sma=sma, ba=ba, pa=pa)
+        print(apcorr)
         hex_maggies[i] = ma * 1.e-9
         hex_maggies_ivar[i] = mai * 1.e-9
+
+    obands = ['decam_g', 'decam_r', 'decam_z']
+    obands = ['bass_g', 'bass_r', 'mzls_z']
+    ms = np.zeros(3, dtype=np.float32)
+    msivar = np.ones(3, dtype=np.float32)
+    for i, band in enumerate(obands):
+        responseDict.load_response(band)
+        ms[i] = responseDict[band].project(wave=wave, flux=hex_spectrum)
+    obandwave, fs, fsivar = kcorrect.utils.maggies2flambda(ms, msivar,
+                                                           obands)
 
     bands = ['galex_FUV', 'galex_NUV', 'decam_g',
              'decam_r', 'decam_z', 'wise_w1', 'wise_w2',
@@ -88,4 +106,5 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     plt.plot(wave, hex_spectrum, linewidth=1, color='grey')
     plt.scatter(bandwave, fl * 1.e+17, s=30, zorder=20, color='red')
+    plt.scatter(obandwave, fs, s=30, zorder=20, color='blue')
     plt.show()

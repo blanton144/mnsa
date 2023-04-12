@@ -120,6 +120,10 @@ class MNSA(object):
                                       'resampled-{plateifu}')
         self.resampled_base = resampled_base.format(plateifu=self.plateifu)
 
+        apimages_base = os.path.join(resampled_dir,
+                                     'apimages-{plateifu}')
+        self.apimages_base = apimages_base.format(plateifu=self.plateifu)
+
         native_base = os.path.join(native_dir,
                                    '{plateifu}-custom')
         self.native_base = native_base.format(plateifu=self.plateifu)
@@ -128,6 +132,7 @@ class MNSA(object):
         self.maps = None
         self.resampled_mask = None
         self.resampled = dict()
+        self.apimages = None
         self.native = dict()
         return
 
@@ -162,6 +167,12 @@ class MNSA(object):
         """Read resampled image FITS file into resampled dict attribute"""
         if(band not in self.resampled):
             self.resampled[band] = fitsio.FITS(self.resampled_base + '-{b}.fits'.format(b=band))
+        return
+
+    def read_apimages(self, apband=None):
+        """Read aperture correction image file"""
+        if(self.apimages is None):
+            self.apimages = fitsio.FITS(self.apimages_base + '-{b}.fits'.format(b=apband))
         return
 
     def read_maps(self):
@@ -270,7 +281,7 @@ class MNSA(object):
         -------
 
         mask : ndarray of np.bool
-            pixels to keep within ellipse        
+            pixels to keep within ellipse
 """
         self.read_resampled_mask()
         hdr = self.resampled_mask['MASK'].read_header()
@@ -338,20 +349,11 @@ class MNSA(object):
         ivar = self.cube['IVAR'].read()
         mask = self.cube['MASK'].read()
         hex_mask_expanded = np.tile(hex_mask, (flux.shape[0], 1, 1))
-        print(mask.shape)
-        print(hex_mask.shape)
-        print(hex_mask_expanded.shape)
         ok = ((mask == 0) & (hex_mask_expanded > 0))
         nok = np.float32(ok.sum(axis=1).sum(axis=1))
         scale = np.float32(hex_mask.sum()) / nok
-        import matplotlib.pyplot as plt
-        plt.imshow(hex_mask)
-        plt.show()
-        print(hex_mask.sum())
         hex_spec = flux[:, hex_mask].sum(axis=1) * scale
         hex_ivar = 1. / (1. / ivar[:, hex_mask]).sum(axis=1) / scale**2
-        plt.plot(scale)
-        plt.show()
         if(return_mask):
             return(hex_spec, hex_ivar, hex_mask)
         else:
@@ -397,18 +399,17 @@ class MNSA(object):
         with the specified parameters in addition to the hexagonal
         mask.
 """
-        hex_mask = self.hex_mask()
-        if(sma is not None):
-            ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
-            hex_mask = hex_mask & ellipse_mask
-        self.read_resampled_mask()
         self.read_resampled(band=band)
-        ix = self.resampled_mask['X'].read()
-        iy = self.resampled_mask['Y'].read()
-        im = self.resampled[band]['IMAGE'].read()
-        iv = self.resampled[band]['IVAR'].read()
-        hex_maggies = (im[ix, iy] * hex_mask).sum()
-        hex_maggies_ivar = 1. / ((1. / iv[ix, iy]) * hex_mask).sum()
+        image = self.resampled[band]['IMAGE'].read()
+        ivar = self.resampled[band]['IVAR'].read()
+
+        results = self.image_hex_maggies(image=image, ivar=ivar,
+                                         ba=ba, pa=pa, sma=sma,
+                                         return_mask=return_mask)
+        if(return_mask):
+            hex_maggies, hex_maggies_ivar, hex_mask = results
+        else:
+            hex_maggies, hex_maggies_ivar = results
 
         toab = dict()
         toab['W1'] = 2.699
@@ -418,6 +419,135 @@ class MNSA(object):
         if(band in toab):
             hex_maggies = hex_maggies * 10.**(-0.4 * toab[band])
             hex_maggies_ivar = hex_maggies_ivar * 10.**(0.8 * toab[band])
+
+        if(return_mask):
+            return(hex_maggies, hex_maggies_ivar, hex_mask)
+        else:
+            return(hex_maggies, hex_maggies_ivar)
+
+    def hex_apcorr(self, band=None, apband=None, ba=1., pa=0., sma=None,
+                   return_mask=False):
+        """Calculate and return aperture correction factor
+
+        Parameters
+        ----------
+
+        band : str
+            band of aperture correction
+
+        apband : str
+            band to correct to
+
+        ba : np.float32
+            axis ratio b/a for applied elliptical aperture
+
+        pa : np.float32
+            position angle (deg E of N) for applied elliptical aperture
+
+        sma : np.float32
+            semi-major axis of applied elliptical aperture (arcsec)
+
+        return_mask : bool
+            if True, return the mask used to sum the spectra
+
+        Returns
+        -------
+
+        apcorr : np.float32
+            aperture correction
+
+        hex_mask : ndarray of bool
+            2D mask used (if return_mask set)
+
+        Notes
+        -----
+
+        If sma is not None, an elliptical aperture is applied
+        with the specified parameters in addition to the hexagonal
+        mask.
+"""
+        self.read_apimages(apband=apband)
+        apimage = self.apimages[apband].read()
+        image = self.apimages[band].read()
+        ivar = np.ones(image.shape, dtype=np.float32)
+
+        results = self.image_hex_maggies(image=apimage, ivar=ivar,
+                                         ba=ba, pa=pa, sma=sma,
+                                         return_mask=return_mask)
+        if(return_mask):
+            ap_maggies, ap_maggies_ivar, hex_mask = results
+        else:
+            ap_maggies, ap_maggies_ivar = results
+
+        results = self.image_hex_maggies(image=image, ivar=ivar,
+                                         ba=ba, pa=pa, sma=sma,
+                                         return_mask=return_mask)
+        if(return_mask):
+            maggies, maggies_ivar, hex_mask = results
+        else:
+            maggies, maggies_ivar = results
+
+        apcorr = ap_maggies / maggies
+
+        if(return_mask):
+            return(apcorr, hex_mask)
+        else:
+            return(apcorr)
+
+    def image_hex_maggies(self, image=None, ivar=None, ba=1., pa=0., sma=None,
+                          return_mask=False):
+        """Calculate and return a flux from a given image in hex footprint
+
+        Parameters
+        ----------
+
+        image : ndarray of np.float32
+           image to calculate
+
+        ivar : ndarray of np.float32
+           ivar of image to calculate
+
+        ba : np.float32
+            axis ratio b/a for applied elliptical aperture
+
+        pa : np.float32
+            position angle (deg E of N) for applied elliptical aperture
+
+        sma : np.float32
+            semi-major axis of applied elliptical aperture (arcsec)
+
+        return_mask : bool
+            if True, return the mask used to sum the spectra
+
+        Returns
+        -------
+
+        hex_maggies : np.float32
+            flux across cube (masked if specified)
+
+        hex_ivar : np.float32
+            inverse variance of hex_maggies (masked if specified)
+
+        hex_mask : ndarray of bool
+            2D mask used (if return_mask set)
+
+        Notes
+        -----
+
+        If sma is not None, an elliptical aperture is applied
+        with the specified parameters in addition to the hexagonal
+        mask.
+"""
+        self.read_resampled_mask()
+        ix = self.resampled_mask['X'].read()
+        iy = self.resampled_mask['Y'].read()
+
+        hex_mask = self.hex_mask()
+        if(sma is not None):
+            ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
+            hex_mask = hex_mask & ellipse_mask
+        hex_maggies = (image[ix, iy] * hex_mask).sum()
+        hex_maggies_ivar = 1. / ((1. / ivar[ix, iy]) * hex_mask).sum()
 
         if(return_mask):
             return(hex_maggies, hex_maggies_ivar, hex_mask)

@@ -1,0 +1,176 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_dlis_apimages
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import numpy as np
+import scipy.interpolate as interpolate
+import fitsio
+import mnsa.utils.configuration as configuration
+import mnsa.resample as resample
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    parser.add_argument('-c', '--clobber', dest='clobber',
+                        action='store_true', required=False, default=False,
+                        help='clobber existing files')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+    clobber = args.clobber
+    apband = 'r'
+
+    mnsa_config = configuration.MNSAConfig(version=version)
+    cfg = mnsa_config.cfg
+
+    pixscale = np.float32(cfg['General']['pixscale'])
+    plate, ifu = [int(x) for x in plateifu.split('-')]
+    wise_bands = cfg['WISE']['bands'].split()
+    dlis_bands = cfg['DLIS']['bands'].split()
+    galex_bands = cfg['GALEX']['bands'].split()
+    bands = galex_bands + dlis_bands + wise_bands
+
+    resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                 version, 'resampled',
+                                 '{p}'.format(p=plate),
+                                 '{pifu}'.format(pifu=plateifu))
+
+    mask_file = os.path.join(resampled_dir,
+                             'resampled-{plateifu}-mask.fits')
+    mask_file = mask_file.format(plateifu=plateifu)
+    if(not os.path.exists(mask_file)):
+        print("Need mask file to exist first: {m}".format(m=mask_file))
+        sys.exit(1)
+
+    imaging_dir = os.path.join(os.getenv('MNSA_DATA'),
+                               version, 'imaging',
+                               '{p}'.format(p=plate),
+                               plateifu)
+
+    manga_dir = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'manga', 'redux',
+                             version,
+                             '{p}'.format(p=plate),
+                             'stack')
+    manga_file = os.path.join(manga_dir,
+                              'manga-{plateifu}-LOGCUBE.fits.gz')
+    manga_file = manga_file.format(plateifu=plateifu)
+
+    if(not os.path.exists(manga_file)):
+        print("MaNGA file not found: {m}".format(m=manga_file))
+        sys.exit(1)
+
+    manga_psf_out = fitsio.read(manga_file, ext='RPSF')
+    manga_psf_out = np.float32(manga_psf_out)
+
+    mask_hdus = ['MASK', 'MASK_MANGA', 'X_MANGA', 'Y_MANGA', 'X', 'Y']
+
+    apimages_file = os.path.join(resampled_dir,
+                                 'apimages-{plateifu}-{apband}.fits')
+    apimages_file = apimages_file.format(plateifu=plateifu,
+                                         apband=apband)
+
+    if(clobber is False):
+        if(os.path.exists(apimages_file)):
+            print("File exists already for {f}".format(f=apimages_file))
+            sys.exit()
+
+    first = True
+    for band in bands:
+        print(band)
+        if(band not in ['g', 'r', 'z']):
+            psf_file = os.path.join(imaging_dir,
+                                    '{plateifu}-custom-psf-{band}.fits.fz')
+            psf_file = psf_file.format(plateifu=plateifu, band=band)
+
+            if(os.path.exists(psf_file) is False):
+                print("plate-ifu {p}: Skipping case where PSF missing: {p}".format(p=plateifu), flush=True)
+                continue
+
+            print("plate-ifu {p}: Reading PSF: {f}".format(f=psf_file, p=plateifu), flush=True)
+            psf = fitsio.read(psf_file)
+            psf = psf / psf.sum()
+            xpsf = np.arange(psf.shape[1])
+            ypsf = np.arange(psf.shape[0])
+            xxpsf = np.outer(np.ones(psf.shape[0]), xpsf)
+            yypsf = np.outer(ypsf, np.ones(psf.shape[1]))
+            rrpsf = np.sqrt((xxpsf - (psf.shape[1] // 2))**2 +
+                            (yypsf - (psf.shape[0] // 2))**2)
+            psf = psf * (rrpsf < 10.)  # based on where PSF gets noisy
+            psf = psf / psf.sum()
+            psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, psf)
+
+            xpsf_out = np.arange(manga_psf_out.shape[1], dtype=np.float32)
+            ypsf_out = np.arange(manga_psf_out.shape[0], dtype=np.float32)
+            ocx = np.float32(manga_psf_out.shape[1] // 2)
+            ocy = np.float32(manga_psf_out.shape[0] // 2)
+            xxpsf_out = np.outer(np.ones(manga_psf_out.shape[0]),
+                                 xpsf_out).flatten() - ocx
+            yypsf_out = np.outer(ypsf_out,
+                                 np.ones(manga_psf_out.shape[1])).flatten() - ocy
+            cx = np.float32(psf.shape[1] // 2)
+            cy = np.float32(psf.shape[0] // 2)
+            lx = xxpsf_out * 0.75 / 2.75
+            ly = yypsf_out * 0.75 / 2.75
+            psf_out = psf_interp(lx + cx, ly + cy, grid=False).flatten()
+            psf_out = psf_out.reshape(manga_psf_out.shape)
+            psf_out = psf_out * (0.75 / 2.75)**2
+        else:
+            psf_out = manga_psf_out.copy()
+
+        # Read in the header again in case it was altered below
+        hdr_out = fitsio.read_header(mask_file, ext='MASK')
+
+        apband_file = os.path.join(imaging_dir,
+                                   '{plateifu}-custom-image-{apband}.fits.fz')
+        apband_file = apband_file.format(plateifu=plateifu, apband=apband)
+
+        if(not os.path.exists(apband_file)):
+            print("File not found: {m}".format(m=apband_file))
+            sys.exit(1)
+
+        image, hdr_in = fitsio.read(apband_file, header=True)
+
+        invvar_file = os.path.join(imaging_dir,
+                                   '{plateifu}-custom-invvar-{apband}.fits.fz')
+        invvar_file = invvar_file.format(plateifu=plateifu, apband=apband)
+
+        if(not os.path.exists(invvar_file)):
+            print("Invvar file not found: {m}".format(m=invvar_file))
+            sys.exit(1)
+
+        invvar = fitsio.read(invvar_file, header=False)
+
+        r = resample.Resample(image=image, invvar=invvar, input_header=hdr_in)
+        r.set_output_header(hdr_out)
+        r.set_output_psf(psf_out)
+        image_down, var_down = r.downsample()
+
+        extname = band.upper()
+        fitsio.write(apimages_file, image_down, extname=extname,
+                     header=hdr_out, clobber=first)
+        first = False
+
+    for mask_hdu in mask_hdus:
+        d, h = fitsio.read(mask_file, ext=mask_hdu, header=True)
+        fitsio.write(apimages_file, d, extname=mask_hdu, header=h, clobber=False)
