@@ -155,6 +155,8 @@ class MNSA(object):
         """Read resampled mask FITS file into resampled_mask attribute"""
         if(self.resampled_mask is None):
             self.resampled_mask = fitsio.FITS(self.resampled_base + '-mask.fits')
+            self.resampled_mask_ix = self.resampled_mask['X'].read()
+            self.resampled_mask_iy = self.resampled_mask['Y'].read()
         return
 
     def read_native(self, band=None, itype=None):
@@ -359,7 +361,8 @@ class MNSA(object):
         else:
             return(hex_spec, hex_ivar)
 
-    def hex_maggies(self, band=None, ba=1., pa=0., sma=None, return_mask=False):
+    def hex_maggies(self, band=None, ba=1., pa=0., sma=None,
+                    return_mask=False):
         """Calculate and return a flux in the MaNGA footprint
 
         Parameters
@@ -398,27 +401,29 @@ class MNSA(object):
         If sma is not None, an elliptical aperture is applied
         with the specified parameters in addition to the hexagonal
         mask.
+
+        Inverse variance is based on MC images in resampled.
 """
         self.read_resampled(band=band)
         image = self.resampled[band]['IMAGE'].read()
         ivar = self.resampled[band]['IVAR'].read()
+        mc = self.resampled[band]['MC'].read()
 
-        results = self.image_hex_maggies(image=image, ivar=ivar,
-                                         ba=ba, pa=pa, sma=sma,
-                                         return_mask=return_mask)
-        if(return_mask):
-            hex_maggies, hex_maggies_ivar, hex_mask = results
-        else:
-            hex_maggies, hex_maggies_ivar = results
+        results = self._image_hex_maggies(image=image, ivar=ivar,
+                                          ba=ba, pa=pa, sma=sma,
+                                          return_mask=True)
+        hex_maggies, dum_ivar, hex_mask = results
 
-        toab = dict()
-        toab['W1'] = 2.699
-        toab['W2'] = 3.339
-        toab['W3'] = 5.174
-        toab['W4'] = 6.620
-        if(band in toab):
-            hex_maggies = hex_maggies * 10.**(-0.4 * toab[band])
-            hex_maggies_ivar = hex_maggies_ivar * 10.**(0.8 * toab[band])
+        nmc = mc.shape[0]
+        hex_maggies_mc = np.zeros(nmc, dtype=np.float32)
+        for imc in np.arange(nmc, dtype=np.int32):
+            results = self._image_hex_maggies(image=mc[imc, :, :],
+                                              ivar=ivar,
+                                              input_mask=hex_mask)
+            tmp_hex_maggies_mc, dum_ivar = results
+            hex_maggies_mc[imc] = tmp_hex_maggies_mc
+
+        hex_maggies_ivar = 1. / hex_maggies_mc.std()**2
 
         if(return_mask):
             return(hex_maggies, hex_maggies_ivar, hex_mask)
@@ -471,17 +476,17 @@ class MNSA(object):
         image = self.apimages[band].read()
         ivar = np.ones(image.shape, dtype=np.float32)
 
-        results = self.image_hex_maggies(image=apimage, ivar=ivar,
-                                         ba=ba, pa=pa, sma=sma,
-                                         return_mask=return_mask)
+        results = self._image_hex_maggies(image=apimage, ivar=ivar,
+                                          ba=ba, pa=pa, sma=sma,
+                                          return_mask=return_mask)
         if(return_mask):
             ap_maggies, ap_maggies_ivar, hex_mask = results
         else:
             ap_maggies, ap_maggies_ivar = results
 
-        results = self.image_hex_maggies(image=image, ivar=ivar,
-                                         ba=ba, pa=pa, sma=sma,
-                                         return_mask=return_mask)
+        results = self._image_hex_maggies(image=image, ivar=ivar,
+                                          ba=ba, pa=pa, sma=sma,
+                                          return_mask=return_mask)
         if(return_mask):
             maggies, maggies_ivar, hex_mask = results
         else:
@@ -494,8 +499,8 @@ class MNSA(object):
         else:
             return(apcorr)
 
-    def image_hex_maggies(self, image=None, ivar=None, ba=1., pa=0., sma=None,
-                          return_mask=False):
+    def _image_hex_maggies(self, image=None, ivar=None, ba=1., pa=0., sma=None,
+                           input_mask=None, return_mask=False):
         """Calculate and return a flux from a given image in hex footprint
 
         Parameters
@@ -515,6 +520,9 @@ class MNSA(object):
 
         sma : np.float32
             semi-major axis of applied elliptical aperture (arcsec)
+        
+        input_mask : ndarray of bool
+            input mask (overrides hex and other parameters)
 
         return_mask : bool
             if True, return the mask used to sum the spectra
@@ -537,15 +545,22 @@ class MNSA(object):
         If sma is not None, an elliptical aperture is applied
         with the specified parameters in addition to the hexagonal
         mask.
+
+        Inverse variance is propagated from ivar image (only
+        accurate if the image has diagonal covariance).
 """
         self.read_resampled_mask()
-        ix = self.resampled_mask['X'].read()
-        iy = self.resampled_mask['Y'].read()
+        ix = self.resampled_mask_ix
+        iy = self.resampled_mask_iy
 
-        hex_mask = self.hex_mask()
-        if(sma is not None):
-            ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
-            hex_mask = hex_mask & ellipse_mask
+        if(input_mask is None):
+            hex_mask = self.hex_mask()
+            if(sma is not None):
+                ellipse_mask = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
+                hex_mask = hex_mask & ellipse_mask
+        else:
+            hex_mask = input_mask
+
         hex_maggies = (image[ix, iy] * hex_mask).sum()
         hex_maggies_ivar = 1. / ((1. / ivar[ix, iy]) * hex_mask).sum()
 

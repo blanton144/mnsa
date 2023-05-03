@@ -22,9 +22,8 @@
 # taking the optical image, convolving to the same resolution,
 # and evaluating the resulting fractional change in flux.
 #
-# Need to calculate errors! (based on MC calculation)
-# Need to check against DR17 in terms of sky noise
 # Weighted aperture flux
+# Overall aperture correction
 
 import os
 import sys
@@ -57,14 +56,13 @@ if __name__ == '__main__':
     version = args.version
     plateifu = args.plateifu
 
-    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
-                           'mnsa-{version}.fits'.format(version=version))
+    ellipse_file = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
+                                'manga-legacyphot-{version}.fits'.format(version=version))
 
-    summary = fitsio.read(sumfile, ext='SUMMARY')
-    ellipse = fitsio.read(sumfile, ext='ELLIPSE')
-    sps = fitsio.read(sumfile, ext='SPS')
+    parent = fitsio.read(ellipse_file, ext='PARENT')
+    ellipse = fitsio.read(ellipse_file, ext='ELLIPSE')
 
-    isingle = np.where(summary['plateifu'] == plateifu)[0][0]
+    isingle = np.where(parent['PLATEIFU'] == plateifu)[0][0]
     pa = ellipse['PA_MOMENT'][isingle]
     ba = ellipse['BA_MOMENT'][isingle]
     sma = ellipse['SMA_AP02'][isingle]
@@ -82,9 +80,8 @@ if __name__ == '__main__':
     for i, band in enumerate(bands):
         ma, mai = m.hex_maggies(band=band, sma=sma, ba=ba, pa=pa)
         apcorr = m.hex_apcorr(band=band, apband='r', sma=sma, ba=ba, pa=pa)
-        print(apcorr)
         hex_maggies[i] = ma * 1.e-9
-        hex_maggies_ivar[i] = mai * 1.e-9
+        hex_maggies_ivar[i] = mai * 1.e+18
 
     obands = ['decam_g', 'decam_r', 'decam_z']
     obands = ['bass_g', 'bass_r', 'mzls_z']
@@ -99,12 +96,18 @@ if __name__ == '__main__':
     bands = ['galex_FUV', 'galex_NUV', 'decam_g',
              'decam_r', 'decam_z', 'wise_w1', 'wise_w2',
              'wise_w3', 'wise_w4']
+    bands = ['galex_FUV', 'galex_NUV', 'bass_g',
+             'bass_r', 'mzls_z', 'wise_w1', 'wise_w2',
+             'wise_w3', 'wise_w4']
     bandwave, fl, flivar = kcorrect.utils.maggies2flambda(hex_maggies,
                                                           hex_maggies_ivar,
                                                           bands)
 
     import matplotlib.pyplot as plt
-    plt.plot(wave, hex_spectrum, linewidth=1, color='grey')
-    plt.scatter(bandwave, fl * 1.e+17, s=30, zorder=20, color='red')
-    plt.scatter(obandwave, fs, s=30, zorder=20, color='blue')
+    plt.plot(np.log10(wave), hex_spectrum, linewidth=1, color='grey')
+    plt.scatter(np.log10(bandwave), fl * 1.e+17, s=30, zorder=20, color='red')
+    flerr = 1. / np.sqrt(flivar)
+    plt.errorbar(np.log10(bandwave), fl * 1.e+17, yerr=flerr * 1.e+17,
+                 zorder=20, color='red', fmt='none')
+    plt.scatter(np.log10(obandwave), fs, s=30, zorder=20, color='blue')
     plt.show()

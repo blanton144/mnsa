@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Performs an arithmetic operation.')
+        description='Creates summary mnsa file')
 
     parser.add_argument('-v', '--version', dest='version',
                         type=str, default='0.3.0',
