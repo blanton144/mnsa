@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import numpy as np
+import fitsio
+import mnsa.agn
+import kcorrect.response
+
+
+# Issues with this:
+#   - Need uncertain calculation
+#   - Does not account for variation of AGN spectrum
+#   - AGN luminosities for some galaxies are very small
+#     relative to nominal limits (i.e. SF in SED model
+#     fits colors not bad)
+
+responses = kcorrect.response.ResponseDict()
+responses.load_response('wise_w1')
+responses.load_response('wise_w2')
+responses.load_response('wise_w3')
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Select mid-IR AGN')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    print("Reading catalog", flush=True)
+    mnsa_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'mnsa-{v}.fits'.format(v=version))
+    summary = fitsio.read(mnsa_file, ext='SUMMARY')
+    pipe3d = fitsio.read(mnsa_file, ext='PIPE3D')
+    sps = fitsio.read(mnsa_file, ext='SPS_AP04')
+
+    print("Reading specs", flush=True)
+    spstype = 'sps-agn'
+    subdir = '.analysis'
+    specfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + subdir, spstype,
+                            'kc-spec-{v}-{a}.fits')
+    specfile = specfile.format(a='AP04', v=version)
+    wave = fitsio.read(specfile, ext='WAVE')
+    spec = fitsio.read(specfile, ext='FLUX')
+    agnspec = fitsio.read(specfile, ext='AGNFLUX')
+
+    logssfr = pipe3d['log_SFR_ssp'] - pipe3d['log_Mass']
+    w1w2 = sps['absmag'][:, 5] - sps['absmag'][:, 6]
+
+    good = ((summary['ipipe3d'] >= 0) & (sps['do_sps'] > 0))
+    isagn = (good) & (w1w2 > mnsa.agn.w1w2_condition(logssfr=logssfr))
+
+    # Make typical AGN spectrum (note there is a lot of variation!)
+    inorm = np.argmin(np.abs(wave - 50000))
+    agnscale = agnspec[:, inorm]
+    isample = np.where(isagn & (agnscale > 0) & (w1w2 > 0))[0]
+    agnnorm = agnspec[isample, :]
+    for i in np.arange(len(isample), dtype=np.int32):
+        agnnorm[i, :] = agnnorm[i, :] / agnscale[isample[i]]
+    agnavg = agnnorm.mean(axis=0)
+    w1_agnavg = responses['wise_w1'].project(wave=wave, flux=agnavg)
+    w2_agnavg = responses['wise_w2'].project(wave=wave, flux=agnavg)
+
+    agn_dtype = np.dtype([('plateifu', str, 20),
+                          ('isagn', bool),
+                          ('good', bool),
+                          ('w1w2', np.float32),
+                          ('logssfr', np.float32),
+                          ('log_nuLnu_w2', np.float32),
+                          ('log_nuLnu_w3', np.float32),
+                          ('log_nuLnu_w2_limit', np.float32),
+                          ('log_nuLnu_w3_limit', np.float32)])
+    agn = np.zeros(len(summary), dtype=agn_dtype)
+    agn['plateifu'] = summary['plateifu']
+    agn['good'] = good
+    agn['logssfr'] = logssfr
+    agn['w1w2'] = w1w2
+    agn['log_nuLnu_w2'] = - 9999.
+    agn['log_nuLnu_w3'] = - 9999.
+    agn['log_nuLnu_w2_limit'] = - 9999.
+    agn['log_nuLnu_w3_limit'] = - 9999.
+
+    iagn = np.where(isagn)[0]
+    for i in iagn:
+        agn['isagn'][i] = True
+        cspec = spec[i, :]
+        cagnspec = agnspec[i, :]
+        lagn = mnsa.agn.agn_luminosity_w2w3(sps=sps[i], wave=wave,
+                                            spec=cspec, agnspec=cagnspec)
+        agn['log_nuLnu_w2'][i] = lagn['log_nuLnu_w2']
+        agn['log_nuLnu_w3'][i] = lagn['log_nuLnu_w3']
+
+    ilimit = np.where(good & (agn['log_nuLnu_w2'] < 0))[0]
+    for i in ilimit:
+        # Get current limit on w2/w1
+        clogssfr = logssfr[i]
+        cw1w2_limit = mnsa.agn.w1w2_condition(logssfr=clogssfr)
+        w2w1_ratio = 10.**(0.4 * cw1w2_limit)
+
+        # Determine how much average AGN SED to add
+        cspec = spec[i, :]
+        cw1 = responses['wise_w1'].project(wave=wave, flux=cspec)
+        cw2 = responses['wise_w2'].project(wave=wave, flux=cspec)
+        agn_factor = ((w2w1_ratio * cw1 - cw2) /
+                      (w2_agnavg - w2w1_ratio * w1_agnavg))
+
+        # Now get the luminosity this limiting factor corresponds to
+        cagnspec = agnspec[i, :]
+        lagnspec = cagnspec + agn_factor * agnavg
+        lagn = mnsa.agn.agn_luminosity_w2w3(sps=sps[i], wave=wave,
+                                            spec=cspec, agnspec=lagnspec)
+        agn['log_nuLnu_w2_limit'][i] = lagn['log_nuLnu_w2']
+        agn['log_nuLnu_w3_limit'][i] = lagn['log_nuLnu_w3']
+
+    agnfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + subdir, 'midir-agn',
+                           'midir-agn-{v}.fits')
+    agnfile = agnfile.format(v=version)
+    fitsio.write(agnfile, agn, clobber=True)

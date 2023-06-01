@@ -25,9 +25,22 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--version', dest='version',
                         type=str, help='version name', required=True)
 
+    parser.add_argument('-t', '--type', dest='type',
+                        type=str, help='SPS type', required=False,
+                        default='sps',
+                        choices=['sps', 'sps-agn'])
+
     args = parser.parse_args()
     aperture = args.aperture
     version = args.version
+    spstype = args.type
+
+    if(spstype == 'sps'):
+        subdir = ''
+        pngs = 'pngs'
+    elif(spstype == 'sps-agn'):
+        subdir = '.analysis'
+        pngs = 'sps-agn-pngs'
 
     print("Reading parent", flush=True)
     parent = fitsio.read(os.path.join(os.getenv('MNSA_DATA'), '0.3.0.analysis',
@@ -36,25 +49,27 @@ if __name__ == '__main__':
     
     print("Reading specs", flush=True)
     specfile = os.path.join(os.getenv('MNSA_DATA'),
-                            version, 'sps',
+                            version + subdir, spstype,
                             'kc-spec-{v}-{a}.fits')
     specfile = specfile.format(a=aperture, v=version)
     wave = fitsio.read(specfile, ext='WAVE')
     spec = fitsio.read(specfile, ext='FLUX')
+    if(spstype == 'sps-agn'):
+        agnspec = fitsio.read(specfile, ext='AGNFLUX')
 
     print("Reading params", flush=True)
     paramsfile = os.path.join(os.getenv('MNSA_DATA'),
-                              version + '.analysis', 'sps',
+                              version + subdir, spstype,
                               'kc-params-{v}-{a}.fits'.format(v=version, a=aperture))
     sps = fitsio.read(paramsfile)
     idone = np.where(sps['do_sps'])[0]
 
     kcnorthfile = os.path.join(os.getenv('MNSA_DATA'),
-                               version, 'sps',
+                               version + subdir, spstype,
                                'kc-fsps-north-{v}.fits'.format(v=version))
 
     kcsouthfile = os.path.join(os.getenv('MNSA_DATA'),
-                               version, 'sps',
+                               version + subdir, spstype,
                                'kc-fsps-south-{v}.fits'.format(v=version))
 
     print("Reading Kcorrect object (north)", flush=True)
@@ -62,6 +77,8 @@ if __name__ == '__main__':
 
     print("Reading Kcorrect object (south)", flush=True)
     kcs = kk.Kcorrect(filename=kcsouthfile)
+
+    bandnames = ['FUV', 'NUV', 'g', 'r', 'z', 'W1', 'W2', 'W3', 'W4']
 
     for i in idone:
         print(i)
@@ -71,13 +88,15 @@ if __name__ == '__main__':
         plate, ifu = plateifu.split('-')
 
         outdir = os.path.join(os.getenv('MNSA_DATA'),
-                              version, 'pngs',
+                              version + subdir, pngs,
                               plate, plateifu)
         os.makedirs(outdir, exist_ok=True)
 
         redshift = sps['redshift'][i]
         cwave = wave * (1. + redshift)
         cspec = spec[i, :] / (1. + redshift)
+        if(spstype == 'sps-agn'):
+            cagnspec = agnspec[i, :] / (1. + redshift)
         maggies = sps['maggies'][i, :]
         rmaggies = sps['rmaggies'][i, :]
         ivar = sps['ivar'][i, :]
@@ -107,26 +126,40 @@ if __name__ == '__main__':
 
         rwave, rflux = ku.maggies2flambda(maggies=rmaggies, responses=responses)
 
-        plt.plot(np.log10(cwave), np.log10(cwave * cspec), color='grey', zorder=1)
+        plt.plot(np.log10(cwave), np.log10(cwave * cspec), color='grey', zorder=1, label='Total SED fit')
+        plt.plot(np.log10(cwave), np.log10(cwave * cagnspec), color='green', zorder=0, label='AGN SED fit')
         plt.scatter(np.log10(bwave), np.log10(bwave * pbflux), s=50, color='red',
-                    alpha=0.4, zorder=2)
+                    alpha=0.4, zorder=2, label='Observed photometry')
         plt.errorbar(np.log10(bwave), np.log10(bwave * pbflux),
                      yerr=berrorbar, color='darkred', fmt='none', zorder=3)
+
+        for iband, bandname in enumerate(bandnames):
+            if(np.isfinite(berrorbar[1, iband])):
+                dmax = (berrorbar[1, iband] +
+                        np.log10(bwave[iband] * pbflux[iband]))
+                im = np.where(np.abs(np.log10(cwave) - np.log10(bwave[iband]))
+                              < 0.08)[0]
+                mmax = np.nanmax(np.log10(cwave[im] * cspec[im]))
+                usemax = np.max(np.array([dmax, mmax]))
+                plt.text(np.log10(bwave[iband]), usemax + 0.1,
+                         bandname, fontsize=12, ha='center', va='bottom')
         plt.scatter(np.log10(rwave), np.log10(bwave * rflux), s=25, color='blue',
-                    alpha=0.4, zorder=4)
+                    alpha=0.4, zorder=4, label='Synthetic photometry')
         plt.xlim([2.9, 5.9])
         miny = np.min([np.nanmin(np.log10(bwave * bflux)),
                        np.nanmin(np.log10(bwave * rflux))]) - 1.
         maxy = np.max([np.nanmax(np.log10(bwave * bflux)),
                        np.nanmax(np.log10(bwave * rflux))]) + 1.
-        if(np.isfinite(miny) == False):
-            miny = -19.
-        if(np.isfinite(maxy) == False):
-            maxy = -10.
+        if((np.isfinite(miny) == False) | (np.isfinite(maxy) == False)):
+            iin = np.where((np.log10(cwave) > 2.9) &
+                           (np.log10(cwave) < 5.9))[0]
+            miny = np.nanmin(np.log10(cwave[iin] * cspec[iin])) - 1.
+            maxy = np.nanmax(np.log10(cwave[iin] * cspec[iin])) + 1.
         plt.ylim([miny, maxy])
         plt.xlabel('log Wavelength (Ang)')
         plt.ylabel('log $\\lambda f_\\lambda$ (erg s$^{-1}$ cm$^{-2}$)')
         plt.title('Plate-IFU {p}'.format(p=parent['PLATEIFU'][i]))
+        plt.legend(fontsize=8)
 
         outfile = os.path.join(outdir, 'manga-{p}-sps-{a}.png'.format(p=plateifu,
                                                                       a=aperture))

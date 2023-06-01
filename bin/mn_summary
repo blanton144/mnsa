@@ -19,6 +19,8 @@ import sys
 import numpy as np
 import fitsio
 
+apertures = ['AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+
 
 if __name__ == '__main__':
 
@@ -30,32 +32,34 @@ if __name__ == '__main__':
                         type=str, default='0.3.0',
                         help='MNSA configuration version')
 
-    parser.add_argument('-a', '--aperture', dest='aperture',
-                        type=str, default='AP06',
-                        help='aperture for SPS results')
-
     args = parser.parse_args()
     version = args.version
-    aperture = args.aperture
 
     sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
                            'mnsa-{version}.fits'.format(version=version))
 
     donefile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
                             'mn-{version}-done.fits'.format(version=version))
+    done = fitsio.read(donefile)
 
     photfile = os.path.join(os.getenv('MNSA_DATA'),
                             version + '.analysis',
                             'manga-legacyphot-{version}.fits'.format(version=version))
     ellipse = fitsio.read(photfile, ext='ELLIPSE')
 
-    spsfile = os.path.join(os.getenv('MNSA_DATA'),
-                           version, 'sps',
-                           'kc-params-{version}-{aperture}.fits'.format(version=version,
-                                                                        aperture=aperture))
-    sps = fitsio.read(spsfile)
+    sps = dict()
+    for aperture in apertures:
+        spsfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version + '.analysis', 'sps-agn',
+                               'kc-params-{version}-{aperture}.fits')
+        spsfile = spsfile.format(version=version, aperture=aperture)
+        sps[aperture] = fitsio.read(spsfile)
 
-    done = fitsio.read(donefile)
+    cffile = os.path.join(os.getenv('MNSA_DATA'),
+                          version + '.analysis',
+                          'central_flux', 'central-flux-{v}.fits')
+    cffile = cffile.format(v=version)
+    central_flux = fitsio.read(cffile)
 
     drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
                            'v3_1_1', 'drpall-v3_1_1.fits')
@@ -87,6 +91,10 @@ if __name__ == '__main__':
         if(len(ipipe3d) > 0):
             summary['ipipe3d'][i] = ipipe3d[0]
 
+    pipe3d_matched = np.zeros(len(summary), dtype=pipe3d.dtype)
+    matched = (summary['ipipe3d'] >= 0)
+    pipe3d_matched[matched] = pipe3d[summary['ipipe3d'][matched]]
+
     hdr = list()
     hdr.append({'name': 'APERTURE',
                 'value': aperture,
@@ -97,7 +105,13 @@ if __name__ == '__main__':
 
     fitsio.write(sumfile, summary, header=hdr, extname='SUMMARY',
                  clobber=True)
-    fitsio.write(sumfile, sps, extname='SPS',
-                 clobber=False)
     fitsio.write(sumfile, ellipse, extname='ELLIPSE',
                  clobber=False)
+    fitsio.write(sumfile, central_flux, extname='CENTRAL_FLUX',
+                 clobber=False)
+    fitsio.write(sumfile, pipe3d_matched, extname='PIPE3D',
+                 clobber=False)
+    for aperture in apertures:
+        fitsio.write(sumfile, sps[aperture],
+                     extname='SPS_{ap}'.format(ap=aperture),
+                     clobber=False)

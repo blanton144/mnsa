@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 import matplotlib.image
 import matplotlib.cm
@@ -52,6 +53,9 @@ class MNSA(object):
 
     plateifu : str
         plate-ifu string
+
+    psf : dict
+        dictionary to store PSF information (initialized to empty)
 
     version : str
         version of data to use
@@ -130,16 +134,28 @@ class MNSA(object):
 
         self.cube = None
         self.maps = None
+        self.rss = None
         self.resampled_mask = None
         self.resampled = dict()
         self.apimages = None
         self.native = dict()
+        self.psf = dict()
         return
 
     def read_cube(self):
         """Read FITS file into cube attribute"""
         if(self.cube is None):
             self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
+        return
+
+    def read_rss(self):
+        """Read RSS FITS file into rss attribute"""
+        if(self.rss is None):
+            rssfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
+                                   'v3_1_1', str(self.plate),
+                                   'stack', 'manga-{p}-LOGRSS.fits.gz')
+            rssfile = rssfile.format(p=self.plateifu)
+            self.rss = fitsio.FITS(rssfile)
         return
 
     def read_drp(self):
@@ -193,7 +209,27 @@ class MNSA(object):
         dap_file = os.path.join(dap_dir, 'manga-{p}-{t}-{d}.fits.gz')
         dap_maps = dap_file.format(p=self.plateifu, d=daptype,
                                    t='MAPS')
-        self.maps = fitsio.FITS(dap_maps)
+        try:
+            self.maps = fitsio.FITS(dap_maps)
+        except:
+            print("Could not read in MAPS", flush=True)
+            return
+        
+        exts = [x.get_extname() for x in self.maps]
+
+        self.ichannel = dict()
+        for ext in exts:
+            if(ext == ''):
+                continue
+            self.ichannel[ext] = dict()
+            try:
+                hdr = self.maps[ext].read_header()
+            except IOError:
+                raise ValueError("Could not read extension {ext}".format(ext=ext))
+            for k in hdr:
+                m = re.match('^C([0-9]*)$', k)
+                if(m is not None):
+                    self.ichannel[ext][hdr[k]] = int(m[1]) - 1
         return
 
     def read_image(self, channel=None, ext=None, file=None):
@@ -217,6 +253,8 @@ class MNSA(object):
         if(file == 'maps'):
             if(self.maps is None):
                 self.read_maps()
+                if(self.maps is None):
+                    return
             hdr = self.maps[ext].read_header()
             if(channel):
                 ichannel = -1
@@ -235,6 +273,7 @@ class MNSA(object):
                 im = self.maps[ext][:, :]
             return(im)
         if(file == 'cube'):
+            self.read_cube()
             if(ext != 'FLUX'):
                 im = self.cube[ext].read()
                 return(im)
@@ -694,3 +733,98 @@ class MNSA(object):
         im_scaled[im_scaled > 1.] = 1.
         rgb = matplotlib.cm.bwr(im_scaled)
         return(rgb)
+
+    def read_psf(self, band=None):
+        """Read PSF image
+
+        Parameters
+        ----------
+
+        band : str
+            band for PSF ("g", "r", "i", "z")
+
+        Notes
+        -----
+
+        Puts psf (2-D ndarray of np.float32) entry of 
+        attribute "psf", a dictionary
+"""
+        self.read_cube()
+        if(band in self.psf):
+            return
+        extname = "{band}PSF".format(band=band.upper())
+        self.psf[band] = self.cube[extname].read()
+        return
+
+    def central_flux(self, channel=None, ext='EMLINE_GFLUX',
+                     psfband='r', rlimit=3.5):
+        """Calculate a central PSF-weighted flux
+
+        Parameters
+        ----------
+
+        channel : str
+            name of emission line channel to calculate
+
+        ext : str
+            name of extension for calculated spaxel fluxes
+
+        psfband : str
+            band to use for PSF weighting
+
+        thlimit : np.float32
+            radius limit for PSF in arcsec
+        
+        Returns
+        -------
+
+        flux : np.float32
+            measured PSF-weighted flux in center of image
+
+        ivar : np.float32
+            inverse variance of measured PSF-weighted flux in center of image
+
+        nbad : np.int32
+            number of pixels within theta limit with ivar=0
+"""
+        self.read_maps()
+        if(self.maps is None):
+            return(0., 0., 0)
+
+        self.read_psf(band=psfband)
+
+        ichannel = self.ichannel[ext][channel]
+
+        # Read in data
+        im = self.maps[ext][ichannel, :, :].squeeze()
+        ivar = self.maps[ext + '_IVAR'][ichannel, :, :].squeeze()
+
+        # Create PSF weighting mask
+        #   - first limit in radius
+        circle_mask = self.ellipse_mask(sma=rlimit)
+
+        # Count how many ivar=0 pixels there are
+        nbad = np.int32(((ivar == 0) & (circle_mask > 0)).sum())
+        
+        psf = self.psf[psfband] * circle_mask
+        #   - then excise negatives        
+        psf[psf < 0.] = 0.
+        #   - if no pixels left, return flux=0, ivar=0
+        if((psf > 0.).sum() == 0):
+            return(0., 0., nbad)
+        #   - normalize to this PSF model
+        psf = psf / psf.sum()
+        #   - now excise poorly measured pixels (but do not renorm)
+        psf[ivar <= 0.] = 0.
+
+        # If no pixels left, return flux=0, ivar=0
+        if((psf > 0.).sum() == 0):
+            return(0., 0., nbad)
+
+        central_flux = (im * psf).sum() / (psf * psf).sum()
+
+        is_positive = (psf > 0)
+        central_ivar = (((psf[is_positive]**2).sum())**2 /
+                        (((psf[is_positive]**2) / ivar[is_positive]).sum()))
+
+        return(central_flux, central_ivar, nbad)

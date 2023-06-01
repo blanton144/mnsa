@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import subprocess
+import argparse
+import numpy as np
+import fitsio
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.rcParams['figure.figsize'] = [8., 5.]
+matplotlib.rcParams['font.size'] = 22
+matplotlib.rcParams['text.usetex'] = True
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Plot selected mid-IR AGN')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    print("Reading catalog", flush=True)
+    mnsa_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'mnsa-{v}.fits'.format(v=version))
+    summary = fitsio.read(mnsa_file, ext='SUMMARY')
+    pipe3d = fitsio.read(mnsa_file, ext='PIPE3D')
+    sps = fitsio.read(mnsa_file, ext='SPS_AP04')
+
+    print("Reading agn", flush=True)
+    agnfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'midir-agn',
+                           'midir-agn-{v}.fits')
+    agnfile = agnfile.format(v=version)
+    agn = fitsio.read(agnfile)
+
+    w1w2 = agn['w1w2']
+    logssfr = agn['logssfr']
+    good = agn['good']
+
+    fig, ax = plt.subplots()
+
+    iagn = np.where(agn['isagn'])[0]
+    ax.scatter(logssfr[good], w1w2[good], s=8, alpha=0.2, color='black',
+               label='MaNGA galaxies')
+    ax.scatter(logssfr[iagn], w1w2[iagn], s=18, color='red',
+               label='MaNGA mid-IR AGN')
+    ax.set_xlim([-13.5, -9.2])
+    ax.set_ylim([-0.95, 1.3])
+    ax.set_xlabel('Specific SFR from stellar populations (yr$^{-1}$)')
+    ax.set_ylabel('$W1 - W2$')
+    ax.plot([-15., 5.], [-0.154, -0.154], linestyle='dotted',
+            linewidth=1, color='black')
+    ax.text(-13.47, -0.15, '{\it Assef et al (2018)}', va='bottom',
+            ha='left', fontsize=14)
+    ax.legend(fontsize=16)
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'midir-agn',
+                           'midir-agn-{v}.png').format(v=version)
+    plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])

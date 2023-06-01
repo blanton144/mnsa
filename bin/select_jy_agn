@@ -8,7 +8,7 @@ import argparse
 import matplotlib.pyplot as plt
 import fitsio
 import numpy as np
-import mnsa.jiyan as jiyan
+import mnsa.jiyan
 import astropy.cosmology
 import astropy.units
 
@@ -21,62 +21,94 @@ if __name__ == '__main__':
         prog=os.path.basename(sys.argv[0]),
         description='Select Ji and Yan-style AGN.')
 
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
     summary = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
                                        '0.3.1', 'mnsa-0.3.1.fits'),
                           ext='SUMMARY')
     sps = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
                                    '0.3.1', 'mnsa-0.3.1.fits'),
                       ext='SPS_AP04')
-    central_flux = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
-                                            '0.3.1', 'mnsa-0.3.1.fits'),
-                               ext='CENTRAL_FLUX')
     pipe3d = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
                                       '0.3.1', 'mnsa-0.3.1.fits'),
                          ext='PIPE3D')
 
-    ihb = 14
-    io3 = 16
-    io1 = 20
-    iha = 23
-    in2 = 24
-    is2a = 25
-    is2b = 26
+    cffile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
+                          'central_flux',
+                          'central-flux-{version}.fits'.format(version=version))
+    central_flux = fitsio.read(cffile, ext='FLUXES')
+    channels = fitsio.read(cffile, ext='CHANNELS_EMLINE_GFLUX')
 
-    good = ((summary['ipipe3d'] >= 0) &
-            (central_flux['central_emline_gflux_nbad'][:, ihb] < 5) &
-            (central_flux['central_emline_gflux_ivar'][:, ihb] > 0))
+    ichannel = dict()
+    for channel in ['Hb-4862', 'OIII-5008', 'Ha-6564', 'NII-6585',
+                    'SII-6718', 'SII-6732']:
+        ichannel[channel] = np.where(channels['channel'] == channel)[0][0]
 
-    detected_lines = ((central_flux['central_emline_gflux_nbad'][:, ihb] < 5) &
-                      ((central_flux['central_emline_gflux'][:, ihb] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
-                      ((central_flux['central_emline_gflux'][:, io3] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
-                      ((central_flux['central_emline_gflux'][:, in2] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
-                      ((central_flux['central_emline_gflux'][:, is2a] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
-                      ((central_flux['central_emline_gflux'][:, is2b] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
-                      ((central_flux['central_emline_gflux'][:, iha] *
-                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.))
+    cf = dict()
+    cf_ivar = dict()
+    cf_nbad = dict()
+    for channel in ichannel:
+        cf[channel] = central_flux['central_emline_gflux'][:, ichannel[channel]]
+        cf_ivar[channel] = central_flux['central_emline_gflux_ivar'][:, ichannel[channel]]
+        cf_nbad[channel] = central_flux['central_emline_gflux_nbad'][:, ichannel[channel]]
+    cf['SII-6718+6732'] = cf['SII-6718'] + cf['SII-6732']
 
-    hb = mnsa['central_emline_gflux'][:, ihb]
-    o3 = mnsa['central_emline_gflux'][:, io3]
-    o1 = mnsa['central_emline_gflux'][:, io1]
-    ha = mnsa['central_emline_gflux'][:, iha]
-    n2 = mnsa['central_emline_gflux'][:, in2]
-    s2a = mnsa['central_emline_gflux'][:, is2a]
-    s2b = mnsa['central_emline_gflux'][:, is2b]
-    s2 = s2a + s2b
+    good = np.ones(len(summary), dtype=bool)
+    good = good & (sps['redshift'] > 0)
+    for channel in ichannel:
+        good = (good & (cf_ivar[channel] > 0.) & (cf_nbad[channel] < 4))
 
-    n2ha = np.log10(n2 / ha)
-    s2ha = np.log10(s2 / ha)
-    o3hb = np.log10(o3 / hb)
+    detected = good.copy()
+    for channel in ichannel:
+        detected = (detected & (cf[channel] * np.sqrt(cf_ivar[channel]) > 2.))
 
-    p1, p2, p3 = jiyan.ratios_to_pspace(n2ha=n2ha, s2ha=s2ha, o3hb=o3hb)
+    tmp_n2ha = np.log10(cf['NII-6585'][detected] / cf['Ha-6564'][detected])
+    tmp_s2ha = np.log10(cf['SII-6718+6732'][detected] / cf['Ha-6564'][detected])
+    tmp_o3hb = np.log10(cf['OIII-5008'][detected] / cf['Hb-4862'][detected])
+    tmp_p1, tmp_p2, tmp_p3 = mnsa.jiyan.ratios_to_pspace(n2ha=tmp_n2ha,
+                                                         s2ha=tmp_s2ha,
+                                                         o3hb=tmp_o3hb)
+    p1 = np.zeros(len(summary), dtype=np.float32) - 9999.
+    p2 = np.zeros(len(summary), dtype=np.float32) - 9999.
+    p3 = np.zeros(len(summary), dtype=np.float32) - 9999.
+    p1[detected] = tmp_p1
+    p2[detected] = tmp_p2
+    p3[detected] = tmp_p3
 
-    iagn = np.where((good) & (detected_lines) & (p1 > 0.) & (p3 > 0.6))[0]
-    log_agn_flux_o3 = np.log10(central_flux['central_emline_gflux'][iagn, io3])
+    isagn = ((detected) & (p1 > - 0.3) & (p3 > 0.5))
+    iagn = np.where(isagn)[0]
+    log_agn_flux_o3 = np.log10(cf['OIII-5008'][iagn]) - 17.
     dm = cosmo.distmod(sps['redshift'][iagn]).to_value(astropy.units.mag)
-    dfactor = 10.**(0.4 * dm)
-    log_agn_dist2 = np.log10(4. * np.pi) + 2 * 
+    log_dfactor = 0.4 * dm
+    log_10pcfactor = np.log10(4. * np.pi) + 2. * (np.log10(3.086) + 19.)
+    log_agn_luminosity_o3 = log_agn_flux_o3 + log_10pcfactor + log_dfactor
+    iagn = np.where((good) & (p1 > - 0.3) & (p3 > 0.5))[0]
+
+    agn_dtype = np.dtype([('plateifu', str, 20),
+                          ('isagn', bool),
+                          ('good', bool),
+                          ('p1', np.float32),
+                          ('p2', np.float32),
+                          ('p3', np.float32),
+                          ('log_luminosity_o3', np.float32),
+                          ('log_luminosity_o3_limit', np.float32)])
+
+    agn = np.zeros(len(summary), dtype=agn_dtype)
+    agn['plateifu'] = summary['plateifu']
+    agn['isagn'][iagn] = True
+    agn['good'] = good
+    agn['p1'] = p1
+    agn['p2'] = p2
+    agn['p3'] = p3
+    agn['log_luminosity_o3'][iagn] = log_agn_luminosity_o3
+
+    agnfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'jiyan-agn',
+                           'jiyan-agn-{v}.fits')
+    agnfile = agnfile.format(v=version)
+    fitsio.write(agnfile, agn, clobber=True)

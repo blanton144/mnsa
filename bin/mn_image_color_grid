@@ -1,0 +1,137 @@
+#!/usr/bin/env python
+
+# Plot images on color grid
+
+import os
+import sys
+import argparse
+import numpy as np
+import scipy.ndimage
+import matplotlib
+import matplotlib.pyplot as plt
+import fitsio
+import mnsa.mnsa
+import mnsa.imagetypes
+
+
+matplotlib.rcParams['figure.figsize'] = [8., 6.]
+matplotlib.rcParams['font.size'] = 24
+matplotlib.rcParams['text.usetex'] = True
+
+
+imagetypes = mnsa.imagetypes.ImageTypes()
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Make color grid')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-g', '--grid-refine', dest='grid_refine',
+                        type=int, default=1,
+                        help='refinement factor of grid')
+
+    parser.add_argument('-s', '--seed', dest='seed',
+                        type=int, default=1,
+                        help='random seed')
+
+    choices = list(imagetypes.types.keys())
+    choices.append('stellar_vel')
+    choices.append('emline_gvel')
+    parser.add_argument('-i', '--image-type', dest='image_type',
+                        type=str, default='irg',
+                        choices=choices,
+                        help='image type')
+
+    args = parser.parse_args()
+    version = args.version
+    grid_refine = args.grid_refine
+    image_type = args.image_type
+    seed = args.seed
+
+    np.random.seed(seed)
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    sps = fitsio.read(sumfile, ext='SPS_AP06')
+
+    absmag_r = sps['absmag'][:, 3]
+    absmag_FmW1 = sps['absmag'][:, 0] - sps['absmag'][:, 5]
+
+    nx = 40
+    ny = 30
+
+    nx_grid = nx // 10 * grid_refine
+    ny_grid = ny // 10 * grid_refine
+
+    xmin = - 16.5
+    xmax = - 24.5
+    ymin = - 1.
+    ymax = 11.
+    xbin = np.int32(nx * (absmag_r - xmin) / (xmax - xmin))
+    ybin = np.int32(ny * (absmag_FmW1 - ymin) / (ymax - ymin))
+    xgrid = np.int32(nx_grid * (absmag_r - xmin) / (xmax - xmin))
+    ygrid = np.int32(ny_grid * (absmag_FmW1 - ymin) / (ymax - ymin))
+    inbin = ((xbin >= 0) & (xbin < nx) & (ybin >= 0) & (ybin < ny))
+
+    dist = np.zeros((ny, nx), dtype=np.float32)
+    for xb, yb in zip(xbin[inbin], ybin[inbin]):
+        dist[yb, xb] = dist[yb, xb] + 1.
+    dist = np.arcsinh(scipy.ndimage.gaussian_filter(dist, 0.75))
+
+    fig, ax = plt.subplots()
+
+    for ix in range(nx_grid):
+        for iy in range(ny_grid):
+            igrid = np.where((xgrid == ix) & (ygrid == iy))[0]
+            if(len(igrid) < 1):
+                continue
+            np.random.shuffle(igrid)
+            rgb = None
+            for i in igrid:
+                try:
+                    plateifu = sps['plateifu'][i]
+                    m = mnsa.mnsa.MNSA(plateifu=plateifu, version=version)
+                    if((image_type == 'stellar_vel') |
+                       (image_type == 'emline_gvel')):
+                        rgb = m.velocity_image(ext=image_type, vlimit=130.)
+                    else:
+                        rgb = m.image(imagetype=image_type)
+                    break
+                except:
+                    print("Skipping one")
+                    continue
+            if(rgb is None):
+                continue
+            rgb = rgb[1:-1, 1:-1, :]
+            xgrid_min = xmin + (xmax - xmin) * np.float32(ix) / np.float32(nx_grid)
+            xgrid_max = xmin + (xmax - xmin) * np.float32(ix + 1) / np.float32(nx_grid)
+            ygrid_min = ymin + (ymax - ymin) * np.float32(iy) / np.float32(ny_grid)
+            ygrid_max = ymin + (ymax - ymin) * np.float32(iy + 1) / np.float32(ny_grid)
+            ax.imshow(rgb, origin='lower',
+                      extent=[xgrid_min, xgrid_max, ygrid_min, ygrid_max],
+                      aspect='auto')
+
+    levels = dist.max() * np.array([0.5, 0.7, 0.87, 0.93])
+    ax.contour(dist, origin='lower', extent=[xmin, xmax, ymin, ymax],
+               colors='grey', levels=levels, alpha=0.6, linewidths=3)
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
+    ax.set_xlabel('$M_r$')
+    ax.set_ylabel('$FUV - W1$')
+    fig.tight_layout()
+
+    pngdir = os.path.join(os.getenv('MNSA_DATA'),
+                          '{v}.analysis'.format(v=version),
+                          'info', 'grid-images')
+    pngfile = 'grid-{t}-{g}-{s}-{v}.png'.format(t=image_type,
+                                                g=grid_refine,
+                                                s=seed,
+                                                v=version)
+
+    plt.savefig(pngfile, dpi=300)

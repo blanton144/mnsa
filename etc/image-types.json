@@ -99,14 +99,14 @@
  {"images": {"Ha": {"file": "maps", "ext": "EMLINE_GFLUX", "channel": "Ha-6564"},
 						 "O3": {"file": "maps", "ext": "EMLINE_GFLUX", "channel": "OIII-5008"},
 						 "r":  {"file": "cube", "ext": "RIMG", "channel": ""}},
-	"R": {"r": 1.9, "Ha": 0.06},
-	"G": {"r": 1.9, "O3": 0.1},
+	"R": {"r": 1.9, "Ha": 0.3},
+	"G": {"r": 1.9, "O3": 0.5},
 	"B": {"r": 1.9},
 	"Rscale": 0.4, 
 	"Gscale": 0.4, 
 	"Bscale": 0.4, 
 	"stretch": 2.0,
-	"Q": 10.0,
+	"Q": 5.0,
 	"minimum": 0.0
  },
  "Ha":
@@ -143,6 +143,18 @@
 	"Bscale": 1.0, 
 	"stretch": 10.0,
 	"Q": 8.0,
+	"minimum": 0.0
+ },
+ "vdisp":
+ {"images": {"vdisp": {"file": "maps", "ext": "STELLAR_SIGMA", "channel": 0}},
+	"R": {"vdisp": 1.0},
+	"G": {"vdisp": 1.0},
+	"B": {"vdisp": 1.0},
+	"Rscale": 1.0, 
+	"Gscale": 1.0, 
+	"Bscale": 1.0, 
+	"stretch": 0.01,
+	"Q": 0.0,
 	"minimum": 0.0
  }
 }
