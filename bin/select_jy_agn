@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+
+import os
+import sys
+import argparse
+import matplotlib.pyplot as plt
+import fitsio
+import numpy as np
+import mnsa.jiyan as jiyan
+import astropy.cosmology
+import astropy.units
+
+
+cosmo = astropy.cosmology.Planck18
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Select Ji and Yan-style AGN.')
+
+    summary = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                       '0.3.1', 'mnsa-0.3.1.fits'),
+                          ext='SUMMARY')
+    sps = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                   '0.3.1', 'mnsa-0.3.1.fits'),
+                      ext='SPS_AP04')
+    central_flux = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                            '0.3.1', 'mnsa-0.3.1.fits'),
+                               ext='CENTRAL_FLUX')
+    pipe3d = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                      '0.3.1', 'mnsa-0.3.1.fits'),
+                         ext='PIPE3D')
+
+    ihb = 14
+    io3 = 16
+    io1 = 20
+    iha = 23
+    in2 = 24
+    is2a = 25
+    is2b = 26
+
+    good = ((summary['ipipe3d'] >= 0) &
+            (central_flux['central_emline_gflux_nbad'][:, ihb] < 5) &
+            (central_flux['central_emline_gflux_ivar'][:, ihb] > 0))
+
+    detected_lines = ((central_flux['central_emline_gflux_nbad'][:, ihb] < 5) &
+                      ((central_flux['central_emline_gflux'][:, ihb] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+                      ((central_flux['central_emline_gflux'][:, io3] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+                      ((central_flux['central_emline_gflux'][:, in2] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+                      ((central_flux['central_emline_gflux'][:, is2a] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
+                      ((central_flux['central_emline_gflux'][:, is2b] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
+                      ((central_flux['central_emline_gflux'][:, iha] *
+                        np.sqrt(central_flux['central_emline_gflux_ivar'][:, ihb])) > 2.))
+
+    hb = mnsa['central_emline_gflux'][:, ihb]
+    o3 = mnsa['central_emline_gflux'][:, io3]
+    o1 = mnsa['central_emline_gflux'][:, io1]
+    ha = mnsa['central_emline_gflux'][:, iha]
+    n2 = mnsa['central_emline_gflux'][:, in2]
+    s2a = mnsa['central_emline_gflux'][:, is2a]
+    s2b = mnsa['central_emline_gflux'][:, is2b]
+    s2 = s2a + s2b
+
+    n2ha = np.log10(n2 / ha)
+    s2ha = np.log10(s2 / ha)
+    o3hb = np.log10(o3 / hb)
+
+    p1, p2, p3 = jiyan.ratios_to_pspace(n2ha=n2ha, s2ha=s2ha, o3hb=o3hb)
+
+    iagn = np.where((good) & (detected_lines) & (p1 > 0.) & (p3 > 0.6))[0]
+    log_agn_flux_o3 = np.log10(central_flux['central_emline_gflux'][iagn, io3])
+    dm = cosmo.distmod(sps['redshift'][iagn]).to_value(astropy.units.mag)
+    dfactor = 10.**(0.4 * dm)
+    log_agn_dist2 = np.log10(4. * np.pi) + 2 * 

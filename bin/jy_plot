@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+
+import os
+import sys
+import argparse
+import matplotlib.pyplot as plt
+import fitsio
+import numpy as np
+import mnsa.jiyan as jiyan
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Plots Ji and Yan models.')
+
+    summary = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                       '0.3.1', 'mnsa-0.3.1.fits'),
+                          ext='SUMMARY')
+    mnsa = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                    '0.3.1', 'mnsa-0.3.1.fits'),
+                       ext='CENTRAL_FLUX')
+    pipe3d = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                      '0.3.1', 'mnsa-0.3.1.fits'),
+                         ext='PIPE3D')
+
+    ihb = 14
+    io3 = 16
+    io1 = 20
+    iha = 23
+    in2 = 24
+    is2a = 25
+    is2b = 26
+
+    good = ((summary['ipipe3d'] >= 0) &
+            (mnsa['central_emline_gflux_ivar'][:, ihb] > 0) &
+            (mnsa['central_emline_gflux_nbad'][:, ihb] < 5) &
+            ((mnsa['central_emline_gflux'][:, ihb] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+            ((mnsa['central_emline_gflux'][:, io3] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+            ((mnsa['central_emline_gflux'][:, in2] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 2.) &
+            ((mnsa['central_emline_gflux'][:, is2a] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
+            ((mnsa['central_emline_gflux'][:, is2b] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 1.4) &
+            ((mnsa['central_emline_gflux'][:, iha] *
+              np.sqrt(mnsa['central_emline_gflux_ivar'][:, ihb])) > 2.))
+    print(good.sum())
+    hb = mnsa['central_emline_gflux'][good, ihb]
+    o3 = mnsa['central_emline_gflux'][good, io3]
+    o1 = mnsa['central_emline_gflux'][good, io1]
+    ha = mnsa['central_emline_gflux'][good, iha]
+    n2 = mnsa['central_emline_gflux'][good, in2]
+    s2a = mnsa['central_emline_gflux'][good, is2a]
+    s2b = mnsa['central_emline_gflux'][good, is2b]
+    s2 = s2a + s2b
+
+    n2ha = np.log10(n2 / ha)
+    s2ha = np.log10(s2 / ha)
+    o3hb = np.log10(o3 / hb)
+
+    p1, p2, p3 = jiyan.ratios_to_pspace(n2ha=n2ha, s2ha=s2ha, o3hb=o3hb)
+
+    logssfr = pipe3d['log_SFR_ssp'][good] - pipe3d['log_Mass'][good]
+
+    ii = np.where((p1 > 0.) &
+                  (p3 > 0.6) & (p3 < 2.))[0]
+    print(len(ii))
+    for i in ii:
+        plate, ifu = mnsa['plateifu'][good][i].split('-')
+        print("https://data.sdss5.org/sas/sdsswork/sandbox/mnsa/0.3.0/plateifu.html?plate={p}&ifu={i}".format(p=plate, i=ifu))
+
+    jy_sf = jiyan.JiYan()
+    jy_sf.read_model('SF_models/stb99_c4my_extraplin_')
+    jy_sf.set_pspace()
+
+    jy_agn2 = jiyan.JiYan()
+    jy_agn2.read_model('AGNm1d7_models/bplm1d7_fel_segro_')
+    jy_agn2.set_pspace()
+
+    jy_agn = jiyan.JiYan()
+    jy_agn.read_model('AGNm1d4_models/bplm1d4_hden2_gro_')
+    jy_agn.set_pspace()
+
+    mask_sf = ((jy_sf.p3 > - 0.23) & (jy_sf.p3 < 0.98))
+    mask_agn = ((jy_agn.p3 > - 0.23) & (jy_agn.p3 < 0.98))
+    mask_agn2 = ((jy_agn2.p3 > 0.55) & (jy_agn2.p3 < 0.98) & (jy_agn2.p2 < 0.2))
+
+    nmets = 200
+    mets = -1.3 + 2.05 * (np.arange(nmets, dtype=np.float32) + 0.5) / np.float32(nmets)
+
+    #p1_line_sf = np.zeros(nmets, dtype=np.float32)
+    #p2_line_sf = np.zeros(nmets, dtype=np.float32)
+    #p3_line_sf = np.zeros(nmets, dtype=np.float32)
+    #for imet, m in enumerate(mets):
+        #iclosest = np.argmin(np.abs(jy_sf.metallicity_o - m))
+        #imask = np.where(mask_sf[iclosest, :])[0]
+        #imax = imask[np.argmax(jy_sf.p1[iclosest, imask])]
+        #p1_line_sf[imet] = jy_sf.p1[iclosest, imax]
+        #p2_line_sf[imet] = jy_sf.p2[iclosest, imax]
+        #p3_line_sf[imet] = jy_sf.p3[iclosest, imax]
+#
+    #p1_line_agn2 = np.zeros(nmets, dtype=np.float32)
+    #p2_line_agn2 = np.zeros(nmets, dtype=np.float32)
+    #p3_line_agn2 = np.zeros(nmets, dtype=np.float32)
+    #for imet, m in enumerate(mets):
+        #iclosest = np.argmin(np.abs(jy_agn2.metallicity_o - m))
+        #imask = np.where(mask_agn2[iclosest, :])[0]
+        #imax = imask[np.argmax(jy_agn2.p1[iclosest, imask])]
+        #p1_line_agn2[imet] = jy_agn2.p1[iclosest, imax]
+        #p2_line_agn2[imet] = jy_agn2.p2[iclosest, imax]
+        #p3_line_agn2[imet] = jy_agn2.p3[iclosest, imax]
+
+    jy_sf.plot_mesh(jy_sf.p1, jy_sf.p3, mask=mask_sf, color='black')
+    #jy_agn.plot_mesh(jy_agn.p1, jy_agn.p3, mask=mask_agn, color='red')
+    jy_agn2.plot_mesh(jy_agn2.p1, jy_agn2.p3, mask=mask_agn2, color='pink')
+    plt.scatter(p1, p3, s=3, c=logssfr, alpha=0.4, vmin=-13., vmax=-9.5)
+    #plt.plot(p1_line_sf, p3_line_sf, color='green', linewidth=3, alpha=0.9)
+    #plt.plot(p1_line_agn2, p3_line_agn2, color='green', linewidth=3, alpha=0.9)
+    plt.show()
+
+    jy_sf.plot_mesh(jy_sf.p1, jy_sf.p2, mask=mask_sf, color='black')
+    # jy_agn.plot_mesh(jy_agn.p1, jy_agn.p2, mask=mask_agn, color='red')
+    jy_agn2.plot_mesh(jy_agn2.p1, jy_agn2.p2, mask=mask_agn2, color='pink')
+    plt.scatter(p1, p2, s=2, color='blue', alpha=0.4)
+    #plt.plot(p1_line_sf, p2_line_sf, color='green', linewidth=1, alpha=0.9)
+    #plt.plot(p1_line_agn2, p2_line_agn2, color='green', linewidth=1, alpha=0.9)
+    #for imet, m in enumerate(mets):
+        #cp1 = np.array([p1_line_sf, p1_line_agn2])
+        #cp2 = np.array([p2_line_sf, p2_line_agn2])
+        #plt.plot(cp1, cp2, linewidth=1, alpha=0.9, color='green')
+    plt.show()
+    sys.exit()
+
+    jy_sf.plot_mesh(jy_sf.p2, jy_sf.p3, mask=mask_sf, color='black')
+    jy_agn.plot_mesh(jy_agn.p2, jy_agn.p3, mask=mask_agn, color='red')
+    jy_agn2.plot_mesh(jy_agn2.p2, jy_agn2.p3, mask=mask_agn2, color='pink')
+    plt.scatter(p2, p3, s=2, color='blue', alpha=0.4)
+    plt.plot(p2_line_sf, p3_line_sf, color='green', linewidth=3, alpha=0.9)
+    plt.plot(p2_line_agn2, p3_line_agn2, color='green', linewidth=3, alpha=0.9)
+    plt.show()
