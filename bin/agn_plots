@@ -135,24 +135,78 @@ def plot_o3_vs_ssfr(log_ssfr=None, log_luminosity_o3=None,
     fig, ax = plt.subplots()
 
     ax.scatter(log_ssfr[iagn], log_luminosity_o3[iagn], s=25, alpha=1.0,
-               color='#555555', zorder=10, label='AGN identified')
+               color='royalblue', zorder=10, label='AGN identified')
 
     if(log_luminosity_o3_limit is not None):
+        ax.scatter(log_ssfr[inot], log_luminosity_o3_limit[inot],
+                   color='black', s=7, alpha=0.2, label='AGN upper limits',
+                   zorder=3)
         ax.errorbar(log_ssfr[inot], log_luminosity_o3_limit[inot],
                     yerr=np.ones(len(inot)), uplims=np.ones(len(inot)),
                     linestyle='none', marker='o', markersize=3, alpha=0.03,
-                    color='black', zorder=2, label='AGN upper limits')
+                    linewidth=1, color='black', zorder=2)
 
     ax.set_xlim([-13.2, -9.5])
     ax.set_ylim([36.8, 43.2])
     ax.set_ylabel(r'$\log_{10} L_{\mathrm{[O III]}} \mathrm{~(erg~s}^{-1})$')
     ax.set_xlabel(r'$\log_{10} \mathrm{\,sSFR} \mathrm{~(yr}^{-1}\mathrm{)~from~stellar~populations}$')
+    ax.legend()
 
     plt.tight_layout()
 
     pngfile = os.path.join(os.getenv('MNSA_DATA'),
                            version + '.analysis', 'info', 'agn',
                            'agn-jiyan-ssfr-{v}.png')
+    pngfile = pngfile.format(v=version)
+    plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
+    return
+
+
+def plot_o3_vs_sfr(log_sfr=None, log_luminosity_o3=None,
+                   log_luminosity_o3_limit=None):
+    """Plot [OIII] luminosity and limits vs SFR
+
+    Parameters
+    ----------
+
+    log_sfr : ndarray of np.float32
+        log SFR
+
+    log_luminosity_o3 : ndarray of np.float32
+        [OIII] luminosities
+
+    log_luminosity_o3_limit : ndarray of np.float32
+        [OIII] luminosity upper limits
+"""
+    iagn = np.where(log_luminosity_o3 != -9999.)[0]
+    inot = np.where(log_luminosity_o3 == -9999.)[0]
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(log_sfr[iagn], log_luminosity_o3[iagn], s=25, alpha=1.0,
+               color='royalblue', zorder=10, label='AGN identified')
+
+    if(log_luminosity_o3_limit is not None):
+        ax.scatter(log_sfr[inot], log_luminosity_o3_limit[inot],
+                   color='black', s=7, alpha=0.2, label='AGN upper limits',
+                   zorder=3)
+        ax.errorbar(log_sfr[inot], log_luminosity_o3_limit[inot],
+                    yerr=np.ones(len(inot)), uplims=np.ones(len(inot)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.03,
+                    linewidth=1, color='black', zorder=2)
+
+    ax.set_xlim([-2.95, 1.8])
+    ax.set_ylim([36.8, 43.2])
+    ax.set_ylabel(r'$\log_{10} L_{\mathrm{[O III]}} \mathrm{~(erg~s}^{-1})$')
+    ax.set_xlabel(r'$\log_{10} \mathrm{\,SFR} ~(M_\odot \mathrm{~yr}^{-1}\mathrm{)~from~stellar~populations}$')
+    ax.legend()
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'info', 'agn',
+                           'agn-jiyan-sfr-{v}.png')
     pngfile = pngfile.format(v=version)
     plt.savefig(pngfile, dpi=300)
     subprocess.run(['convert', pngfile, '-trim', pngfile])
@@ -181,14 +235,16 @@ def plot_o3_vs_mass(log_mass=None, log_luminosity_o3=None,
     fig, ax = plt.subplots()
 
     ax.scatter(log_mass[iagn], log_luminosity_o3[iagn], s=25, alpha=1.0,
-               color='#444444', zorder=10, label='AGN identified')
+               color='royalblue', zorder=10, label='AGN identified')
 
     if(log_luminosity_o3_limit is not None):
+        ax.scatter(log_mass[inot], log_luminosity_o3_limit[inot],
+                   color='black', s=7, alpha=0.2, label='AGN upper limits',
+                   zorder=3)
         ax.errorbar(log_mass[inot], log_luminosity_o3_limit[inot],
                     yerr=np.ones(len(inot)), uplims=np.ones(len(inot)),
                     linestyle='none', marker='o', markersize=3, alpha=0.04,
-                    color='black', zorder=2, linewidth=1,
-                    label='AGN upper limits')
+                    color='black', zorder=2, linewidth=1)
 
     ax.set_xlim([9.0, 11.9])
     ax.set_ylim([36.8, 43.2])
@@ -287,11 +343,16 @@ if __name__ == '__main__':
     log_luminosity_o3 = jiyan_agn['log_luminosity_o3'][good]
     log_luminosity_o3_limit = jiyan_agn['log_luminosity_o3_limit'][good]
     log_ssfr = pipe3d['log_SFR_ssp'][good] - pipe3d['log_Mass'][good]
+    log_sfr = pipe3d['log_SFR_ssp'][good]
     log_mass = pipe3d['log_Mass'][good]
 
     plot_o3_vs_ssfr(log_ssfr=log_ssfr,
                     log_luminosity_o3=log_luminosity_o3,
                     log_luminosity_o3_limit=log_luminosity_o3_limit)
+
+    plot_o3_vs_sfr(log_sfr=log_sfr,
+                   log_luminosity_o3=log_luminosity_o3,
+                   log_luminosity_o3_limit=log_luminosity_o3_limit)
 
     plot_o3_vs_mass(log_mass=log_mass,
                     log_luminosity_o3=log_luminosity_o3,
