@@ -1,0 +1,298 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import subprocess
+import argparse
+import numpy as np
+import fitsio
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.rcParams['figure.figsize'] = [8., 7.]
+matplotlib.rcParams['font.size'] = 22
+matplotlib.rcParams['text.usetex'] = True
+
+
+def plot_luminosities(log_nuLnu_w3=None, log_nuLnu_w3_limit=None,
+                      log_luminosity_o3=None, log_luminosity_o3_limit=None,
+                      plot_neither=False):
+    """Plot luminosities
+
+    Parameters
+    ----------
+
+    log_nuLnu_w3 : ndarray of np.float32
+        W3 luminosities
+
+    log_nuLnu_w3_limit : ndarray of np.float32
+        W3 luminosity upper limits
+
+    log_luminosity_o3 : ndarray of np.float32
+        [OIII] luminosities
+
+    log_luminosity_o3_limit : ndarray of np.float32
+        [OIII] luminosity upper limits
+
+    plot_neither : bool
+        if True, plot the cases where both are upper limits
+
+    Notes
+    -----
+
+    Only plots upper limits if provided.
+"""
+    iboth = np.where((log_nuLnu_w3 != -9999.) &
+                     (log_luminosity_o3 != -9999.))[0]
+    limits = 'none'
+    if(log_luminosity_o3_limit is not None):
+        imidir = np.where((log_nuLnu_w3 != -9999.) &
+                          (log_luminosity_o3 == -9999.))[0]
+        limits = 'o3'
+    else:
+        imidir = None
+    if(log_nuLnu_w3_limit is not None):
+        ijiyan = np.where((log_nuLnu_w3 == -9999.) &
+                          (log_luminosity_o3 != -9999.))[0]
+        limits = 'w3'
+    else:
+        ijiyan = None
+    if((log_luminosity_o3_limit is not None) &
+       (log_nuLnu_w3_limit is not None)):
+        ineither = np.where((log_nuLnu_w3 == -9999.) &
+                            (log_luminosity_o3 == -9999.))[0]
+        limits = 'both'
+    else:
+        ineither = None
+
+    fig, ax = plt.subplots()
+
+    if(ijiyan is not None):
+        ax.errorbar(log_luminosity_o3[ijiyan], log_nuLnu_w3_limit[ijiyan],
+                    yerr=np.ones(len(ijiyan)), uplims=np.ones(len(ijiyan)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.5,
+                    color='mediumturquoise', zorder=2, label='AGN in [OIII]')
+
+    if(imidir is not None):
+        ax.errorbar(log_luminosity_o3_limit[imidir], log_nuLnu_w3[imidir],
+                    xerr=np.ones(len(imidir)), xuplims=np.ones(len(imidir)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.5,
+                    color='indianred', zorder=3, label='AGN in WISE')
+
+    if((ineither is not None) & plot_neither):
+        limits = 'all'
+        ax.errorbar(log_luminosity_o3_limit[ineither],
+                    log_nuLnu_w3_limit[ineither],
+                    xerr=np.ones(len(ineither)), xuplims=np.ones(len(ineither)),
+                    yerr=np.ones(len(ineither)), uplims=np.ones(len(ineither)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.05,
+                    linewidth=1, color='black', zorder=1, label='AGN in neither')
+
+    ax.scatter(log_luminosity_o3[iboth], log_nuLnu_w3[iboth], s=35, alpha=1.0,
+               color='#353535', zorder=10, label='AGN in both')
+
+    xx = np.array([30., 50.], dtype=np.float32)
+    ax.plot(xx, xx + 1.85, linewidth=2, alpha=0.6, color='grey')
+
+    ax.set_xlabel(r'$\log_{10} L_{\mathrm{[O III]}} \mathrm{~(erg~s}^{-1})$')
+    ax.set_ylabel(r'$\log_{10} \nu L_{\nu, \mathrm{W3}} \mathrm{~(erg~ s}^{-1}\mathrm{)}$')
+
+    ax.set_ylim([37.5, 45.2])
+    ax.set_xlim([36.1, 43.5])
+
+    ax.legend(fontsize=16)
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'info', 'agn',
+                           'agn-midir-jiyan-limits-{limits}-{v}.png')
+    pngfile = pngfile.format(v=version, limits=limits)
+    plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
+    return
+
+
+def plot_o3_vs_ssfr(log_ssfr=None, log_luminosity_o3=None,
+                    log_luminosity_o3_limit=None):
+    """Plot [OIII] luminosity and limits vs ssfr
+
+    Parameters
+    ----------
+
+    log_ssfr : ndarray of np.float32
+        log sSFR
+
+    log_luminosity_o3 : ndarray of np.float32
+        [OIII] luminosities
+
+    log_luminosity_o3_limit : ndarray of np.float32
+        [OIII] luminosity upper limits
+"""
+    iagn = np.where(log_luminosity_o3 != -9999.)[0]
+    inot = np.where(log_luminosity_o3 == -9999.)[0]
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(log_ssfr[iagn], log_luminosity_o3[iagn], s=25, alpha=1.0,
+               color='#555555', zorder=10, label='AGN identified')
+
+    if(log_luminosity_o3_limit is not None):
+        ax.errorbar(log_ssfr[inot], log_luminosity_o3_limit[inot],
+                    yerr=np.ones(len(inot)), uplims=np.ones(len(inot)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.03,
+                    color='black', zorder=2, label='AGN upper limits')
+
+    ax.set_xlim([-13.2, -9.5])
+    ax.set_ylim([36.8, 43.2])
+    ax.set_ylabel(r'$\log_{10} L_{\mathrm{[O III]}} \mathrm{~(erg~s}^{-1})$')
+    ax.set_xlabel(r'$\log_{10} \mathrm{\,sSFR} \mathrm{~(yr}^{-1}\mathrm{)~from~stellar~populations}$')
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'info', 'agn',
+                           'agn-jiyan-ssfr-{v}.png')
+    pngfile = pngfile.format(v=version)
+    plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
+    return
+
+
+def plot_o3_vs_mass(log_mass=None, log_luminosity_o3=None,
+                    log_luminosity_o3_limit=None):
+    """Plot [OIII] luminosity and limits vs mass
+
+    Parameters
+    ----------
+
+    log_mass : ndarray of np.float32
+        log mass
+
+    log_luminosity_o3 : ndarray of np.float32
+        [OIII] luminosities
+
+    log_luminosity_o3_limit : ndarray of np.float32
+        [OIII] luminosity upper limits
+"""
+    iagn = np.where(log_luminosity_o3 != -9999.)[0]
+    inot = np.where(log_luminosity_o3 == -9999.)[0]
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(log_mass[iagn], log_luminosity_o3[iagn], s=25, alpha=1.0,
+               color='#444444', zorder=10, label='AGN identified')
+
+    if(log_luminosity_o3_limit is not None):
+        ax.errorbar(log_mass[inot], log_luminosity_o3_limit[inot],
+                    yerr=np.ones(len(inot)), uplims=np.ones(len(inot)),
+                    linestyle='none', marker='o', markersize=3, alpha=0.04,
+                    color='black', zorder=2, linewidth=1,
+                    label='AGN upper limits')
+
+    ax.set_xlim([9.0, 11.9])
+    ax.set_ylim([36.8, 43.2])
+    ax.set_ylabel(r'$\log_{10} L_{\mathrm{[O III]}} \mathrm{~(erg~s}^{-1})$')
+    ax.set_xlabel(r'$\log_{10} \mathrm{\,Stellar~Mass} (M_\odot)$')
+
+    ax.legend()
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'info', 'agn',
+                           'agn-jiyan-mass-{v}.png')
+    pngfile = pngfile.format(v=version)
+    plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
+    return
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='AGN related plots')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    print("Reading catalog", flush=True)
+    mnsa_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'mnsa-{v}.fits'.format(v=version))
+    summary = fitsio.read(mnsa_file, ext='SUMMARY')
+    pipe3d = fitsio.read(mnsa_file, ext='PIPE3D')
+    sps = fitsio.read(mnsa_file, ext='SPS_AP04')
+
+    print("Reading Mid-IR agn", flush=True)
+    agnfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'midir-agn',
+                           'midir-agn-{v}.fits')
+    agnfile = agnfile.format(v=version)
+    midir_agn = fitsio.read(agnfile)
+
+    print("Reading Ji-Yan agn", flush=True)
+    agnfile = os.path.join(os.getenv('MNSA_DATA'),
+                           version + '.analysis', 'jiyan-agn',
+                           'jiyan-agn-{v}.fits')
+    agnfile = agnfile.format(v=version)
+    jiyan_agn = fitsio.read(agnfile)
+
+    w1w2 = midir_agn['w1w2']
+    logssfr = midir_agn['logssfr']
+    midir_good = midir_agn['good']
+    jiyan_good = jiyan_agn['good']
+
+    good = (midir_good & jiyan_good)
+
+    log_nuLnu_w3 = midir_agn['log_nuLnu_w3'][good]
+    log_nuLnu_w3_limit = midir_agn['log_nuLnu_w3_limit'][good]
+    log_luminosity_o3 = jiyan_agn['log_luminosity_o3'][good]
+    log_luminosity_o3_limit = jiyan_agn['log_luminosity_o3_limit'][good]
+
+    plot_luminosities(log_nuLnu_w3=log_nuLnu_w3,
+                      log_nuLnu_w3_limit=log_nuLnu_w3_limit,
+                      log_luminosity_o3=log_luminosity_o3,
+                      log_luminosity_o3_limit=log_luminosity_o3_limit,
+                      plot_neither=True)
+
+    plot_luminosities(log_nuLnu_w3=log_nuLnu_w3,
+                      log_nuLnu_w3_limit=log_nuLnu_w3_limit,
+                      log_luminosity_o3=log_luminosity_o3,
+                      log_luminosity_o3_limit=log_luminosity_o3_limit)
+
+    plot_luminosities(log_nuLnu_w3=log_nuLnu_w3,
+                      log_nuLnu_w3_limit=None,
+                      log_luminosity_o3=log_luminosity_o3,
+                      log_luminosity_o3_limit=log_luminosity_o3_limit)
+
+    plot_luminosities(log_nuLnu_w3=log_nuLnu_w3,
+                      log_nuLnu_w3_limit=log_nuLnu_w3_limit,
+                      log_luminosity_o3=log_luminosity_o3,
+                      log_luminosity_o3_limit=None)
+
+    plot_luminosities(log_nuLnu_w3=log_nuLnu_w3,
+                      log_nuLnu_w3_limit=None,
+                      log_luminosity_o3=log_luminosity_o3,
+                      log_luminosity_o3_limit=None)
+
+    good = (midir_good & jiyan_good & (summary['ipipe3d'] >= 0))
+
+    log_nuLnu_w3 = midir_agn['log_nuLnu_w3'][good]
+    log_nuLnu_w3_limit = midir_agn['log_nuLnu_w3_limit'][good]
+    log_luminosity_o3 = jiyan_agn['log_luminosity_o3'][good]
+    log_luminosity_o3_limit = jiyan_agn['log_luminosity_o3_limit'][good]
+    log_ssfr = pipe3d['log_SFR_ssp'][good] - pipe3d['log_Mass'][good]
+    log_mass = pipe3d['log_Mass'][good]
+
+    plot_o3_vs_ssfr(log_ssfr=log_ssfr,
+                    log_luminosity_o3=log_luminosity_o3,
+                    log_luminosity_o3_limit=log_luminosity_o3_limit)
+
+    plot_o3_vs_mass(log_mass=log_mass,
+                    log_luminosity_o3=log_luminosity_o3,
+                    log_luminosity_o3_limit=log_luminosity_o3_limit)
