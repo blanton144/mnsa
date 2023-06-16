@@ -1,0 +1,166 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_manga
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+import mnsa.mnsa as mnsa
+
+matplotlib.rcParams['figure.figsize'] = [11.7, 8.]
+matplotlib.rcParams['font.size'] = 18
+
+
+def create_image(version=None, plateifu=None, imagetype=None, dr17=False):
+    print("Doing image: {imagetype} {plateifu}".format(imagetype=imagetype,
+                                                       plateifu=plateifu),
+          flush=True)
+    m = mnsa.MNSA(version=version, plateifu=plateifu, dr17=dr17)
+    try:
+        m.read_cube()
+        m.read_maps()
+    except:
+        print("Could not read cube and map.")
+        return
+
+    rgb = m.image(imagetype=imagetype, invert=True)
+    return(rgb)
+
+
+def create_velocity_image(version=None, plateifu=None, ext=None, dr17=False):
+    print("Doing image: {ext} {plateifu}".format(ext=ext,
+                                                 plateifu=plateifu),
+          flush=True)
+
+    m = mnsa.MNSA(version=version, plateifu=plateifu, dr17=dr17)
+    try:
+        m.read_cube()
+        m.read_maps()
+    except:
+        print("Could not read cube and map.")
+        return
+
+    rgb = m.velocity_image(ext=ext, vlimit=200.)
+    return(rgb)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Performs an arithmetic operation.')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plateifu', dest='plateifu',
+                        type=str, help='plate-IFU', required=True)
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+
+    sv_image = create_velocity_image(version=version, plateifu=plateifu,
+                                     ext='stellar_vel', dr17=False)
+    sv_image_dr17 = create_velocity_image(version=version, plateifu=plateifu,
+                                          ext='stellar_vel', dr17=True)
+
+    Ha_image = create_image(version=version, plateifu=plateifu,
+                            imagetype='Ha', dr17=False)
+    Ha_image_dr17 = create_image(version=version, plateifu=plateifu,
+                                 imagetype='Ha', dr17=True)
+
+    OIII_image = create_image(version=version, plateifu=plateifu,
+                              imagetype='OIII', dr17=False)
+    OIII_image_dr17 = create_image(version=version, plateifu=plateifu,
+                                   imagetype='OIII', dr17=True)
+
+    r_image = create_image(version=version, plateifu=plateifu,
+                           imagetype='r', dr17=False)
+    r_image_dr17 = create_image(version=version, plateifu=plateifu,
+                                imagetype='r', dr17=True)
+
+    Ha_image = Ha_image[3:46, 3:46, :]
+    Ha_image_dr17 = Ha_image_dr17[5:69, 5:69, :]
+    OIII_image = OIII_image[3:46, 3:46, :]
+    OIII_image_dr17 = OIII_image_dr17[5:69, 5:69, :]
+    r_image = r_image[3:46, 3:46, :]
+    r_image_dr17 = r_image_dr17[5:69, 5:69, :]
+    limit = 16.
+
+    n = Ha_image.shape[0]
+    extent = (np.float32(n) * 0.5) * 0.75
+    n_dr17 = Ha_image_dr17.shape[0]
+    extent_dr17 = (np.float32(n_dr17) * 0.5) * 0.5
+
+    fig, ax = plt.subplots(2, 3, sharex='all', sharey='all',
+                           gridspec_kw={'wspace': 0.0, 'hspace': 0.0})
+
+    ax[0][0].imshow(Ha_image, extent=[- extent, extent, - extent, extent],
+                    origin='lower')
+    ax[0][0].set_xlim([limit, - limit])
+    ax[0][0].set_ylim([- limit, limit])
+    ax[0][0].set_ylabel('$\\Delta\\delta$ (arcsec)')
+    ax[0][0].tick_params(bottom=False)
+    ax[0][0].text(0.02, 0.92, plateifu, transform=ax[0][0].transAxes)
+    ax[0][0].text(0.02, 0.02, 'MNSA', transform=ax[0][0].transAxes)
+    ax[0][0].text(0.85, 0.02, 'H$\\alpha$', transform=ax[0][0].transAxes)
+
+    ax[1][0].imshow(Ha_image_dr17,
+                    extent=[- extent_dr17, extent_dr17, - extent_dr17, extent_dr17],
+                    origin='lower')
+    ax[1][0].set_xlim([limit, - limit])
+    ax[1][0].set_ylim([- limit, limit])
+    ax[1][0].set_xlabel('$\\Delta\\alpha$ (arcsec)')
+    ax[1][0].set_ylabel('$\\Delta\\delta$ (arcsec)')
+    ax[1][0].text(0.02, 0.02, 'DR17', transform=ax[1][0].transAxes)
+    ax[1][0].text(0.85, 0.02, 'H$\\alpha$', transform=ax[1][0].transAxes)
+
+    ax[0][1].imshow(OIII_image, extent=[- extent, extent, - extent, extent],
+                    origin='lower')
+    ax[0][1].set_xlim([limit, - limit])
+    ax[0][1].set_ylim([- limit, limit])
+    ax[0][1].tick_params(left=False, bottom=False)
+    ax[0][1].text(0.02, 0.02, 'MNSA', transform=ax[0][1].transAxes)
+    ax[0][1].text(0.81, 0.02, '[OIII]', transform=ax[0][1].transAxes)
+    ax[1][1].imshow(OIII_image_dr17,
+                    extent=[- extent_dr17, extent_dr17, - extent_dr17, extent_dr17],
+                    origin='lower')
+    ax[1][1].set_xlim([limit, - limit])
+    ax[1][1].set_ylim([- limit, limit])
+    ax[1][1].set_xlabel('$\\Delta\\alpha$ (arcsec)')
+    ax[1][1].tick_params(left=False)
+    ax[1][1].text(0.02, 0.02, 'DR17', transform=ax[1][1].transAxes)
+    ax[1][1].text(0.81, 0.02, '[OIII]', transform=ax[1][1].transAxes)
+
+    ax[0][2].imshow(r_image, extent=[- extent, extent, - extent, extent],
+                    origin='lower')
+    ax[0][2].set_xlim([limit, - limit])
+    ax[0][2].set_ylim([- limit, limit])
+    ax[0][2].tick_params(left=False, bottom=False)
+    ax[0][2].text(0.02, 0.02, 'MNSA', transform=ax[0][2].transAxes)
+    ax[0][2].text(0.91, 0.02, '$r$', transform=ax[0][2].transAxes)
+    ax[1][2].imshow(r_image_dr17,
+                    extent=[- extent_dr17, extent_dr17, - extent_dr17, extent_dr17],
+                    origin='lower')
+    ax[1][2].set_xlim([limit, - limit])
+    ax[1][2].set_ylim([- limit, limit])
+    ax[1][2].set_xlabel('$\\Delta\\alpha$ (arcsec)')
+    ax[1][2].tick_params(left=False)
+    ax[1][2].text(0.02, 0.02, 'DR17', transform=ax[1][2].transAxes)
+    ax[1][2].text(0.91, 0.02, '$r$', transform=ax[1][2].transAxes)
+
+    plt.tight_layout()
+
+    pngfile = os.path.join(os.getenv('MNSA_DATA'), version, 'info',
+                           'compare-dr17-{p}.png'.format(p=plateifu))
+    plt.savefig(pngfile, dpi=300)

@@ -36,11 +36,6 @@ if __name__ == '__main__':
                         type=int, default=1,
                         help='refinement factor of grid')
 
-    parser.add_argument('-n', '--no-grid', dest='nogrid',
-                        default=False,
-                        action='store_true',
-                        help='only plot points version')
-
     parser.add_argument('-s', '--seed', dest='seed',
                         type=int, default=1,
                         help='random seed')
@@ -57,7 +52,6 @@ if __name__ == '__main__':
     version = args.version
     grid_refine = args.grid_refine
     image_type = args.image_type
-    nogrid = args.nogrid
     seed = args.seed
 
     np.random.seed(seed)
@@ -126,29 +120,6 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-    ax.scatter(p1, p3, color='black', s=15, alpha=0.5)
-    levels = dist.max() * np.array([0.5, 0.7, 0.87, 0.93])
-    ax.contour(dist, origin='lower', extent=[xmin, xmax, ymin, ymax],
-               colors='grey', levels=levels, alpha=0.6, linewidths=3)
-
-    ax.set_xlim([xmin, xmax])
-    ax.set_ylim([ymin, ymax])
-    ax.set_xlabel('$P1$')
-    ax.set_ylabel('$P3$')
-    fig.tight_layout()
-    pngfile = os.path.join(pngdir,
-                           'points-p1p3-{t}-{g}-{s}-{v}.png'.format(t=image_type,
-                                                                    g=grid_refine,
-                                                                    s=seed,
-                                                                    v=version))
-
-    plt.savefig(pngfile, dpi=300)
-
-    if(nogrid):
-        sys.exit()
-
-    fig, ax = plt.subplots()
-
     for ix in range(nx_grid):
         for iy in range(ny_grid):
             igrid = np.where((xgrid == ix) & (ygrid == iy))[0]
@@ -189,9 +160,25 @@ if __name__ == '__main__':
     ax.set_ylabel('$P3$')
     fig.tight_layout()
 
-    pngfile = os.path.join(pngdir, 'grid-p1p3-{t}-{g}-{s}-{v}.png'.format(t=image_type,
-                                                                          g=grid_refine,
-                                                                          s=seed,
-                                                                          v=version))
+    pngfile = 'grid-p1p3-{t}-{g}-{s}-{v}.png'.format(t=image_type,
+                                                     g=grid_refine,
+                                                     s=seed,
+                                                     v=version)
+
+    plt.savefig(pngfile, dpi=300)
+
+    fig, ax = plt.subplots()
+
+    ax.scatter(p1, p3, color='black', s=15, alpha=0.5)
+
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
+    ax.set_xlabel('$P1$')
+    ax.set_ylabel('$P3$')
+    fig.tight_layout()
+    pngfile = 'points-p1p3-{t}-{g}-{s}-{v}.png'.format(t=image_type,
+                                                       g=grid_refine,
+                                                       s=seed,
+                                                       v=version)
 
     plt.savefig(pngfile, dpi=300)
