@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+
+# Plot images on color grid
+
+import os
+import sys
+import argparse
+import numpy as np
+import scipy.ndimage
+import matplotlib
+import matplotlib.pyplot as plt
+import fitsio
+import mnsa.mnsa
+import mnsa.imagetypes
+
+
+matplotlib.rcParams['figure.figsize'] = [7., 7.]
+matplotlib.rcParams['font.size'] = 24
+matplotlib.rcParams['text.usetex'] = True
+
+
+imagetypes = mnsa.imagetypes.ImageTypes()
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Make single image')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='MaNGA plate-ifu')
+
+    parser.add_argument('-o', '--output', dest='output',
+                        type=str, required=False,
+                        default=None,
+                        help='Output file name')
+
+    parser.add_argument('-s', '--seventeen', dest='seventeen',
+                        action='store_true' , required=False,
+                        default=False, help='Use DR17 version')
+
+    choices = list(imagetypes.types.keys())
+    choices.append('stellar_vel')
+    choices.append('emline_gvel')
+    parser.add_argument('-i', '--image-type', dest='image_type',
+                        type=str, default='irg',
+                        choices=choices,
+                        help='image type')
+
+    parser.add_argument('-f', '--fibers', dest='show_fibers',
+                        type=str, required=False,
+                        default=None,
+                        help='Fiber wavelength positions to show (comma separated)')
+
+    parser.add_argument('-c', '--fibers-colors', dest='show_fibers_colors',
+                        type=str, required=False,
+                        default=None,
+                        help='Colors for fibers')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+    image_type = args.image_type
+    show_fibers_str = args.show_fibers
+    show_fibers_colors_str = args.show_fibers_colors
+    output = args.output
+    seventeen = args.seventeen
+
+    if(seventeen):
+        pixscale = 0.5
+    else:
+        pixscale = 0.75
+
+    if(show_fibers_str is None):
+        show_fibers = None
+    else:
+        show_fibers = np.array([np.float32(x)
+                                for x in show_fibers_str.split(',')])
+        if(show_fibers_colors_str is None):
+            show_fibers_colors = ['white'] * len(show_fibers)
+        else:
+            show_fibers_colors = show_fibers_colors_str.split(',')
+
+    m = mnsa.mnsa.MNSA(plateifu=plateifu, version=version,
+                       dr17=seventeen)
+    try:
+        if((image_type == 'stellar_vel') |
+           (image_type == 'emline_gvel')):
+            rgb = m.velocity_image(ext=image_type, vlimit=130.)
+        else:
+            rgb = m.image(imagetype=image_type)
+    except:
+        print("Could not produce image.")
+        sys.exit()
+
+    fig, ax = plt.subplots()
+
+    ax.imshow(rgb, origin='lower', aspect='auto')
+
+    if(show_fibers is not None):
+        m.read_rss()
+        nx = rgb.shape[0]
+        ny = rgb.shape[0]
+        wave = m.rss['WAVE'].read()
+        xpos = (m.rss['XPOS'].read() / pixscale) + np.float32(nx // 2)
+        ypos = (m.rss['YPOS'].read() / pixscale) + np.float32(ny // 2)
+        for show_fiber, show_fiber_color in zip(show_fibers,
+                                                show_fibers_colors):
+            close = np.abs(show_fiber - wave)
+            iclosest = np.argmin(close)
+            ax.scatter(xpos[:, iclosest], ypos[:, iclosest], s=4,
+                       color=show_fiber_color)
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    fig.tight_layout()
+
+    if(output is None):
+        plt.show()
+    else:
+        plt.savefig(output, dpi=300)

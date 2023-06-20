@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+# Calculate total spectroscopy in MaNGA hexagon.
+
+import os
+import sys
+import argparse
+import numpy as np
+import fitsio
+import matplotlib.pyplot as plt
+import kcorrect.utils
+import kcorrect.response
+import kcorrect.template
+import mnsa.mnsa
+
+responseDict = kcorrect.response.ResponseDict()
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Calculate hex photometry')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='v0',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='plate-ifu for MaNGA observations')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+
+    m = mnsa.mnsa.MNSA(version=version, plateifu=plateifu)
+    m_dr17 = mnsa.mnsa.MNSA(version=version, plateifu=plateifu, dr17=True)
+
+    hex_spectrum, hex_spectrum_ivar = m.hex_spectrum()
+    hex_spectrum_dr17, hex_spectrum_ivar_dr17 = m_dr17.hex_spectrum()
+
+    wave = m.cube['WAVE'].read()
+    wave_dr17 = m.cube['WAVE'].read()
+
+    plt.plot(wave, hex_spectrum)
+    plt.plot(wave, hex_spectrum_dr17)
+    plt.show()
