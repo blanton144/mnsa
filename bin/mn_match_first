@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import fitsio
+import numpy as np
+import astropy.coordinates
+import astropy.units
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Select mid-IR AGN')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-t', '--tolerance', dest='tolerance',
+                        type=np.float32, default=2.,
+                        help='tolerance (arcsec)')
+
+    args = parser.parse_args()
+    version = args.version
+    tolerance = args.tolerance
+
+    print("Reading catalog", flush=True)
+    mnsa_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'mnsa-{v}.fits'.format(v=version))
+    summary = fitsio.read(mnsa_file, ext='SUMMARY')
+
+    print("Reading FIRST", flush=True)
+    first_file = os.path.join(os.getenv('MNSA_DATA'),
+                              version + '.analysis',
+                              'first', 'first_14dec17.fits.gz')
+    first = fitsio.read(first_file)
+
+    mnsa_coords = astropy.coordinates.SkyCoord(ra=summary['objra'],
+                                               dec=summary['objdec'],
+                                               unit='deg', frame='icrs')
+
+    first_coords = astropy.coordinates.SkyCoord(ra=first['RA'],
+                                                dec=first['DEC'],
+                                                unit='deg', frame='icrs')
+
+    idx_first, d2d, d3d = mnsa_coords.match_to_catalog_sky(first_coords)
+
+    isclose = d2d < (tolerance * astropy.units.arcsec)
+
+    first_matched = np.zeros(len(summary), dtype=first.dtype)
+    first_matched['RA'] = -1.
+    first_matched['DEC'] = -1.
+    first_matched[isclose] = first[idx_first[isclose]]
+
+    mnsa_first_file = os.path.join(os.getenv('MNSA_DATA'),
+                                   version + '.analysis',
+                                   'first', 'mnsa-first-{v}.fits').format(v=version)
+    fitsio.write(mnsa_first_file, first_matched, clobber=True)
