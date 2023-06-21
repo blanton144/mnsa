@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import argparse
+import numpy as np
+import fitsio
+import mnsa.agn
+import astropy.cosmology
+import astropy.units
+
+
+# Issues with this:
+#    FIRST-based
+
+
+cosmo = astropy.cosmology.Planck18
+
+
+def log_flux_to_luminosity(redshift=None):
+    """Return term to turn log flux to log luminosity
+
+    Parameters
+    ----------
+
+    redshift : np.float32 or ndarray of np.flaot32
+        redshift of galaxy or galaxies
+
+    Returns
+    -------
+
+    logterm : np.float32 or ndarray of np.float32
+        term to add to flux to get luminosity
+"""
+    logterm = - 17.
+    dm = cosmo.distmod(redshift).to_value(astropy.units.mag)
+    log_dfactor = 0.4 * dm
+    log_10pcfactor = np.log10(4. * np.pi) + 2. * (np.log10(3.086) + 19.)
+    logterm = logterm + log_10pcfactor + log_dfactor
+    return(logterm)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Select mid-IR AGN')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    print("Reading catalog", flush=True)
+    mnsa_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version, 'mnsa-{v}.fits'.format(v=version))
+    summary = fitsio.read(mnsa_file, ext='SUMMARY')
+    pipe3d = fitsio.read(mnsa_file, ext='PIPE3D')
+    sps = fitsio.read(mnsa_file, ext='SPS_AP04')
+    first_file = os.path.join(os.getenv('MNSA_DATA'),
+                              version + '.analysis',
+                              'radio-agn', 'mnsa-first-{v}.fits'.format(v=version))
+    first = fitsio.read(first)
+
+    print("Selecting", flush=True)
+    good = np.ones(len(summary), dtype=bool)
+    good = good & (sps['redshift'] > 0)
+    good = good & (summary['ipipe3d'] >= 0)
+
+    logssfr = pipe3d['log_SFR_ssp'][good] - pipe3d['log_Mass'][good]
+
+    idetected = np.where((first['FINT'] > 1.) & good)[0]
+    logfnuint = np.log10(first['FINT'][idetected]) - 26.   # in erg/cm^2/s/Hz from mJy
+    logterm = log_flux_to_luminosity(redshift=sps['redshift'][idetected])
+    logLnuint = logfnuint + logterm  # in erg/s/Hz
+    lognu = np.log10(1.4) + 9
+    lognuLnuint = logLnuint + lognu
+
+    inotdetected = np.where((first['FINT'] <= 1.) & good)[0]
+    logfnuint_limit = np.log10(first['fint_limit'][inotdetected]) - 26.   # in erg/cm^2/s/Hz from mJy
+    logterm = log_flux_to_luminosity(redshift=sps['redshift'][inotdetected])
+    logLnuint_limit = logfnuint_limit + logterm  # in erg/s/Hz
+    lognuLnuint_limit = logLnuint_limit + lognu
+
+    agn_dtype = np.dtype([('plateifu', str, 20),
+                          ('isagn', bool),
+                          ('logssfr', np.float32),
+                          ('log_nuLnu_fint', np.float32),
+                          ('log_nuLnu_fint_limit', np.float32)])
+    agn = np.zeros(len(summary), dtype=agn_dtype)
+    agn['plateifu'] = summary['plateifu']
+    agn['good'] = good
+    agn['logssfr'] = - 9999.
+    agn['log_nuLnu_fint'] = - 9999.
+    agn['log_nuLnu_fint_limit'] = - 9999.
+
+    agn['logssfr'][good] = logssfr
+    agn['log_nuLnu_fint'][idetected] = lognuLnuint
+    agn['log_nuLnu_fint_limit'][inotdetected] = lognuLnuint_limit
+
