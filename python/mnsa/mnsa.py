@@ -212,7 +212,7 @@ class MNSA(object):
         try:
             self.maps = fitsio.FITS(dap_maps)
         except:
-            print("Could not read in MAPS", flush=True)
+            print("Could not read in MAPS: {dm}".format(dm=dap_maps), flush=True)
             return
         
         exts = [x.get_extname() for x in self.maps]

@@ -23,7 +23,7 @@ if __name__ == '__main__':
         description='Calculate hex photometry')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='v0',
+                        type=str, default='0.3.1',
                         help='MNSA configuration version')
 
     parser.add_argument('-p', '--plate-ifu', dest='plateifu',
