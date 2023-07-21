@@ -1,0 +1,830 @@
+[
+  {
+    "name": "plate",
+    "comment": "MaNGA Plate Number",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ifudsgn",
+    "comment": "MaNGA IFU number",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "plateifu",
+    "comment": "MaNGA Plate-IFU",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mangaid",
+    "comment": "MaNGA ID number",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "versdrp2",
+    "comment": "DRP Version for RSS Production",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "versdrp3",
+    "comment": "MNSA Version for Cube Production",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "verscore",
+    "comment": "mangacore version",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "versutil",
+    "comment": "idlutils version",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "versprim",
+    "comment": "MaNGA pre-imaging version",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "platetyp",
+    "comment": "Plate type (e.g. MaNGA or APOGEE-2\\&MaNGA)",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "srvymode",
+    "shortcomment": "Survey mode",
+    "comment": "Survey mode (e.g. MaNGA dither, MaNGA stare, APOGEE lead)",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "objra",
+    "comment": "J2000 RA of object",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "objdec",
+    "comment": "J2000 Dec of object",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "ifuglon",
+    "comment": "Galactic longitude of IFU center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "ifuglat",
+    "comment": "Galactic latitude of IFU center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "ifura",
+    "comment": "J2000 RA of IFU center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "ifudec",
+    "comment": "J2000 Dec of IFU center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "ebvgal",
+    "shortcomment": "Galactic E(B-V) from SFD98",
+    "comment": "Galactic E(B-V) from Schlegel, Finkbeiner, and Davis (1998)",
+    "type": "float64",
+    "shape": [],
+    "unit": "mag"
+  },
+  {
+    "name": "nexp",
+    "comment": "Total number of science exposures combined",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "exptime",
+    "comment": "Total exposure time",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "drp3qual",
+    "comment": "Quality bitmask",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "bluesn2",
+    "comment": "Total blue $(S/N)^2$ for combined exposures",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "redsn2",
+    "comment": "Total red $(S/N)^2$ for combined exposures",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "harname",
+    "comment": "IFU harness name",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "frlplug",
+    "comment": "Frplug hardware code",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "cartid",
+    "comment": "Cartridge ID number",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "designid",
+    "comment": "Design ID number associated with plate",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "cenra",
+    "comment": "J2000 RA of plate center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "cendec",
+    "comment": "J2000 Dec of plate center",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "airmsmin",
+    "comment": "Minimum airmass across all exposures",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "airmsmed",
+    "comment": "Median airmass across all exposures",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "airmsmax",
+    "comment": "Maximum airmass across all exposures",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "seemin",
+    "comment": "Minimum guider seeing",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "seemed",
+    "comment": "Median guider seeing",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "seemax",
+    "comment": "Maximum guider seeing",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "transmin",
+    "comment": "Minimum atmospheric transparency",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "transmed",
+    "comment": "Median atmospheric transparency",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "transmax",
+    "comment": "Maximum atmospheric transparency",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mjdmin",
+    "comment": "Minimum MJD across all exposures",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mjdmed",
+    "comment": "Median MJD across all exposures",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mjdmax",
+    "comment": "Maximum MJD across all exposures",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "gfwhm",
+    "comment": "Reconstructed FWHM in g-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "rfwhm",
+    "comment": "Reconstructed FWHM in r-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "ifwhm",
+    "comment": "Reconstructed FWHM in i-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "zfwhm",
+    "comment": "Reconstructed FWHM in z-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "mngtarg1",
+    "comment": "manga_target1 bitmask for target selection",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mngtarg2",
+    "comment": "manga_target2 bitmask for target selection",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "mngtarg3",
+    "comment": "manga_target3 bitmask for target selection",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "catidnum",
+    "shortcomment": "Primary catalog input catalog",
+    "comment": "Primary catalog input catalog row number (leading digits of mangaid)",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "plttarg",
+    "comment": "plateTarget file appropriate for this target",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "manga_tileid",
+    "comment": "Tile ID for this object",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_iauname",
+    "shortcomment": "IAU-style designation",
+    "comment": "IAU-style designation based on RA and Dec from NSA",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ifudesignsize",
+    "comment": "Allocated IFU survey (0 = 'unallocated')",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ifutargetsize",
+    "comment": "Ideal IFU size",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ifudesignwrongsize",
+    "shortcomment": "Actual allocated IFU size",
+    "comment": "Allocated IFU size if intended IFU size is unavailable",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "z",
+    "comment": "Redshift from target catalog",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "zmin",
+    "shortcomment": "Minimum Primary redshift",
+    "comment": "Minimum redshift for which galaxy could have been included in Primary sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "zmax",
+    "shortcomment": "Maximum Primary redshift",
+    "comment": "Maximum redshift for which galaxy could have been included in Primary sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "szmin",
+    "shortcomment": "Minimum Secondary redshift",
+    "comment": "Minimum redshift for which galaxy could have been included in Secondary sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "szmax",
+    "shortcomment": "Maximum Secondary redshift",
+    "comment": "Maximum redshift for which galaxy could have been included in Secondary sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ezmin",
+    "shortcomment": "Minimum Primary+ redshift",
+    "comment": "Minimum redshift for which galaxy could have been included in Primary+ sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ezmax",
+    "shortcomment": "Maximum Primary+ redshift",
+    "comment": "Maximum redshift for which galaxy could have been included in Primary+ sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "probs",
+    "shortcomment": "Secondary down-sampling probability",
+    "comment": "Probability that a Secondary sample galaxy is included after down-sampling. For galaxies not in the Secondary sample, set to mean down-sampling probability",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "pweight",
+    "shortcomment": "Weight for Primary",
+    "comment": "Volume weight for the Primary sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "psweight",
+    "shortcomment": "Weight for Primary + full Secondary",
+    "comment": "Volume weight for the combined Primary and full Secondary samples. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "psrweight",
+    "shortcomment": "Weight for Primary + Secondary",
+    "comment": "Volume weight for the combined Primary and down-sampled Secondary samples. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "sweight",
+    "shortcomment": "Weight for full Secondary",
+    "comment": "Volume weight for the full Secondary sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "srweight",
+    "shortcomment": "Weight for Secondary",
+    "comment": "Volume weight for the down-sampled Secondary sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "eweight",
+    "shortcomment": "Weight for Primary+",
+    "comment": "Volume weight for the Primary+ sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "esweight",
+    "shortcomment": "Weight for Primary+ plus full Secondary",
+    "comment": "Volume weight for the combined Primary+ and full Secondary sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "esrweight",
+    "shortcomment": "Weight for Primary+ plus Secondary",
+    "comment": "Volume weight for the combined Primary+ and down-sampled Secondary sample. Corrects the MaNGA selection to a volume-limited sample",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_field",
+    "comment": "SDSS imaging field for NSA-selected objects",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_run",
+    "comment": "SDSS imaging run for NSA-selected objects",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_camcol",
+    "comment": "SDSS imaging camcol for NSA-selected objects",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_version",
+    "comment": "NSA version for target selection",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_nsaid",
+    "comment": "NSA ID number for v1_0_1 targets",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_nsaid_v1b",
+    "comment": "NSA ID number for v1b_0_0_v2 targets",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_z",
+    "comment": "Heliocentric redshift according to NSA",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_zdist",
+    "shortcomment": "Distance estimate from Willick et al",
+    "comment": "Distance estimate using peculiar velocity model of Willick et al (1997); multiply by $c/H_0$ for Mpc",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_sersic_absmag",
+    "shortcomment": "Sersic absolute magnitude [FNugriz]",
+    "comment": "Absolute magnitude in rest frame bands [FNugriz] based on single-component elliptical Sersic profile fit ($\\Omega_m=0.3$, $\\Omega_\\Lambda=0.7$, $h=1$)",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "mag"
+  },
+  {
+    "name": "nsa_elpetro_absmag",
+    "shortcomment": "Petrosian absolute magnitude [FNugriz]",
+    "comment": "Absolute magnitude in rest frame bands [FNugriz] based on elliptical Petrosian magnitude ($\\Omega_m=0.3$, $\\Omega_\\Lambda=0.7$, $h=1$)",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "mag"
+  },
+  {
+    "name": "nsa_elpetro_amivar",
+    "shortcomment": "Inverse variance nsa_elpetro_absmag",
+    "comment": "Inverse variance of {\\tt nsa_elpetro_absmag}",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "mag$^{-2}$"
+  },
+  {
+    "name": "nsa_sersic_mass",
+    "shortcomment": "Sersic stellar mass",
+    "comment": "Stellar mass from {\\tt kcorrect} fit for Sersic fluxes ($\\Omega_m=0.3$, $\\Omega_\\Lambda=0.7$, $h=1$; {\\bf use with caution})",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_elpetro_mass",
+    "shortcomment": "Petrosian stellar mass",
+    "comment": "Stellar mass from {\\tt kcorrect} fit for Elliptical Petrosian fluxes ($\\Omega_m=0.3$, $\\Omega_\\Lambda=0.7$, $h=1$; {\\bf use with caution})",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_elpetro_ba",
+    "shortcomment": "Petrosian axis ratio",
+    "comment": "Axis ratio (minor over major) for elliptical apertures in elliptical Petrosian fit",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_elpetro_phi",
+    "shortcomment": "Petrosian position angle (East of North)",
+    "comment": "Position angle (East of North) for elliptical apertures in elliptical Petrosian fit",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "nsa_extinction",
+    "shortcomment": "Galactic extinction from SFD98 in FNugriz",
+    "comment": "Galactic extinction from Schlegel, Finkbeiner, and Davis (1997), in FNugriz",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "mag"
+  },
+  {
+    "name": "nsa_elpetro_th50_r",
+    "shortcomment": "r-band 50% light in elliptical Petrosian",
+    "comment": "50\\% light radius of elliptical Petrosian profile for $r$-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "nsa_petro_th50",
+    "shortcomment": "r-band 50% light in circular Petrosian",
+    "comment": "50\\% light radius of circular Petrosian profile for $r$-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "nsa_petro_flux",
+    "comment": "Circular Petrosian flux for FNugriz bands ",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy"
+  },
+  {
+    "name": "nsa_petro_flux_ivar",
+    "shortcomment": "Inverse variance of nsa_petro_flux",
+    "comment": "Inverse variance of {\\tt nsa_petro_flux}",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy$^{-2}$"
+  },
+  {
+    "name": "nsa_elpetro_flux",
+    "comment": "Elliptical Petrosian flux for FNugriz bands",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy"
+  },
+  {
+    "name": "nsa_elpetro_flux_ivar",
+    "shortcomment": "Inverse variance of nsa_elpetro_flux",
+    "comment": "Inverse variance of {\\tt nsa_elpetro_flux}",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy$^{-2}$"
+  },
+  {
+    "name": "nsa_sersic_ba",
+    "shortcomment": "Sersic axis ratio",
+    "comment": "Axis ratio (minor over major) found for elliptical Sersic fit",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_sersic_n",
+    "shortcomment": "Sersic index",
+    "comment": "Sersic index found for elliptical Sersic fit",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "nsa_sersic_phi",
+    "shortcomment": "Sersic position angle (East of North)",
+    "comment": "Position angle (East of North) for major-axis orientation found in Sersic fit",
+    "type": "float64",
+    "shape": [],
+    "unit": "deg"
+  },
+  {
+    "name": "nsa_sersic_th50",
+    "shortcomment": "50% light radius of Sersic fit",
+    "comment": "50\\% light radius of elliptical, single-component Sersic fit to $r$-band",
+    "type": "float64",
+    "shape": [],
+    "unit": "arcsec"
+  },
+  {
+    "name": "nsa_sersic_flux",
+    "comment": "Elliptical Sersic flux for FNugriz bands",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy"
+  },
+  {
+    "name": "nsa_sersic_flux_ivar",
+    "shortcomment": "Inverse variance of nsa_sersic_flux",
+    "comment": "Inverse variance of {\\tt nsa_sersic_flux}",
+    "type": "float64",
+    "shape": [
+      7
+    ],
+    "unit": "nmgy$^{-2}$"
+  },
+  {
+    "name": "manga_cube_mnsa",
+    "comment": "Set if MNSA cube was attempted",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "wise_coadd_done",
+    "comment": "Set if WISE coadd was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "dlis_coadd_done",
+    "comment": "Set if DLIS coadd was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "galex_coadd_empty",
+    "comment": "Set if GALEX coadd produced with zero flux",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "galex_coadd_done",
+    "comment": "Set if GALEX coadd produced with non-zero flux",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "manga_cube_done",
+    "comment": "Set if MNSA cube was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "wise_resampled_done",
+    "comment": "Set if resampled WISE image was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "dlis_resampled_done",
+    "comment": "Set if resampled DLIS image was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "galex_resampled_done",
+    "comment": "Set if resampled GALEX image was produced",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "dap_done",
+    "comment": "Set if DAP was run for MNSA cube",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "ipipe3d",
+    "comment": "Index into Pipe3D catalog from Sanchez et al.",
+    "type": "int32",
+    "shape": [],
+    "unit": ""
+  }
+]

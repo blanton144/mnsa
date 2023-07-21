@@ -96,12 +96,11 @@ if __name__ == '__main__':
     pipe3d_matched[matched] = pipe3d[summary['ipipe3d'][matched]]
 
     hdr = list()
-    hdr.append({'name': 'APERTURE',
-                'value': aperture,
-                'comment': 'aperture used for SPS'})
     hdr.append({'name': 'MNSA_VER',
                 'value': version,
                 'comment': 'MNSA version'})
+
+    summary['versdrp3'] = '0.3.0'
 
     fitsio.write(sumfile, summary, header=hdr, extname='SUMMARY',
                  clobber=True)
@@ -112,6 +111,10 @@ if __name__ == '__main__':
     fitsio.write(sumfile, pipe3d_matched, extname='PIPE3D',
                  clobber=False)
     for aperture in apertures:
+        aphdr = hdr
+        aphdr.append({'name': 'APERTURE',
+                      'value': aperture,
+                      'comment': 'aperture used for SPS'})
         fitsio.write(sumfile, sps[aperture],
-                     extname='SPS_{ap}'.format(ap=aperture),
+                     extname='SPS_{ap}'.format(ap=aperture), header=aphdr,
                      clobber=False)

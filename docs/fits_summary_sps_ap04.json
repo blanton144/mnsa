@@ -1,0 +1,90 @@
+[
+  {
+    "name": "plateifu",
+    "comment": "label for field   1",
+    "shortcomment": "label for field   1",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "do_sps",
+    "comment": "label for field   2",
+    "shortcomment": "label for field   2",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "hemi",
+    "comment": "label for field   3",
+    "shortcomment": "label for field   3",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "redshift",
+    "comment": "label for field   4",
+    "shortcomment": "label for field   4",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "maggies",
+    "comment": "label for field   5",
+    "shortcomment": "label for field   5",
+    "type": "float32",
+    "shape": [
+      9
+    ],
+    "unit": ""
+  },
+  {
+    "name": "ivar",
+    "comment": "label for field   6",
+    "shortcomment": "label for field   6",
+    "type": "float32",
+    "shape": [
+      9
+    ],
+    "unit": ""
+  },
+  {
+    "name": "absmag",
+    "comment": "label for field   7",
+    "shortcomment": "label for field   7",
+    "type": "float32",
+    "shape": [
+      9
+    ],
+    "unit": ""
+  },
+  {
+    "name": "rmaggies",
+    "comment": "label for field   8",
+    "shortcomment": "label for field   8",
+    "type": "float32",
+    "shape": [
+      9
+    ],
+    "unit": ""
+  },
+  {
+    "name": "chi2",
+    "comment": "label for field   9",
+    "shortcomment": "label for field   9",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "dof",
+    "comment": "label for field  10",
+    "shortcomment": "label for field  10",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  }
+]

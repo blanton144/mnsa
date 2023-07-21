@@ -1,0 +1,4138 @@
+[
+  {
+    "name": "MANGAID",
+    "comment": "label for field   1",
+    "shortcomment": "label for field   1",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "REFBAND",
+    "comment": "label for field   2",
+    "shortcomment": "label for field   2",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "REFPIXSCALE",
+    "comment": "label for field   3",
+    "shortcomment": "label for field   3",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SUCCESS",
+    "comment": "label for field   4",
+    "shortcomment": "label for field   4",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FITGEOMETRY",
+    "comment": "label for field   5",
+    "shortcomment": "label for field   5",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INPUT_ELLIPSE",
+    "comment": "label for field   6",
+    "shortcomment": "label for field   6",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "LARGESHIFT",
+    "comment": "label for field   7",
+    "shortcomment": "label for field   7",
+    "type": "boolean",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "X0_MOMENT",
+    "comment": "label for field   8",
+    "shortcomment": "label for field   8",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "Y0_MOMENT",
+    "comment": "label for field   9",
+    "shortcomment": "label for field   9",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RA_MOMENT",
+    "comment": "label for field  10",
+    "shortcomment": "label for field  10",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "DEC_MOMENT",
+    "comment": "label for field  11",
+    "shortcomment": "label for field  11",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_MOMENT",
+    "comment": "label for field  12",
+    "shortcomment": "label for field  12",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MAJORAXIS",
+    "comment": "label for field  13",
+    "shortcomment": "label for field  13",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PA_MOMENT",
+    "comment": "label for field  14",
+    "shortcomment": "label for field  14",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "BA_MOMENT",
+    "comment": "label for field  15",
+    "shortcomment": "label for field  15",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EPS_MOMENT",
+    "comment": "label for field  16",
+    "shortcomment": "label for field  16",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MAXSMA",
+    "comment": "label for field  17",
+    "shortcomment": "label for field  17",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INTEGRMODE",
+    "comment": "label for field  18",
+    "shortcomment": "label for field  18",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SCLIP",
+    "comment": "label for field  19",
+    "shortcomment": "label for field  19",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NCLIP",
+    "comment": "label for field  20",
+    "shortcomment": "label for field  20",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFSIZE_G",
+    "comment": "label for field  21",
+    "shortcomment": "label for field  21",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFSIZE_R",
+    "comment": "label for field  22",
+    "shortcomment": "label for field  22",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFSIZE_Z",
+    "comment": "label for field  23",
+    "shortcomment": "label for field  23",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFDEPTH_G",
+    "comment": "label for field  24",
+    "shortcomment": "label for field  24",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFDEPTH_R",
+    "comment": "label for field  25",
+    "shortcomment": "label for field  25",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PSFDEPTH_Z",
+    "comment": "label for field  26",
+    "shortcomment": "label for field  26",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "REFBAND_WIDTH",
+    "comment": "label for field  27",
+    "shortcomment": "label for field  27",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "REFBAND_HEIGHT",
+    "comment": "label for field  28",
+    "shortcomment": "label for field  28",
+    "type": "int64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EBV",
+    "comment": "label for field  29",
+    "shortcomment": "label for field  29",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_G",
+    "comment": "label for field  30",
+    "shortcomment": "label for field  30",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_R",
+    "comment": "label for field  31",
+    "shortcomment": "label for field  31",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_Z",
+    "comment": "label for field  32",
+    "shortcomment": "label for field  32",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_FUV",
+    "comment": "label for field  33",
+    "shortcomment": "label for field  33",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_NUV",
+    "comment": "label for field  34",
+    "shortcomment": "label for field  34",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_W1",
+    "comment": "label for field  35",
+    "shortcomment": "label for field  35",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_W2",
+    "comment": "label for field  36",
+    "shortcomment": "label for field  36",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_W3",
+    "comment": "label for field  37",
+    "shortcomment": "label for field  37",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "MW_TRANSMISSION_W4",
+    "comment": "label for field  38",
+    "shortcomment": "label for field  38",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB22",
+    "comment": "label for field  39",
+    "shortcomment": "label for field  39",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB22.5",
+    "comment": "label for field  40",
+    "shortcomment": "label for field  40",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB23",
+    "comment": "label for field  41",
+    "shortcomment": "label for field  41",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB23.5",
+    "comment": "label for field  42",
+    "shortcomment": "label for field  42",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB24",
+    "comment": "label for field  43",
+    "shortcomment": "label for field  43",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB24.5",
+    "comment": "label for field  44",
+    "shortcomment": "label for field  44",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB25",
+    "comment": "label for field  45",
+    "shortcomment": "label for field  45",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB25.5",
+    "comment": "label for field  46",
+    "shortcomment": "label for field  46",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_SB26",
+    "comment": "label for field  47",
+    "shortcomment": "label for field  47",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB22",
+    "comment": "label for field  48",
+    "shortcomment": "label for field  48",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB22.5",
+    "comment": "label for field  49",
+    "shortcomment": "label for field  49",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB23",
+    "comment": "label for field  50",
+    "shortcomment": "label for field  50",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB23.5",
+    "comment": "label for field  51",
+    "shortcomment": "label for field  51",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB24",
+    "comment": "label for field  52",
+    "shortcomment": "label for field  52",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB24.5",
+    "comment": "label for field  53",
+    "shortcomment": "label for field  53",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB25",
+    "comment": "label for field  54",
+    "shortcomment": "label for field  54",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB25.5",
+    "comment": "label for field  55",
+    "shortcomment": "label for field  55",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_IVAR_SB26",
+    "comment": "label for field  56",
+    "shortcomment": "label for field  56",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_G",
+    "comment": "label for field  57",
+    "shortcomment": "label for field  57",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_G",
+    "comment": "label for field  58",
+    "shortcomment": "label for field  58",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_G",
+    "comment": "label for field  59",
+    "shortcomment": "label for field  59",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_G",
+    "comment": "label for field  60",
+    "shortcomment": "label for field  60",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_G",
+    "comment": "label for field  61",
+    "shortcomment": "label for field  61",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_G",
+    "comment": "label for field  62",
+    "shortcomment": "label for field  62",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_G",
+    "comment": "label for field  63",
+    "shortcomment": "label for field  63",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_G",
+    "comment": "label for field  64",
+    "shortcomment": "label for field  64",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_G",
+    "comment": "label for field  65",
+    "shortcomment": "label for field  65",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_G",
+    "comment": "label for field  66",
+    "shortcomment": "label for field  66",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_G",
+    "comment": "label for field  67",
+    "shortcomment": "label for field  67",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_G",
+    "comment": "label for field  68",
+    "shortcomment": "label for field  68",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_G",
+    "comment": "label for field  69",
+    "shortcomment": "label for field  69",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_G",
+    "comment": "label for field  70",
+    "shortcomment": "label for field  70",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_G",
+    "comment": "label for field  71",
+    "shortcomment": "label for field  71",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_G",
+    "comment": "label for field  72",
+    "shortcomment": "label for field  72",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_G",
+    "comment": "label for field  73",
+    "shortcomment": "label for field  73",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_G",
+    "comment": "label for field  74",
+    "shortcomment": "label for field  74",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_R",
+    "comment": "label for field  75",
+    "shortcomment": "label for field  75",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_R",
+    "comment": "label for field  76",
+    "shortcomment": "label for field  76",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_R",
+    "comment": "label for field  77",
+    "shortcomment": "label for field  77",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_R",
+    "comment": "label for field  78",
+    "shortcomment": "label for field  78",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_R",
+    "comment": "label for field  79",
+    "shortcomment": "label for field  79",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_R",
+    "comment": "label for field  80",
+    "shortcomment": "label for field  80",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_R",
+    "comment": "label for field  81",
+    "shortcomment": "label for field  81",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_R",
+    "comment": "label for field  82",
+    "shortcomment": "label for field  82",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_R",
+    "comment": "label for field  83",
+    "shortcomment": "label for field  83",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_R",
+    "comment": "label for field  84",
+    "shortcomment": "label for field  84",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_R",
+    "comment": "label for field  85",
+    "shortcomment": "label for field  85",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_R",
+    "comment": "label for field  86",
+    "shortcomment": "label for field  86",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_R",
+    "comment": "label for field  87",
+    "shortcomment": "label for field  87",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_R",
+    "comment": "label for field  88",
+    "shortcomment": "label for field  88",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_R",
+    "comment": "label for field  89",
+    "shortcomment": "label for field  89",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_R",
+    "comment": "label for field  90",
+    "shortcomment": "label for field  90",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_R",
+    "comment": "label for field  91",
+    "shortcomment": "label for field  91",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_R",
+    "comment": "label for field  92",
+    "shortcomment": "label for field  92",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_Z",
+    "comment": "label for field  93",
+    "shortcomment": "label for field  93",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_Z",
+    "comment": "label for field  94",
+    "shortcomment": "label for field  94",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_Z",
+    "comment": "label for field  95",
+    "shortcomment": "label for field  95",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_Z",
+    "comment": "label for field  96",
+    "shortcomment": "label for field  96",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_Z",
+    "comment": "label for field  97",
+    "shortcomment": "label for field  97",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_Z",
+    "comment": "label for field  98",
+    "shortcomment": "label for field  98",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_Z",
+    "comment": "label for field  99",
+    "shortcomment": "label for field  99",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_Z",
+    "comment": "label for field 100",
+    "shortcomment": "label for field 100",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_Z",
+    "comment": "label for field 101",
+    "shortcomment": "label for field 101",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_Z",
+    "comment": "label for field 102",
+    "shortcomment": "label for field 102",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_Z",
+    "comment": "label for field 103",
+    "shortcomment": "label for field 103",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_Z",
+    "comment": "label for field 104",
+    "shortcomment": "label for field 104",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_Z",
+    "comment": "label for field 105",
+    "shortcomment": "label for field 105",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_Z",
+    "comment": "label for field 106",
+    "shortcomment": "label for field 106",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_Z",
+    "comment": "label for field 107",
+    "shortcomment": "label for field 107",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_Z",
+    "comment": "label for field 108",
+    "shortcomment": "label for field 108",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_Z",
+    "comment": "label for field 109",
+    "shortcomment": "label for field 109",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_Z",
+    "comment": "label for field 110",
+    "shortcomment": "label for field 110",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_FUV",
+    "comment": "label for field 111",
+    "shortcomment": "label for field 111",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_FUV",
+    "comment": "label for field 112",
+    "shortcomment": "label for field 112",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_FUV",
+    "comment": "label for field 113",
+    "shortcomment": "label for field 113",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_FUV",
+    "comment": "label for field 114",
+    "shortcomment": "label for field 114",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_FUV",
+    "comment": "label for field 115",
+    "shortcomment": "label for field 115",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_FUV",
+    "comment": "label for field 116",
+    "shortcomment": "label for field 116",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_FUV",
+    "comment": "label for field 117",
+    "shortcomment": "label for field 117",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_FUV",
+    "comment": "label for field 118",
+    "shortcomment": "label for field 118",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_FUV",
+    "comment": "label for field 119",
+    "shortcomment": "label for field 119",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_FUV",
+    "comment": "label for field 120",
+    "shortcomment": "label for field 120",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_FUV",
+    "comment": "label for field 121",
+    "shortcomment": "label for field 121",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_FUV",
+    "comment": "label for field 122",
+    "shortcomment": "label for field 122",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_FUV",
+    "comment": "label for field 123",
+    "shortcomment": "label for field 123",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_FUV",
+    "comment": "label for field 124",
+    "shortcomment": "label for field 124",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_FUV",
+    "comment": "label for field 125",
+    "shortcomment": "label for field 125",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_FUV",
+    "comment": "label for field 126",
+    "shortcomment": "label for field 126",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_FUV",
+    "comment": "label for field 127",
+    "shortcomment": "label for field 127",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_FUV",
+    "comment": "label for field 128",
+    "shortcomment": "label for field 128",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_NUV",
+    "comment": "label for field 129",
+    "shortcomment": "label for field 129",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_NUV",
+    "comment": "label for field 130",
+    "shortcomment": "label for field 130",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_NUV",
+    "comment": "label for field 131",
+    "shortcomment": "label for field 131",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_NUV",
+    "comment": "label for field 132",
+    "shortcomment": "label for field 132",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_NUV",
+    "comment": "label for field 133",
+    "shortcomment": "label for field 133",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_NUV",
+    "comment": "label for field 134",
+    "shortcomment": "label for field 134",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_NUV",
+    "comment": "label for field 135",
+    "shortcomment": "label for field 135",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_NUV",
+    "comment": "label for field 136",
+    "shortcomment": "label for field 136",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_NUV",
+    "comment": "label for field 137",
+    "shortcomment": "label for field 137",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_NUV",
+    "comment": "label for field 138",
+    "shortcomment": "label for field 138",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_NUV",
+    "comment": "label for field 139",
+    "shortcomment": "label for field 139",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_NUV",
+    "comment": "label for field 140",
+    "shortcomment": "label for field 140",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_NUV",
+    "comment": "label for field 141",
+    "shortcomment": "label for field 141",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_NUV",
+    "comment": "label for field 142",
+    "shortcomment": "label for field 142",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_NUV",
+    "comment": "label for field 143",
+    "shortcomment": "label for field 143",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_NUV",
+    "comment": "label for field 144",
+    "shortcomment": "label for field 144",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_NUV",
+    "comment": "label for field 145",
+    "shortcomment": "label for field 145",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_NUV",
+    "comment": "label for field 146",
+    "shortcomment": "label for field 146",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_W1",
+    "comment": "label for field 147",
+    "shortcomment": "label for field 147",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_W1",
+    "comment": "label for field 148",
+    "shortcomment": "label for field 148",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_W1",
+    "comment": "label for field 149",
+    "shortcomment": "label for field 149",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_W1",
+    "comment": "label for field 150",
+    "shortcomment": "label for field 150",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_W1",
+    "comment": "label for field 151",
+    "shortcomment": "label for field 151",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_W1",
+    "comment": "label for field 152",
+    "shortcomment": "label for field 152",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_W1",
+    "comment": "label for field 153",
+    "shortcomment": "label for field 153",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_W1",
+    "comment": "label for field 154",
+    "shortcomment": "label for field 154",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_W1",
+    "comment": "label for field 155",
+    "shortcomment": "label for field 155",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_W1",
+    "comment": "label for field 156",
+    "shortcomment": "label for field 156",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_W1",
+    "comment": "label for field 157",
+    "shortcomment": "label for field 157",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_W1",
+    "comment": "label for field 158",
+    "shortcomment": "label for field 158",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_W1",
+    "comment": "label for field 159",
+    "shortcomment": "label for field 159",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_W1",
+    "comment": "label for field 160",
+    "shortcomment": "label for field 160",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_W1",
+    "comment": "label for field 161",
+    "shortcomment": "label for field 161",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_W1",
+    "comment": "label for field 162",
+    "shortcomment": "label for field 162",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_W1",
+    "comment": "label for field 163",
+    "shortcomment": "label for field 163",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_W1",
+    "comment": "label for field 164",
+    "shortcomment": "label for field 164",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_W2",
+    "comment": "label for field 165",
+    "shortcomment": "label for field 165",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_W2",
+    "comment": "label for field 166",
+    "shortcomment": "label for field 166",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_W2",
+    "comment": "label for field 167",
+    "shortcomment": "label for field 167",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_W2",
+    "comment": "label for field 168",
+    "shortcomment": "label for field 168",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_W2",
+    "comment": "label for field 169",
+    "shortcomment": "label for field 169",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_W2",
+    "comment": "label for field 170",
+    "shortcomment": "label for field 170",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_W2",
+    "comment": "label for field 171",
+    "shortcomment": "label for field 171",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_W2",
+    "comment": "label for field 172",
+    "shortcomment": "label for field 172",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_W2",
+    "comment": "label for field 173",
+    "shortcomment": "label for field 173",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_W2",
+    "comment": "label for field 174",
+    "shortcomment": "label for field 174",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_W2",
+    "comment": "label for field 175",
+    "shortcomment": "label for field 175",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_W2",
+    "comment": "label for field 176",
+    "shortcomment": "label for field 176",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_W2",
+    "comment": "label for field 177",
+    "shortcomment": "label for field 177",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_W2",
+    "comment": "label for field 178",
+    "shortcomment": "label for field 178",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_W2",
+    "comment": "label for field 179",
+    "shortcomment": "label for field 179",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_W2",
+    "comment": "label for field 180",
+    "shortcomment": "label for field 180",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_W2",
+    "comment": "label for field 181",
+    "shortcomment": "label for field 181",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_W2",
+    "comment": "label for field 182",
+    "shortcomment": "label for field 182",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_W3",
+    "comment": "label for field 183",
+    "shortcomment": "label for field 183",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_W3",
+    "comment": "label for field 184",
+    "shortcomment": "label for field 184",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_W3",
+    "comment": "label for field 185",
+    "shortcomment": "label for field 185",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_W3",
+    "comment": "label for field 186",
+    "shortcomment": "label for field 186",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_W3",
+    "comment": "label for field 187",
+    "shortcomment": "label for field 187",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_W3",
+    "comment": "label for field 188",
+    "shortcomment": "label for field 188",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_W3",
+    "comment": "label for field 189",
+    "shortcomment": "label for field 189",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_W3",
+    "comment": "label for field 190",
+    "shortcomment": "label for field 190",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_W3",
+    "comment": "label for field 191",
+    "shortcomment": "label for field 191",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_W3",
+    "comment": "label for field 192",
+    "shortcomment": "label for field 192",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_W3",
+    "comment": "label for field 193",
+    "shortcomment": "label for field 193",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_W3",
+    "comment": "label for field 194",
+    "shortcomment": "label for field 194",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_W3",
+    "comment": "label for field 195",
+    "shortcomment": "label for field 195",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_W3",
+    "comment": "label for field 196",
+    "shortcomment": "label for field 196",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_W3",
+    "comment": "label for field 197",
+    "shortcomment": "label for field 197",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_W3",
+    "comment": "label for field 198",
+    "shortcomment": "label for field 198",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_W3",
+    "comment": "label for field 199",
+    "shortcomment": "label for field 199",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_W3",
+    "comment": "label for field 200",
+    "shortcomment": "label for field 200",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22_W4",
+    "comment": "label for field 201",
+    "shortcomment": "label for field 201",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB22.5_W4",
+    "comment": "label for field 202",
+    "shortcomment": "label for field 202",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23_W4",
+    "comment": "label for field 203",
+    "shortcomment": "label for field 203",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB23.5_W4",
+    "comment": "label for field 204",
+    "shortcomment": "label for field 204",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24_W4",
+    "comment": "label for field 205",
+    "shortcomment": "label for field 205",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB24.5_W4",
+    "comment": "label for field 206",
+    "shortcomment": "label for field 206",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25_W4",
+    "comment": "label for field 207",
+    "shortcomment": "label for field 207",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB25.5_W4",
+    "comment": "label for field 208",
+    "shortcomment": "label for field 208",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_SB26_W4",
+    "comment": "label for field 209",
+    "shortcomment": "label for field 209",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22_W4",
+    "comment": "label for field 210",
+    "shortcomment": "label for field 210",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB22.5_W4",
+    "comment": "label for field 211",
+    "shortcomment": "label for field 211",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23_W4",
+    "comment": "label for field 212",
+    "shortcomment": "label for field 212",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB23.5_W4",
+    "comment": "label for field 213",
+    "shortcomment": "label for field 213",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24_W4",
+    "comment": "label for field 214",
+    "shortcomment": "label for field 214",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB24.5_W4",
+    "comment": "label for field 215",
+    "shortcomment": "label for field 215",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25_W4",
+    "comment": "label for field 216",
+    "shortcomment": "label for field 216",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB25.5_W4",
+    "comment": "label for field 217",
+    "shortcomment": "label for field 217",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_SB26_W4",
+    "comment": "label for field 218",
+    "shortcomment": "label for field 218",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP01",
+    "comment": "label for field 219",
+    "shortcomment": "label for field 219",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP02",
+    "comment": "label for field 220",
+    "shortcomment": "label for field 220",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP03",
+    "comment": "label for field 221",
+    "shortcomment": "label for field 221",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP04",
+    "comment": "label for field 222",
+    "shortcomment": "label for field 222",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP05",
+    "comment": "label for field 223",
+    "shortcomment": "label for field 223",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP06",
+    "comment": "label for field 224",
+    "shortcomment": "label for field 224",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP07",
+    "comment": "label for field 225",
+    "shortcomment": "label for field 225",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_AP08",
+    "comment": "label for field 226",
+    "shortcomment": "label for field 226",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_G",
+    "comment": "label for field 227",
+    "shortcomment": "label for field 227",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_G",
+    "comment": "label for field 228",
+    "shortcomment": "label for field 228",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_G",
+    "comment": "label for field 229",
+    "shortcomment": "label for field 229",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_G",
+    "comment": "label for field 230",
+    "shortcomment": "label for field 230",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_G",
+    "comment": "label for field 231",
+    "shortcomment": "label for field 231",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_G",
+    "comment": "label for field 232",
+    "shortcomment": "label for field 232",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_G",
+    "comment": "label for field 233",
+    "shortcomment": "label for field 233",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_G",
+    "comment": "label for field 234",
+    "shortcomment": "label for field 234",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_G",
+    "comment": "label for field 235",
+    "shortcomment": "label for field 235",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_G",
+    "comment": "label for field 236",
+    "shortcomment": "label for field 236",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_G",
+    "comment": "label for field 237",
+    "shortcomment": "label for field 237",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_G",
+    "comment": "label for field 238",
+    "shortcomment": "label for field 238",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_G",
+    "comment": "label for field 239",
+    "shortcomment": "label for field 239",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_G",
+    "comment": "label for field 240",
+    "shortcomment": "label for field 240",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_G",
+    "comment": "label for field 241",
+    "shortcomment": "label for field 241",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_G",
+    "comment": "label for field 242",
+    "shortcomment": "label for field 242",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_R",
+    "comment": "label for field 243",
+    "shortcomment": "label for field 243",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_R",
+    "comment": "label for field 244",
+    "shortcomment": "label for field 244",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_R",
+    "comment": "label for field 245",
+    "shortcomment": "label for field 245",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_R",
+    "comment": "label for field 246",
+    "shortcomment": "label for field 246",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_R",
+    "comment": "label for field 247",
+    "shortcomment": "label for field 247",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_R",
+    "comment": "label for field 248",
+    "shortcomment": "label for field 248",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_R",
+    "comment": "label for field 249",
+    "shortcomment": "label for field 249",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_R",
+    "comment": "label for field 250",
+    "shortcomment": "label for field 250",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_R",
+    "comment": "label for field 251",
+    "shortcomment": "label for field 251",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_R",
+    "comment": "label for field 252",
+    "shortcomment": "label for field 252",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_R",
+    "comment": "label for field 253",
+    "shortcomment": "label for field 253",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_R",
+    "comment": "label for field 254",
+    "shortcomment": "label for field 254",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_R",
+    "comment": "label for field 255",
+    "shortcomment": "label for field 255",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_R",
+    "comment": "label for field 256",
+    "shortcomment": "label for field 256",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_R",
+    "comment": "label for field 257",
+    "shortcomment": "label for field 257",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_R",
+    "comment": "label for field 258",
+    "shortcomment": "label for field 258",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_Z",
+    "comment": "label for field 259",
+    "shortcomment": "label for field 259",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_Z",
+    "comment": "label for field 260",
+    "shortcomment": "label for field 260",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_Z",
+    "comment": "label for field 261",
+    "shortcomment": "label for field 261",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_Z",
+    "comment": "label for field 262",
+    "shortcomment": "label for field 262",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_Z",
+    "comment": "label for field 263",
+    "shortcomment": "label for field 263",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_Z",
+    "comment": "label for field 264",
+    "shortcomment": "label for field 264",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_Z",
+    "comment": "label for field 265",
+    "shortcomment": "label for field 265",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_Z",
+    "comment": "label for field 266",
+    "shortcomment": "label for field 266",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_Z",
+    "comment": "label for field 267",
+    "shortcomment": "label for field 267",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_Z",
+    "comment": "label for field 268",
+    "shortcomment": "label for field 268",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_Z",
+    "comment": "label for field 269",
+    "shortcomment": "label for field 269",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_Z",
+    "comment": "label for field 270",
+    "shortcomment": "label for field 270",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_Z",
+    "comment": "label for field 271",
+    "shortcomment": "label for field 271",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_Z",
+    "comment": "label for field 272",
+    "shortcomment": "label for field 272",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_Z",
+    "comment": "label for field 273",
+    "shortcomment": "label for field 273",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_Z",
+    "comment": "label for field 274",
+    "shortcomment": "label for field 274",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_FUV",
+    "comment": "label for field 275",
+    "shortcomment": "label for field 275",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_FUV",
+    "comment": "label for field 276",
+    "shortcomment": "label for field 276",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_FUV",
+    "comment": "label for field 277",
+    "shortcomment": "label for field 277",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_FUV",
+    "comment": "label for field 278",
+    "shortcomment": "label for field 278",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_FUV",
+    "comment": "label for field 279",
+    "shortcomment": "label for field 279",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_FUV",
+    "comment": "label for field 280",
+    "shortcomment": "label for field 280",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_FUV",
+    "comment": "label for field 281",
+    "shortcomment": "label for field 281",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_FUV",
+    "comment": "label for field 282",
+    "shortcomment": "label for field 282",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_FUV",
+    "comment": "label for field 283",
+    "shortcomment": "label for field 283",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_FUV",
+    "comment": "label for field 284",
+    "shortcomment": "label for field 284",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_FUV",
+    "comment": "label for field 285",
+    "shortcomment": "label for field 285",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_FUV",
+    "comment": "label for field 286",
+    "shortcomment": "label for field 286",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_FUV",
+    "comment": "label for field 287",
+    "shortcomment": "label for field 287",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_FUV",
+    "comment": "label for field 288",
+    "shortcomment": "label for field 288",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_FUV",
+    "comment": "label for field 289",
+    "shortcomment": "label for field 289",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_FUV",
+    "comment": "label for field 290",
+    "shortcomment": "label for field 290",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_NUV",
+    "comment": "label for field 291",
+    "shortcomment": "label for field 291",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_NUV",
+    "comment": "label for field 292",
+    "shortcomment": "label for field 292",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_NUV",
+    "comment": "label for field 293",
+    "shortcomment": "label for field 293",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_NUV",
+    "comment": "label for field 294",
+    "shortcomment": "label for field 294",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_NUV",
+    "comment": "label for field 295",
+    "shortcomment": "label for field 295",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_NUV",
+    "comment": "label for field 296",
+    "shortcomment": "label for field 296",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_NUV",
+    "comment": "label for field 297",
+    "shortcomment": "label for field 297",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_NUV",
+    "comment": "label for field 298",
+    "shortcomment": "label for field 298",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_NUV",
+    "comment": "label for field 299",
+    "shortcomment": "label for field 299",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_NUV",
+    "comment": "label for field 300",
+    "shortcomment": "label for field 300",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_NUV",
+    "comment": "label for field 301",
+    "shortcomment": "label for field 301",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_NUV",
+    "comment": "label for field 302",
+    "shortcomment": "label for field 302",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_NUV",
+    "comment": "label for field 303",
+    "shortcomment": "label for field 303",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_NUV",
+    "comment": "label for field 304",
+    "shortcomment": "label for field 304",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_NUV",
+    "comment": "label for field 305",
+    "shortcomment": "label for field 305",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_NUV",
+    "comment": "label for field 306",
+    "shortcomment": "label for field 306",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_W1",
+    "comment": "label for field 307",
+    "shortcomment": "label for field 307",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_W1",
+    "comment": "label for field 308",
+    "shortcomment": "label for field 308",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_W1",
+    "comment": "label for field 309",
+    "shortcomment": "label for field 309",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_W1",
+    "comment": "label for field 310",
+    "shortcomment": "label for field 310",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_W1",
+    "comment": "label for field 311",
+    "shortcomment": "label for field 311",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_W1",
+    "comment": "label for field 312",
+    "shortcomment": "label for field 312",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_W1",
+    "comment": "label for field 313",
+    "shortcomment": "label for field 313",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_W1",
+    "comment": "label for field 314",
+    "shortcomment": "label for field 314",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_W1",
+    "comment": "label for field 315",
+    "shortcomment": "label for field 315",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_W1",
+    "comment": "label for field 316",
+    "shortcomment": "label for field 316",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_W1",
+    "comment": "label for field 317",
+    "shortcomment": "label for field 317",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_W1",
+    "comment": "label for field 318",
+    "shortcomment": "label for field 318",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_W1",
+    "comment": "label for field 319",
+    "shortcomment": "label for field 319",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_W1",
+    "comment": "label for field 320",
+    "shortcomment": "label for field 320",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_W1",
+    "comment": "label for field 321",
+    "shortcomment": "label for field 321",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_W1",
+    "comment": "label for field 322",
+    "shortcomment": "label for field 322",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_W2",
+    "comment": "label for field 323",
+    "shortcomment": "label for field 323",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_W2",
+    "comment": "label for field 324",
+    "shortcomment": "label for field 324",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_W2",
+    "comment": "label for field 325",
+    "shortcomment": "label for field 325",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_W2",
+    "comment": "label for field 326",
+    "shortcomment": "label for field 326",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_W2",
+    "comment": "label for field 327",
+    "shortcomment": "label for field 327",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_W2",
+    "comment": "label for field 328",
+    "shortcomment": "label for field 328",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_W2",
+    "comment": "label for field 329",
+    "shortcomment": "label for field 329",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_W2",
+    "comment": "label for field 330",
+    "shortcomment": "label for field 330",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_W2",
+    "comment": "label for field 331",
+    "shortcomment": "label for field 331",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_W2",
+    "comment": "label for field 332",
+    "shortcomment": "label for field 332",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_W2",
+    "comment": "label for field 333",
+    "shortcomment": "label for field 333",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_W2",
+    "comment": "label for field 334",
+    "shortcomment": "label for field 334",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_W2",
+    "comment": "label for field 335",
+    "shortcomment": "label for field 335",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_W2",
+    "comment": "label for field 336",
+    "shortcomment": "label for field 336",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_W2",
+    "comment": "label for field 337",
+    "shortcomment": "label for field 337",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_W2",
+    "comment": "label for field 338",
+    "shortcomment": "label for field 338",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_W3",
+    "comment": "label for field 339",
+    "shortcomment": "label for field 339",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_W3",
+    "comment": "label for field 340",
+    "shortcomment": "label for field 340",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_W3",
+    "comment": "label for field 341",
+    "shortcomment": "label for field 341",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_W3",
+    "comment": "label for field 342",
+    "shortcomment": "label for field 342",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_W3",
+    "comment": "label for field 343",
+    "shortcomment": "label for field 343",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_W3",
+    "comment": "label for field 344",
+    "shortcomment": "label for field 344",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_W3",
+    "comment": "label for field 345",
+    "shortcomment": "label for field 345",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_W3",
+    "comment": "label for field 346",
+    "shortcomment": "label for field 346",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_W3",
+    "comment": "label for field 347",
+    "shortcomment": "label for field 347",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_W3",
+    "comment": "label for field 348",
+    "shortcomment": "label for field 348",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_W3",
+    "comment": "label for field 349",
+    "shortcomment": "label for field 349",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_W3",
+    "comment": "label for field 350",
+    "shortcomment": "label for field 350",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_W3",
+    "comment": "label for field 351",
+    "shortcomment": "label for field 351",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_W3",
+    "comment": "label for field 352",
+    "shortcomment": "label for field 352",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_W3",
+    "comment": "label for field 353",
+    "shortcomment": "label for field 353",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_W3",
+    "comment": "label for field 354",
+    "shortcomment": "label for field 354",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP01_W4",
+    "comment": "label for field 355",
+    "shortcomment": "label for field 355",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP02_W4",
+    "comment": "label for field 356",
+    "shortcomment": "label for field 356",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP03_W4",
+    "comment": "label for field 357",
+    "shortcomment": "label for field 357",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP04_W4",
+    "comment": "label for field 358",
+    "shortcomment": "label for field 358",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP05_W4",
+    "comment": "label for field 359",
+    "shortcomment": "label for field 359",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP06_W4",
+    "comment": "label for field 360",
+    "shortcomment": "label for field 360",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP07_W4",
+    "comment": "label for field 361",
+    "shortcomment": "label for field 361",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_AP08_W4",
+    "comment": "label for field 362",
+    "shortcomment": "label for field 362",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP01_W4",
+    "comment": "label for field 363",
+    "shortcomment": "label for field 363",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP02_W4",
+    "comment": "label for field 364",
+    "shortcomment": "label for field 364",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP03_W4",
+    "comment": "label for field 365",
+    "shortcomment": "label for field 365",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP04_W4",
+    "comment": "label for field 366",
+    "shortcomment": "label for field 366",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP05_W4",
+    "comment": "label for field 367",
+    "shortcomment": "label for field 367",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP06_W4",
+    "comment": "label for field 368",
+    "shortcomment": "label for field 368",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP07_W4",
+    "comment": "label for field 369",
+    "shortcomment": "label for field 369",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "FLUX_IVAR_AP08_W4",
+    "comment": "label for field 370",
+    "shortcomment": "label for field 370",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_G",
+    "comment": "label for field 371",
+    "shortcomment": "label for field 371",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_G",
+    "comment": "label for field 372",
+    "shortcomment": "label for field 372",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_G",
+    "comment": "label for field 373",
+    "shortcomment": "label for field 373",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_G",
+    "comment": "label for field 374",
+    "shortcomment": "label for field 374",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_G",
+    "comment": "label for field 375",
+    "shortcomment": "label for field 375",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_G",
+    "comment": "label for field 376",
+    "shortcomment": "label for field 376",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_G",
+    "comment": "label for field 377",
+    "shortcomment": "label for field 377",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_G",
+    "comment": "label for field 378",
+    "shortcomment": "label for field 378",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_G",
+    "comment": "label for field 379",
+    "shortcomment": "label for field 379",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_G",
+    "comment": "label for field 380",
+    "shortcomment": "label for field 380",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_R",
+    "comment": "label for field 381",
+    "shortcomment": "label for field 381",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_R",
+    "comment": "label for field 382",
+    "shortcomment": "label for field 382",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_R",
+    "comment": "label for field 383",
+    "shortcomment": "label for field 383",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_R",
+    "comment": "label for field 384",
+    "shortcomment": "label for field 384",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_R",
+    "comment": "label for field 385",
+    "shortcomment": "label for field 385",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_R",
+    "comment": "label for field 386",
+    "shortcomment": "label for field 386",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_R",
+    "comment": "label for field 387",
+    "shortcomment": "label for field 387",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_R",
+    "comment": "label for field 388",
+    "shortcomment": "label for field 388",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_R",
+    "comment": "label for field 389",
+    "shortcomment": "label for field 389",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_R",
+    "comment": "label for field 390",
+    "shortcomment": "label for field 390",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_Z",
+    "comment": "label for field 391",
+    "shortcomment": "label for field 391",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_Z",
+    "comment": "label for field 392",
+    "shortcomment": "label for field 392",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_Z",
+    "comment": "label for field 393",
+    "shortcomment": "label for field 393",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_Z",
+    "comment": "label for field 394",
+    "shortcomment": "label for field 394",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_Z",
+    "comment": "label for field 395",
+    "shortcomment": "label for field 395",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_Z",
+    "comment": "label for field 396",
+    "shortcomment": "label for field 396",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_Z",
+    "comment": "label for field 397",
+    "shortcomment": "label for field 397",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_Z",
+    "comment": "label for field 398",
+    "shortcomment": "label for field 398",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_Z",
+    "comment": "label for field 399",
+    "shortcomment": "label for field 399",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_Z",
+    "comment": "label for field 400",
+    "shortcomment": "label for field 400",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_FUV",
+    "comment": "label for field 401",
+    "shortcomment": "label for field 401",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_FUV",
+    "comment": "label for field 402",
+    "shortcomment": "label for field 402",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_FUV",
+    "comment": "label for field 403",
+    "shortcomment": "label for field 403",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_FUV",
+    "comment": "label for field 404",
+    "shortcomment": "label for field 404",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_FUV",
+    "comment": "label for field 405",
+    "shortcomment": "label for field 405",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_FUV",
+    "comment": "label for field 406",
+    "shortcomment": "label for field 406",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_FUV",
+    "comment": "label for field 407",
+    "shortcomment": "label for field 407",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_FUV",
+    "comment": "label for field 408",
+    "shortcomment": "label for field 408",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_FUV",
+    "comment": "label for field 409",
+    "shortcomment": "label for field 409",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_FUV",
+    "comment": "label for field 410",
+    "shortcomment": "label for field 410",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_NUV",
+    "comment": "label for field 411",
+    "shortcomment": "label for field 411",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_NUV",
+    "comment": "label for field 412",
+    "shortcomment": "label for field 412",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_NUV",
+    "comment": "label for field 413",
+    "shortcomment": "label for field 413",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_NUV",
+    "comment": "label for field 414",
+    "shortcomment": "label for field 414",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_NUV",
+    "comment": "label for field 415",
+    "shortcomment": "label for field 415",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_NUV",
+    "comment": "label for field 416",
+    "shortcomment": "label for field 416",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_NUV",
+    "comment": "label for field 417",
+    "shortcomment": "label for field 417",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_NUV",
+    "comment": "label for field 418",
+    "shortcomment": "label for field 418",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_NUV",
+    "comment": "label for field 419",
+    "shortcomment": "label for field 419",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_NUV",
+    "comment": "label for field 420",
+    "shortcomment": "label for field 420",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_W1",
+    "comment": "label for field 421",
+    "shortcomment": "label for field 421",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_W1",
+    "comment": "label for field 422",
+    "shortcomment": "label for field 422",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_W1",
+    "comment": "label for field 423",
+    "shortcomment": "label for field 423",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_W1",
+    "comment": "label for field 424",
+    "shortcomment": "label for field 424",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_W1",
+    "comment": "label for field 425",
+    "shortcomment": "label for field 425",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_W1",
+    "comment": "label for field 426",
+    "shortcomment": "label for field 426",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_W1",
+    "comment": "label for field 427",
+    "shortcomment": "label for field 427",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_W1",
+    "comment": "label for field 428",
+    "shortcomment": "label for field 428",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_W1",
+    "comment": "label for field 429",
+    "shortcomment": "label for field 429",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_W1",
+    "comment": "label for field 430",
+    "shortcomment": "label for field 430",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_W2",
+    "comment": "label for field 431",
+    "shortcomment": "label for field 431",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_W2",
+    "comment": "label for field 432",
+    "shortcomment": "label for field 432",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_W2",
+    "comment": "label for field 433",
+    "shortcomment": "label for field 433",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_W2",
+    "comment": "label for field 434",
+    "shortcomment": "label for field 434",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_W2",
+    "comment": "label for field 435",
+    "shortcomment": "label for field 435",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_W2",
+    "comment": "label for field 436",
+    "shortcomment": "label for field 436",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_W2",
+    "comment": "label for field 437",
+    "shortcomment": "label for field 437",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_W2",
+    "comment": "label for field 438",
+    "shortcomment": "label for field 438",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_W2",
+    "comment": "label for field 439",
+    "shortcomment": "label for field 439",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_W2",
+    "comment": "label for field 440",
+    "shortcomment": "label for field 440",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_W3",
+    "comment": "label for field 441",
+    "shortcomment": "label for field 441",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_W3",
+    "comment": "label for field 442",
+    "shortcomment": "label for field 442",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_W3",
+    "comment": "label for field 443",
+    "shortcomment": "label for field 443",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_W3",
+    "comment": "label for field 444",
+    "shortcomment": "label for field 444",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_W3",
+    "comment": "label for field 445",
+    "shortcomment": "label for field 445",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_W3",
+    "comment": "label for field 446",
+    "shortcomment": "label for field 446",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_W3",
+    "comment": "label for field 447",
+    "shortcomment": "label for field 447",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_W3",
+    "comment": "label for field 448",
+    "shortcomment": "label for field 448",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_W3",
+    "comment": "label for field 449",
+    "shortcomment": "label for field 449",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_W3",
+    "comment": "label for field 450",
+    "shortcomment": "label for field 450",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_W4",
+    "comment": "label for field 451",
+    "shortcomment": "label for field 451",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_MTOT_IVAR_W4",
+    "comment": "label for field 452",
+    "shortcomment": "label for field 452",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_W4",
+    "comment": "label for field 453",
+    "shortcomment": "label for field 453",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_M0_IVAR_W4",
+    "comment": "label for field 454",
+    "shortcomment": "label for field 454",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_W4",
+    "comment": "label for field 455",
+    "shortcomment": "label for field 455",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA1_IVAR_W4",
+    "comment": "label for field 456",
+    "shortcomment": "label for field 456",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_W4",
+    "comment": "label for field 457",
+    "shortcomment": "label for field 457",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_ALPHA2_IVAR_W4",
+    "comment": "label for field 458",
+    "shortcomment": "label for field 458",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_CHI2_W4",
+    "comment": "label for field 459",
+    "shortcomment": "label for field 459",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA50_W4",
+    "comment": "label for field 460",
+    "shortcomment": "label for field 460",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA_FUV",
+    "comment": "label for field 461",
+    "shortcomment": "label for field 461",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_FUV",
+    "comment": "label for field 462",
+    "shortcomment": "label for field 462",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_IVAR_FUV",
+    "comment": "label for field 463",
+    "shortcomment": "label for field 463",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_FUV",
+    "comment": "label for field 464",
+    "shortcomment": "label for field 464",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INTENS_FUV",
+    "comment": "label for field 465",
+    "shortcomment": "label for field 465",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INTENS_ERR_FUV",
+    "comment": "label for field 466",
+    "shortcomment": "label for field 466",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EPS_FUV",
+    "comment": "label for field 467",
+    "shortcomment": "label for field 467",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EPS_ERR_FUV",
+    "comment": "label for field 468",
+    "shortcomment": "label for field 468",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PA_FUV",
+    "comment": "label for field 469",
+    "shortcomment": "label for field 469",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PA_ERR_FUV",
+    "comment": "label for field 470",
+    "shortcomment": "label for field 470",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "X0_FUV",
+    "comment": "label for field 471",
+    "shortcomment": "label for field 471",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "X0_ERR_FUV",
+    "comment": "label for field 472",
+    "shortcomment": "label for field 472",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "Y0_FUV",
+    "comment": "label for field 473",
+    "shortcomment": "label for field 473",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "Y0_ERR_FUV",
+    "comment": "label for field 474",
+    "shortcomment": "label for field 474",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A3_FUV",
+    "comment": "label for field 475",
+    "shortcomment": "label for field 475",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A3_ERR_FUV",
+    "comment": "label for field 476",
+    "shortcomment": "label for field 476",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A4_FUV",
+    "comment": "label for field 477",
+    "shortcomment": "label for field 477",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A4_ERR_FUV",
+    "comment": "label for field 478",
+    "shortcomment": "label for field 478",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RMS_FUV",
+    "comment": "label for field 479",
+    "shortcomment": "label for field 479",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PIX_STDDEV_FUV",
+    "comment": "label for field 480",
+    "shortcomment": "label for field 480",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "STOP_CODE_FUV",
+    "comment": "label for field 481",
+    "shortcomment": "label for field 481",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NDATA_FUV",
+    "comment": "label for field 482",
+    "shortcomment": "label for field 482",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NFLAG_FUV",
+    "comment": "label for field 483",
+    "shortcomment": "label for field 483",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NITER_FUV",
+    "comment": "label for field 484",
+    "shortcomment": "label for field 484",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "SMA_NUV",
+    "comment": "label for field 485",
+    "shortcomment": "label for field 485",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INTENS_NUV",
+    "comment": "label for field 486",
+    "shortcomment": "label for field 486",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "INTENS_ERR_NUV",
+    "comment": "label for field 487",
+    "shortcomment": "label for field 487",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EPS_NUV",
+    "comment": "label for field 488",
+    "shortcomment": "label for field 488",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "EPS_ERR_NUV",
+    "comment": "label for field 489",
+    "shortcomment": "label for field 489",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PA_NUV",
+    "comment": "label for field 490",
+    "shortcomment": "label for field 490",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PA_ERR_NUV",
+    "comment": "label for field 491",
+    "shortcomment": "label for field 491",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "X0_NUV",
+    "comment": "label for field 492",
+    "shortcomment": "label for field 492",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "X0_ERR_NUV",
+    "comment": "label for field 493",
+    "shortcomment": "label for field 493",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "Y0_NUV",
+    "comment": "label for field 494",
+    "shortcomment": "label for field 494",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "Y0_ERR_NUV",
+    "comment": "label for field 495",
+    "shortcomment": "label for field 495",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A3_NUV",
+    "comment": "label for field 496",
+    "shortcomment": "label for field 496",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A3_ERR_NUV",
+    "comment": "label for field 497",
+    "shortcomment": "label for field 497",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A4_NUV",
+    "comment": "label for field 498",
+    "shortcomment": "label for field 498",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "A4_ERR_NUV",
+    "comment": "label for field 499",
+    "shortcomment": "label for field 499",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RMS_NUV",
+    "comment": "label for field 500",
+    "shortcomment": "label for field 500",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "PIX_STDDEV_NUV",
+    "comment": "label for field 501",
+    "shortcomment": "label for field 501",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "STOP_CODE_NUV",
+    "comment": "label for field 502",
+    "shortcomment": "label for field 502",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NDATA_NUV",
+    "comment": "label for field 503",
+    "shortcomment": "label for field 503",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NFLAG_NUV",
+    "comment": "label for field 504",
+    "shortcomment": "label for field 504",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "NITER_NUV",
+    "comment": "label for field 505",
+    "shortcomment": "label for field 505",
+    "type": "int16",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA_NUV",
+    "comment": "label for field 506",
+    "shortcomment": "label for field 506",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_NUV",
+    "comment": "label for field 507",
+    "shortcomment": "label for field 507",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_IVAR_NUV",
+    "comment": "label for field 508",
+    "shortcomment": "label for field 508",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA_W3",
+    "comment": "label for field 509",
+    "shortcomment": "label for field 509",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_W3",
+    "comment": "label for field 510",
+    "shortcomment": "label for field 510",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_IVAR_W3",
+    "comment": "label for field 511",
+    "shortcomment": "label for field 511",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA_W4",
+    "comment": "label for field 512",
+    "shortcomment": "label for field 512",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_W4",
+    "comment": "label for field 513",
+    "shortcomment": "label for field 513",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_IVAR_W4",
+    "comment": "label for field 514",
+    "shortcomment": "label for field 514",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_SMA_Z",
+    "comment": "label for field 515",
+    "shortcomment": "label for field 515",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_Z",
+    "comment": "label for field 516",
+    "shortcomment": "label for field 516",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "COG_FLUX_IVAR_Z",
+    "comment": "label for field 517",
+    "shortcomment": "label for field 517",
+    "type": "float32",
+    "shape": [],
+    "unit": ""
+  }
+]

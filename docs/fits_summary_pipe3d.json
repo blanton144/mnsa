@@ -1,0 +1,3782 @@
+[
+  {
+    "name": "name",
+    "unit": "",
+    "type": "string",
+    "comment": "manga-plate-ifudsgn unique name",
+    "shape": ""
+  },
+  {
+    "name": "plate",
+    "unit": "",
+    "type": "int64",
+    "comment": "plate ID of the MaNGA cube",
+    "shape": ""
+  },
+  {
+    "name": "ifudsgn",
+    "unit": "",
+    "type": "string",
+    "comment": "IFU bundle ID of the MaNGA cube",
+    "shape": ""
+  },
+  {
+    "name": "plateifu",
+    "unit": "",
+    "type": "string",
+    "comment": "code formed by the plate and ifu names",
+    "shape": ""
+  },
+  {
+    "name": "mangaid",
+    "unit": "--",
+    "type": "string",
+    "comment": "MaNGA ID",
+    "shape": ""
+  },
+  {
+    "name": "objra",
+    "unit": "deg",
+    "type": "float64",
+    "comment": "RA of the object",
+    "shape": ""
+  },
+  {
+    "name": "objdec",
+    "unit": "deg",
+    "type": "float64",
+    "comment": "DEC of the object",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_Ha",
+    "unit": "$\\log$($M_{\\odot}$ yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated star-formation rate derived from Ha",
+    "shape": ""
+  },
+  {
+    "name": "FoV",
+    "unit": "",
+    "type": "float64",
+    "comment": "Ratio between the diagonal radius of the cube and Re",
+    "shape": ""
+  },
+  {
+    "name": "Re_kpc",
+    "unit": "kpc",
+    "type": "float64",
+    "comment": "Effective radius in kpc",
+    "shape": ""
+  },
+  {
+    "name": "e_log_Mass",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Error of the integrated stellar mass",
+    "shape": ""
+  },
+  {
+    "name": "e_log_SFR_Ha",
+    "unit": "$\\log$($M_{\\odot}$ yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Error of the Integrated SFR derived from Ha",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Integrated stellar mass in units of the solar mass in log scale",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_ssp",
+    "unit": "$\\log$($M_{\\odot}$ yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated SFR derived from the SSP analysis t<32Myr",
+    "shape": ""
+  },
+  {
+    "name": "log_NII_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [NII]6583/Halpha line ratio in the central 2.5 arcsec aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_log_NII_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [NII]6583/Halpha line ratio",
+    "shape": ""
+  },
+  {
+    "name": "log_OIII_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OIII]5007/Hbeta line ratio in the central 2.5 arcsec aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OIII_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OIII]5007/Hbeta line ratio",
+    "shape": ""
+  },
+  {
+    "name": "log_SII_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [SII]6717+6731/Halpha line ratio in the central 2.5 arcsec aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_log_SII_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [SII]6717/Halpha line ratio",
+    "shape": ""
+  },
+  {
+    "name": "log_OII_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OII]3727/Hbeta line ratio in the central 2.5 arcsec aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OII_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OII]3727/Hbeta line ratio",
+    "shape": ""
+  },
+  {
+    "name": "EW_Ha_cen",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "EW of Halpha in the central 2.5arcsec/aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_EW_Ha_cen",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "error of the EW of Halpha in the central 2.5arcsec/aperture",
+    "shape": ""
+  },
+  {
+    "name": "ZH_LW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Luminosity weighted (LW) metallicity of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_ZH_LW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Error in the LW metallicity",
+    "shape": ""
+  },
+  {
+    "name": "alpha_ZH_LW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "slope of the gradient of the LW log-metallicity",
+    "shape": ""
+  },
+  {
+    "name": "e_alpha_ZH_LW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error of the slope of the gradient of the LW",
+    "shape": ""
+  },
+  {
+    "name": "ZH_MW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Mass weighted (MW) metallicity of the stellar population in log",
+    "shape": ""
+  },
+  {
+    "name": "e_ZH_MW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Error in the MW metallicity",
+    "shape": ""
+  },
+  {
+    "name": "alpha_ZH_MW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "slope of the gradient of the MW metallicity",
+    "shape": ""
+  },
+  {
+    "name": "e_alpha_ZH_MW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error of the slope of the gradient of the MW metallicity",
+    "shape": ""
+  },
+  {
+    "name": "Age_LW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Luminosity weighted age of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_Age_LW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Error in the luminosity weighted age of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "alpha_Age_LW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "slope of the gradient of the LW log-age of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_alpha_Age_LW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error of the slope of the gradient of the LW log-age",
+    "shape": ""
+  },
+  {
+    "name": "Age_MW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Mass weighted (MW) age of the stellar population in logarithm",
+    "shape": ""
+  },
+  {
+    "name": "e_Age_MW_Re_fit",
+    "unit": "$\\log$(yr)",
+    "type": "float64",
+    "comment": "Error in the MW age of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "alpha_Age_MW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "slope of the gradient of the MW log-age of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_alpha_Age_MW_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error of the slope of the gradient of the MW log-age of",
+    "shape": ""
+  },
+  {
+    "name": "Re_arc",
+    "unit": "arcsec",
+    "type": "float64",
+    "comment": "effective radius in arcsec",
+    "shape": ""
+  },
+  {
+    "name": "DL",
+    "unit": "",
+    "type": "float64",
+    "comment": "Adopted luminosity distance in Mpc",
+    "shape": ""
+  },
+  {
+    "name": "DA",
+    "unit": "",
+    "type": "float64",
+    "comment": "Adopted angular-diameter distance in Mpc",
+    "shape": ""
+  },
+  {
+    "name": "PA",
+    "unit": "degs",
+    "type": "float64",
+    "comment": "Adopted position angle in degs",
+    "shape": ""
+  },
+  {
+    "name": "ellip",
+    "unit": "",
+    "type": "float64",
+    "comment": "Adopted eccentricity",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_gas",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Integrated gas mass in units of the solar mass",
+    "shape": ""
+  },
+  {
+    "name": "vel_sigma_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "Velocity/dispersion ratio for the stellar populations within 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_vel_sigma_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the velocity/dispersion ratio for the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_SF",
+    "unit": "$\\log$($M_{\\odot}$yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated SFR using only the spaxels compatible with SF",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_D_C",
+    "unit": "$\\log$($M_{\\odot}$yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated SFR diffuse corrected",
+    "shape": ""
+  },
+  {
+    "name": "OH_O3N2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator O3N2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_O3N2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator O3N2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_N2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator N2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_N2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator N2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_ONS_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator ONS at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_ONS_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator ONS at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_R23_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator R23 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_R23_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator R23 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_pyqz_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator pyqz at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_pyqz_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator pyqz at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_t2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator t2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_t2_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator t2 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_M08_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator M08 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_M08_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator M08 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_T04_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator T04 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_T04_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator T04 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_dop_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator dop at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_dop_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator dop at the central region",
+    "shape": ""
+  },
+  {
+    "name": "OH_O3N2_EPM09_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator O3N2_EPM09 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_O3N2_EPM09_cen",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator O3N2_EPM09 at the central region",
+    "shape": ""
+  },
+  {
+    "name": "log_OI_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OI]6301/Ha within a central aperture of 2arcsec",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OI_Ha_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OI]6301/Hbeta within a central aperture of 2arcsec",
+    "shape": ""
+  },
+  {
+    "name": "Ha_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "Ratio between the flux of Halpha and Hbeta within a central aperture of 2arcsec",
+    "shape": ""
+  },
+  {
+    "name": "e_Ha_Hb_cen",
+    "unit": "",
+    "type": "float64",
+    "comment": "error of Ha_Hb_cen",
+    "shape": ""
+  },
+  {
+    "name": "log_NII_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [NII]6583/Halpha line ratio at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_log_NII_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [NII]6583/Halpha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "log_OIII_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OIII]5007/Hbeta line ratio at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OIII_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OIII]5007/Hbeta at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "log_SII_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [SII]6717+6731/Halpha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_log_SII_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [SII]6717/Halpha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "log_OII_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OII]3727/Hbeta at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OII_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OII]3727/Hbeta at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "log_OI_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OI]6301/Ha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OI_Ha_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OI]6301/Hbeta at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "EW_Ha_Re",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "EW of Halpha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_EW_Ha_Re",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "error of the EW of Halpha at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Ha_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "Ratio between the flux of Halpha and Hbeta within at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Ha_Hb_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error of Ha_Hb_Re",
+    "shape": ""
+  },
+  {
+    "name": "log_NII_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [NII]6583/Halpha line ratio within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_log_NII_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [NII]6583/Halpha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "log_OIII_Hb_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OIII]5007/Hbeta line ratio within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OIII_Hb_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OIII]5007/Hbeta within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "log_SII_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [SII]6717+6731/Halpha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_log_SII_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [SII]6717/Halpha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "log_OII_Hb_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OII]3727/Hbeta within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OII_Hb_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OII]3727/Hbeta within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "log_OI_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "logarithm of the [OI]6301/Ha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_log_OI_Ha_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the logarithm of the [OI]6301/Hbeta within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "EW_Ha_ALL",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "EW of Halpha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_EW_Ha_ALL",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "error of the EW of Halpha within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "Ha_Hb_ALL",
+    "unit": "",
+    "type": "float64",
+    "comment": "Ratio between the flux of Halpha and Hbeta within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "Sigma_Mass_cen",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "Stellar Mass surface density in the central 2arcsec",
+    "shape": ""
+  },
+  {
+    "name": "e_Sigma_Mass_cen",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "error in Stellar Mass density in the central 2arcsec",
+    "shape": ""
+  },
+  {
+    "name": "Sigma_Mass_Re",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "Stellar Mass surface density at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Sigma_Mass_Re",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "error in Stellar Mass density at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Sigma_Mass_ALL",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "Average Stellar Mass surface density within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "e_Sigma_Mass_ALL",
+    "unit": "$\\log$($M_{\\odot}$ pc^{-2})",
+    "type": "float64",
+    "comment": "error in the Average Stellar Mass surface density within the FoV",
+    "shape": ""
+  },
+  {
+    "name": "T30",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 30% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T30",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T30 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T30",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T30 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T30",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T30 time",
+    "shape": ""
+  },
+  {
+    "name": "T40",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 40% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T40",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T40 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T40",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T40 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T40",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T40 time",
+    "shape": ""
+  },
+  {
+    "name": "T50",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 50% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T50",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T50 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T50",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T50 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T50",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T50 time",
+    "shape": ""
+  },
+  {
+    "name": "T60",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 60% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T60",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T60 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T60",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T60 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T60",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T60 time",
+    "shape": ""
+  },
+  {
+    "name": "T70",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 70% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T70",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T70 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T70",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T70 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T70",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T70 time",
+    "shape": ""
+  },
+  {
+    "name": "T80",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 80% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T80",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T80 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T80",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T80 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T80",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T80 time",
+    "shape": ""
+  },
+  {
+    "name": "T90",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 90% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T90",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T90 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T90",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T90 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T90",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T90 time",
+    "shape": ""
+  },
+  {
+    "name": "T95",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 95% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T95",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T95 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T95",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T95 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T95",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T95 time",
+    "shape": ""
+  },
+  {
+    "name": "T99",
+    "unit": "Gyr",
+    "type": "float64",
+    "comment": "Look Back time at which the galaxy has formed 99% of its mass",
+    "shape": ""
+  },
+  {
+    "name": "ZH_T99",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at T99 time",
+    "shape": ""
+  },
+  {
+    "name": "ZH_Re_T99",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Stellar metallicity at Re at T99 time",
+    "shape": ""
+  },
+  {
+    "name": "a_ZH_T99",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "slope of the ZH gradient at time T99 time",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_gas_Av_gas_OH",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Gas mass estimated from the gas dust attenuation considering the oxygen abundance",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_gas_Av_ssp_OH",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Gas mass estimated from the stellar dust attenuation considering the oxygen abundance",
+    "shape": ""
+  },
+  {
+    "name": "vel_ssp_2",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "stellar velocity at 2Re",
+    "shape": ""
+  },
+  {
+    "name": "e_vel_ssp_2",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "error in vel_ssp_2",
+    "shape": ""
+  },
+  {
+    "name": "vel_Ha_2",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Ha velocity at 2Re",
+    "shape": ""
+  },
+  {
+    "name": "e_vel_Ha_2",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "error in vel_Ha_2",
+    "shape": ""
+  },
+  {
+    "name": "vel_ssp_1",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "stellar velocity at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_vel_ssp_1",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "error of vel_ssp_1",
+    "shape": ""
+  },
+  {
+    "name": "vel_Ha_1",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Ha velocity at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_vel_Ha_1",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "error of e_vel_Ha_1",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_ssp_100Myr",
+    "unit": "$\\log$($M_{\\odot}$yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated SFR derived from the SSP analysis t<100Myr",
+    "shape": ""
+  },
+  {
+    "name": "log_SFR_ssp_10Myr",
+    "unit": "$\\log$($M_{\\odot}$yr$^{-1}$)",
+    "type": "float64",
+    "comment": "Integrated SFR derived from the SSP analysis t<10Myr",
+    "shape": ""
+  },
+  {
+    "name": "vel_disp_Ha_cen",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Ha velocity dispersion at the central regions",
+    "shape": ""
+  },
+  {
+    "name": "vel_disp_ssp_cen",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Stellar velocity dispersion at the central regions",
+    "shape": ""
+  },
+  {
+    "name": "vel_disp_Ha_1Re",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Ha velocity dispersion at 1 Re",
+    "shape": ""
+  },
+  {
+    "name": "vel_disp_ssp_1Re",
+    "unit": "km s$^{-1}$",
+    "type": "float64",
+    "comment": "Stellar velocity at 1 Re",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_in_Re",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Integrated stellar mass within one optical Re",
+    "shape": ""
+  },
+  {
+    "name": "ML_int",
+    "unit": "$M_{\\odot}$ $L_{\\odot}$$^{-1}$",
+    "type": "float64",
+    "comment": "V-band mass-to-light ratio from integrated quantities",
+    "shape": ""
+  },
+  {
+    "name": "ML_avg",
+    "unit": "$M_{\\odot}$ $L_{\\odot}$$^{-1}$",
+    "type": "float64",
+    "comment": "V-band mass-to-light ratio average across the FoV",
+    "shape": ""
+  },
+  {
+    "name": "F_Ha_cen",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of Halpha in the central 2.5arcsec/aperture",
+    "shape": ""
+  },
+  {
+    "name": "e_F_Ha_cen",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "error of F_Ha_cen",
+    "shape": ""
+  },
+  {
+    "name": "R50_kpc_V",
+    "unit": "kpc",
+    "type": "float64",
+    "comment": "R50 in the V-band within the FoV of the cube",
+    "shape": ""
+  },
+  {
+    "name": "e_R50_kpc_V",
+    "unit": "kpc",
+    "type": "float64",
+    "comment": "error of R50_kpc_V",
+    "shape": ""
+  },
+  {
+    "name": "R50_kpc_Mass",
+    "unit": "kpc",
+    "type": "float64",
+    "comment": "R50 in Mass within the FoV of the cube",
+    "shape": ""
+  },
+  {
+    "name": "e_R50_kpc_Mass",
+    "unit": "kpc",
+    "type": "float64",
+    "comment": "error of R50_kpc_Mass",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_corr_in_R50_V",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Integrated stellar mass within one R50 in the V-band",
+    "shape": ""
+  },
+  {
+    "name": "e_log_Mass_corr_in_R50_V",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "error of log_Mass_corr_in_R50_V",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_gas_Av_gas_log_log",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "Gas mass estimated from the gas dust attenuation using the updated relation by Barrera-Ballesteros et al. 2020",
+    "shape": ""
+  },
+  {
+    "name": "Av_gas_Re",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "Dust attenuation in the V-band derived from the Ha/Hb line ratios",
+    "shape": ""
+  },
+  {
+    "name": "e_Av_gas_Re",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "Error of the dust attenuation in the V-band",
+    "shape": ""
+  },
+  {
+    "name": "Av_ssp_Re",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "Dust attenuation in the V-band derived from the analysis of the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_Av_ssp_Re",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "Error of the dust attenuation in the V-band derived for the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "Lambda_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "Specific angular momentum (lambda parameter) for the stellar population",
+    "shape": ""
+  },
+  {
+    "name": "e_Lambda_Re",
+    "unit": "",
+    "type": "float64",
+    "comment": "error in the specific angular momentum (lambda parameter)",
+    "shape": ""
+  },
+  {
+    "name": "nsa_redshift",
+    "unit": "",
+    "type": "float64",
+    "comment": "Redshift extracted from the NSA catalog",
+    "shape": ""
+  },
+  {
+    "name": "nsa_mstar",
+    "unit": "$M_{\\odot}$",
+    "type": "float64",
+    "comment": "Stellar Mass extracted from the NSA catalog",
+    "shape": ""
+  },
+  {
+    "name": "nsa_inclination",
+    "unit": "deg",
+    "type": "float64",
+    "comment": "Inclination of the galaxy extracted from the NSA catalog",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OII]3726.03_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [OII]3726.03 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OII]3726.03_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [OII]3726.03 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OII]3726.03_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [OII]3726.03 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OII]3726.03_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [OII]3726.03 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OII]3728.82_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [OII]3728.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OII]3728.82_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [OII]3728.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OII]3728.82_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [OII]3728.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OII]3728.82_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [OII]3728.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3734.37_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HI3734.37 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3734.37_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HI3734.37 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3734.37_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HI3734.37 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3734.37_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HI3734.37 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3797.9_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HI3797.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3797.9_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HI3797.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3797.9_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HI3797.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3797.9_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HI3797.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI3888.65_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HeI3888.65 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI3888.65_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HeI3888.65 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI3888.65_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HeI3888.65 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI3888.65_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HeI3888.65 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3889.05_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HI3889.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3889.05_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HI3889.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI3889.05_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HI3889.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI3889.05_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HI3889.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI3964.73_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HeI3964.73 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI3964.73_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HeI3964.73 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI3964.73_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HeI3964.73 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI3964.73_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HeI3964.73 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NeIII]3967.46_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [NeIII]3967.46 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NeIII]3967.46_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [NeIII]3967.46 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NeIII]3967.46_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [NeIII]3967.46 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NeIII]3967.46_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [NeIII]3967.46 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_CaII3968.47_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line CaII3968.47 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_CaII3968.47_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line CaII3968.47 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_CaII3968.47_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line CaII3968.47 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_CaII3968.47_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line CaII3968.47 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hepsilon3970.07_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line Hepsilon3970.07 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hepsilon3970.07_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line Hepsilon3970.07 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hepsilon3970.07_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line Hepsilon3970.07 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hepsilon3970.07_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line Hepsilon3970.07 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hdelta4101.77_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line Hdelta4101.77 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hdelta4101.77_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line Hdelta4101.77 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hdelta4101.77_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line Hdelta4101.77 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hdelta4101.77_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line Hdelta4101.77 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hgamma4340.49_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line Hgamma4340.49 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hgamma4340.49_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line Hgamma4340.49 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hgamma4340.49_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line Hgamma4340.49 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hgamma4340.49_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line Hgamma4340.49 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hbeta4861.36_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line Hbeta4861.36 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hbeta4861.36_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line Hbeta4861.36 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Hbeta4861.36_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line Hbeta4861.36 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Hbeta4861.36_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line Hbeta4861.36 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OIII]4958.91_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [OIII]4958.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OIII]4958.91_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [OIII]4958.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OIII]4958.91_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [OIII]4958.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OIII]4958.91_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [OIII]4958.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OIII]5006.84_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [OIII]5006.84 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OIII]5006.84_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [OIII]5006.84 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OIII]5006.84_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [OIII]5006.84 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OIII]5006.84_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [OIII]5006.84 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI5015.68_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HeI5015.68 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI5015.68_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HeI5015.68 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI5015.68_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HeI5015.68 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI5015.68_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HeI5015.68 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NI]5197.9_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [NI]5197.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NI]5197.9_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [NI]5197.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NI]5197.9_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [NI]5197.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NI]5197.9_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [NI]5197.9 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NI]5200.26_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [NI]5200.26 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NI]5200.26_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [NI]5200.26 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NI]5200.26_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [NI]5200.26 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NI]5200.26_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [NI]5200.26 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI5876.0_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HeI5876.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI5876.0_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HeI5876.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HeI5876.0_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HeI5876.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HeI5876.0_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HeI5876.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_NaI5889.95_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line NaI5889.95 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_NaI5889.95_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line NaI5889.95 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_NaI5889.95_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line NaI5889.95 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_NaI5889.95_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line NaI5889.95 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_NaI5895.92_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line NaI5895.92 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_NaI5895.92_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line NaI5895.92 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_NaI5895.92_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line NaI5895.92 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_NaI5895.92_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line NaI5895.92 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OI]6300.3_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [OI]6300.3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OI]6300.3_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [OI]6300.3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[OI]6300.3_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [OI]6300.3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[OI]6300.3_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [OI]6300.3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NII]6548.05_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [NII]6548.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NII]6548.05_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [NII]6548.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NII]6548.05_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [NII]6548.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NII]6548.05_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [NII]6548.05 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Halpha6562.85_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line Halpha6562.85 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Halpha6562.85_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line Halpha6562.85 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_Halpha6562.85_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line Halpha6562.85 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_Halpha6562.85_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line Halpha6562.85 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NII]6583.45_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [NII]6583.45 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NII]6583.45_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [NII]6583.45 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[NII]6583.45_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [NII]6583.45 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[NII]6583.45_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [NII]6583.45 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SII]6716.44_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [SII]6716.44 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SII]6716.44_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [SII]6716.44 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SII]6716.44_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [SII]6716.44 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SII]6716.44_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [SII]6716.44 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SII]6730.82_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [SII]6730.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SII]6730.82_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [SII]6730.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SII]6730.82_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [SII]6730.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SII]6730.82_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [SII]6730.82 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[ArIII]7135.8_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [ArIII]7135.8 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[ArIII]7135.8_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [ArIII]7135.8 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[ArIII]7135.8_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [ArIII]7135.8 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[ArIII]7135.8_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [ArIII]7135.8 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI9014.91_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line HI9014.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI9014.91_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line HI9014.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_HI9014.91_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line HI9014.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_HI9014.91_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line HI9014.91 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SIII]9069.0_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [SIII]9069.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SIII]9069.0_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [SIII]9069.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SIII]9069.0_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [SIII]9069.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SIII]9069.0_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [SIII]9069.0 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[FeII]9470.93_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [FeII]9470.93 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[FeII]9470.93_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [FeII]9470.93 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[FeII]9470.93_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [FeII]9470.93 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[FeII]9470.93_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [FeII]9470.93 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SIII]9531.1_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Flux intensity of line [SIII]9531.1 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SIII]9531.1_Re_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the flux intensity of line [SIII]9531.1 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "flux_[SIII]9531.1_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "flux slope gradient of line [SIII]9531.1 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_flux_[SIII]9531.1_alpha_fit",
+    "unit": "10^{-16} erg s$^{-1}$ cm^{-2}",
+    "type": "float64",
+    "comment": "Error in the slope of flux of line [SIII]9531.1 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Mar13_N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Mar13_N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Mar13_N2_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Mar13_N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Mar13_N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Mar13_N2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Mar13_N2_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Mar13_N2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Mar13_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Mar13_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Mar13_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Mar13_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Mar13_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Mar13_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Mar13_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Mar13_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "OH_T04_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator T04 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_T04_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator T04 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_T04_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator T04",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_T04_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator T04",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_N2_lin_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pet04_N2_lin at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_N2_lin_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Pet04_N2_lin at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_N2_lin_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pet04_N2_lin",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_N2_lin_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pet04_N2_lin",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_N2_poly_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pet04_N2_poly at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_N2_poly_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Pet04_N2_poly at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_N2_poly_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pet04_N2_poly",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_N2_poly_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pet04_N2_poly",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pet04_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pet04_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pet04_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pet04_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pet04_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pet04_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Kew02_N2O2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Kew02_N2O2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Kew02_N2O2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Kew02_N2O2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Kew02_N2O2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Kew02_N2O2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Kew02_N2O2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Kew02_N2O2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil10_ONS_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pil10_ONS at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil10_ONS_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pil10_ONS at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil10_ONS_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pil10_ONS",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil10_ONS_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pil10_ONS",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil10_ON_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pil10_ON at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil10_ON_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pil10_ON at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil10_ON_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pil10_ON",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil10_ON_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pil10_ON",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil11_NS_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pil11_NS at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil11_NS_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pil11_NS at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil11_NS_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pil11_NS",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil11_NS_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pil11_NS",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_RS32_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_RS32 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_RS32_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_RS32 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_RS32_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_RS32",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_RS32_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_RS32",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R3_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_R3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R3_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_R3 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R3_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_R3",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R3_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_R3",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3O2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_O3O2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3O2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_O3O2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3O2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_O3O2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3O2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_O3O2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_S2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_S2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_S2_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_S2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_S2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_S2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_S2_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_S2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_R2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_R2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_R2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_R2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_N2_Re_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_N2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_N2_alpha_fit",
+    "unit": "dex",
+    "type": "string",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_N2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R23_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_R23 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R23_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_R23 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_R23_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_R23",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_R23_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_R23",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3N2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_O3N2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3N2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_O3N2",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3S2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Cur20_O3S2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3S2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Cur20_O3S2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Cur20_O3S2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Cur20_O3S2",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Cur20_O3S2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Cur20_O3S2",
+    "shape": ""
+  },
+  {
+    "name": "OH_KK04_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator KK04 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_KK04_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator KK04 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_KK04_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator KK04",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_KK04_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator KK04",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil16_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Pil16_S at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil16_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Pil16_S at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Pil16_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Pil16_S",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Pil16_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Pil16_S",
+    "shape": ""
+  },
+  {
+    "name": "OH_Ho_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Oxygen abundance using the calibrator Ho at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Ho_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Oxygen abundance using the calibrator Ho at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "OH_Ho_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the O/H gradient using the calibrator Ho",
+    "shape": ""
+  },
+  {
+    "name": "e_OH_Ho_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the O/H gradient using the calibrator Ho",
+    "shape": ""
+  },
+  {
+    "name": "U_Dors_O32_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "$\\log$(U), ionization parameter using the calibrator Dors_O32 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Dors_O32_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in $\\log$(U) using the calibrator Dors_O32 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "U_Dors_O32_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the $\\log$(U) gradient using the calibrator Dors_O32",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Dors_O32_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the $\\log$(U) gradient using the calibrator Dors_O32",
+    "shape": ""
+  },
+  {
+    "name": "U_Dors_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "$\\log$(U), ionization parameter using the calibrator Dors_S at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Dors_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in $\\log$(U) using the calibrator Dors_S at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "U_Dors_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the $\\log$(U) gradient using the calibrator Dors_S",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Dors_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the $\\log$(U) gradient using the calibrator Dors_S",
+    "shape": ""
+  },
+  {
+    "name": "U_Mor16_O23_fs_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "$\\log$(U), ionization parameter using the calibrator Mor16_O23_fs at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Mor16_O23_fs_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in $\\log$(U) using the calibrator Mor16_O23_fs at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "U_Mor16_O23_fs_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the $\\log$(U) gradient using the calibrator Mor16_O23_fs",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Mor16_O23_fs_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the $\\log$(U) gradient using the calibrator Mor16_O23_fs",
+    "shape": ""
+  },
+  {
+    "name": "U_Mor16_O23_ts_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "$\\log$(U), ionization parameter using the calibrator Mor16_O23_ts at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Mor16_O23_ts_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in $\\log$(U) using the calibrator Mor16_O23_ts at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "U_Mor16_O23_ts_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the $\\log$(U) gradient using the calibrator Mor16_O23_ts",
+    "shape": ""
+  },
+  {
+    "name": "e_U_Mor16_O23_ts_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the $\\log$(U) gradient using the calibrator Mor16_O23_ts",
+    "shape": ""
+  },
+  {
+    "name": "NH_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Nitrogen abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_NH_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in Nitrogen abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "NH_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the N/H gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "e_NH_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the N/H gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "N/O abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in N/O abundance using the calibrator Pil16_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the N/O gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the N/O gradient using the calibrator Pil16_R",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_Ho_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "N/O abundance using the calibrator Pil16_Ho_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_Ho_R_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in N/O abundance using the calibrator Pil16_Ho_R at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_Ho_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the N/O gradient using the calibrator Pil16_Ho_R",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_Ho_R_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the N/O gradient using the calibrator Pil16_Ho_R",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_N2_R2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "N/O abundance using the calibrator Pil16_N2_R2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_N2_R2_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in N/O abundance using the calibrator Pil16_N2_R2 at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "NO_Pil16_N2_R2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the N/O gradient using the calibrator Pil16_N2_R2",
+    "shape": ""
+  },
+  {
+    "name": "e_NO_Pil16_N2_R2_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of the N/O gradient using the calibrator Pil16_N2_R2",
+    "shape": ""
+  },
+  {
+    "name": "Ne_Oster_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "n_e, electron density using the Oster_S estimator at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Ne_Oster_S_Re_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in n_e using the Oster_S estimator at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Ne_Oster_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Slope of the n_e gradient using the Oster_S estimator",
+    "shape": ""
+  },
+  {
+    "name": "e_Ne_Oster_S_alpha_fit",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "Error in the slope of n_e gradient using the Oster_S estimator",
+    "shape": ""
+  },
+  {
+    "name": "Hd_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Hd stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Hd_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Hd stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Hd_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Hd index",
+    "shape": ""
+  },
+  {
+    "name": "e_Hd_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Hd index",
+    "shape": ""
+  },
+  {
+    "name": "Hb_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Hb stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Hb_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Hb stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Hb_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Hb index",
+    "shape": ""
+  },
+  {
+    "name": "e_Hb_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Hb index",
+    "shape": ""
+  },
+  {
+    "name": "Mgb_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Mgb stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Mgb_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Mgb stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Mgb_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Mgb index",
+    "shape": ""
+  },
+  {
+    "name": "e_Mgb_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Mgb index",
+    "shape": ""
+  },
+  {
+    "name": "Fe5270_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Fe5270 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Fe5270_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Fe5270 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Fe5270_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Fe5270 index",
+    "shape": ""
+  },
+  {
+    "name": "e_Fe5270_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Fe5270 index",
+    "shape": ""
+  },
+  {
+    "name": "Fe5335_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Fe5335 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Fe5335_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Fe5335 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Fe5335_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Fe5335 index",
+    "shape": ""
+  },
+  {
+    "name": "e_Fe5335_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Fe5335 index",
+    "shape": ""
+  },
+  {
+    "name": "D4000_Re_fit1",
+    "unit": "",
+    "type": "float64",
+    "comment": "Value of the D40001 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_D4000_Re_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error of the D4000 stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "D4000_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the D4000 index",
+    "shape": ""
+  },
+  {
+    "name": "e_D4000_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the D4000 index",
+    "shape": ""
+  },
+  {
+    "name": "Hdmod_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Hdmod stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Hdmod_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Hdmod stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Hdmod_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Hdmod index",
+    "shape": ""
+  },
+  {
+    "name": "e_Hdmod_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Hdmod index",
+    "shape": ""
+  },
+  {
+    "name": "Hg_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Value of the Hg stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "e_Hg_Re_fit",
+    "unit": "Angstrom",
+    "type": "float64",
+    "comment": "Error of the Hg stellar index at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "Hg_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Slope of the gradient of the Hg index",
+    "shape": ""
+  },
+  {
+    "name": "e_Hg_alpha_fit",
+    "unit": "",
+    "type": "float64",
+    "comment": "Error in the slope of the gradient of the Hg index",
+    "shape": ""
+  },
+  {
+    "name": "u_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "u-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "u_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in u-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "u_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "u-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "u_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in u-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "g_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "g-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "g_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in g-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "g_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "g-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "g_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in g-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "r_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "r-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "r_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in r-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "r_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "r-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "r_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in r-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "i_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "i-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "i_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in i-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "i_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "i-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "i_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in i-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "B_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "B-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "B_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in B-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "B_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "B-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "B_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in B-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "V_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "V-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "V_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in V-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "V_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "V-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "V_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in V-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R_band_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "R-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R_band_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error R-band magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R_band_abs_mag",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "R-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R_band_abs_mag_error",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in R-band abs. magnitude from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R50",
+    "unit": "arcsec",
+    "type": "float64",
+    "comment": "g-band R50 derived from the cube",
+    "shape": ""
+  },
+  {
+    "name": "error_R50",
+    "unit": "arcsec",
+    "type": "float64",
+    "comment": "error in g-band R50 derived from the cube",
+    "shape": ""
+  },
+  {
+    "name": "R90",
+    "unit": "arcsec",
+    "type": "float64",
+    "comment": "g-band R90 derived from the cube",
+    "shape": ""
+  },
+  {
+    "name": "error_R90",
+    "unit": "arcsec",
+    "type": "float64",
+    "comment": "error in g-band R90 derived from the cube",
+    "shape": ""
+  },
+  {
+    "name": "C",
+    "unit": "--",
+    "type": "float64",
+    "comment": "R90/R50 Concentration index",
+    "shape": ""
+  },
+  {
+    "name": "e_C",
+    "unit": "--",
+    "type": "float64",
+    "comment": "error in concentration index",
+    "shape": ""
+  },
+  {
+    "name": "B-V",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "B-V color",
+    "shape": ""
+  },
+  {
+    "name": "error_B-V",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in the B-V color",
+    "shape": ""
+  },
+  {
+    "name": "B-R",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "B-R color",
+    "shape": ""
+  },
+  {
+    "name": "error_B-R",
+    "unit": "mag",
+    "type": "float64",
+    "comment": "error in the B-R color",
+    "shape": ""
+  },
+  {
+    "name": "log_Mass_phot",
+    "unit": "$\\log$($M_{\\odot}$)",
+    "type": "float64",
+    "comment": "stellar masses derived from photometric",
+    "shape": ""
+  },
+  {
+    "name": "e_log_Mass_phot",
+    "unit": "dex",
+    "type": "float64",
+    "comment": "error in the stellar masses derived from photometry",
+    "shape": ""
+  },
+  {
+    "name": "V-band_SB_at_Re",
+    "unit": "mag arcsec^{-2}",
+    "type": "float64",
+    "comment": "V-band surface brightness at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "error_V-band_SB_at_Re",
+    "unit": "mag arcsec^{-2}",
+    "type": "float64",
+    "comment": "error in the V-band SB at 1Re",
+    "shape": ""
+  },
+  {
+    "name": "V-band_SB_at_R_50",
+    "unit": "mag arcsec^{-2}",
+    "type": "float64",
+    "comment": "V-band surface brightness at R50",
+    "shape": ""
+  },
+  {
+    "name": "error_V-band_SB_at_R_50",
+    "unit": "mag arcsec^{-2}",
+    "type": "float64",
+    "comment": "error in V-band surface brightness at R50",
+    "shape": ""
+  },
+  {
+    "name": "nsa_sersic_n_morph",
+    "unit": "--",
+    "type": "float32",
+    "comment": "NSA sersic index",
+    "shape": ""
+  },
+  {
+    "name": "u-g",
+    "unit": "mag",
+    "type": "float32",
+    "comment": "u-g NSA color",
+    "shape": ""
+  },
+  {
+    "name": "g-r",
+    "unit": "mag",
+    "type": "float32",
+    "comment": "g-r NSA color",
+    "shape": ""
+  },
+  {
+    "name": "r-i",
+    "unit": "mag",
+    "type": "float32",
+    "comment": "r-i NSA color",
+    "shape": ""
+  },
+  {
+    "name": "i-z",
+    "unit": "mag",
+    "type": "float32",
+    "comment": "i-z NSA color",
+    "shape": ""
+  },
+  {
+    "name": "P(CD)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a CD galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(E)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a E galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(S0)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a S0 galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sa)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sa galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sab)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sab galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sb)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sb galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sbc)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sbc galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sc)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sc galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Scd)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Scd galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sd)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sd galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sdm)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sdm galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Sm)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Sm galaxy",
+    "shape": ""
+  },
+  {
+    "name": "P(Irr)",
+    "unit": "--",
+    "type": "float32",
+    "comment": "Probability of being a Irr galaxy",
+    "shape": ""
+  },
+  {
+    "name": "best_type_n",
+    "unit": "--",
+    "type": "int64",
+    "comment": "Best morphological type index based on a NN analysis",
+    "shape": ""
+  },
+  {
+    "name": "best_type",
+    "unit": "--",
+    "type": "string",
+    "comment": "Morphological Type derived by the NN analysis",
+    "shape": ""
+  },
+  {
+    "name": "nsa_nsaid",
+    "unit": "--",
+    "type": "int64",
+    "comment": "NSA ID",
+    "shape": ""
+  },
+  {
+    "name": "Vmax_w",
+    "unit": "Mpc^-3 dex^-1",
+    "type": "float64",
+    "comment": "Weight for the volume correction in volume",
+    "shape": ""
+  },
+  {
+    "name": "Num_w",
+    "unit": "--",
+    "type": "float64",
+    "comment": "Weight of the volume correction in number",
+    "shape": ""
+  },
+  {
+    "name": "QCFLAG",
+    "unit": "",
+    "type": "int64",
+    "comment": "QC flat 0=good 2=bad >2 warning",
+    "shape": ""
+  },
+  {
+    "name": "RJ_band_mag",
+    "comment": "R-band magnitude derived from the original cube",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RJ_band_mag_error",
+    "comment": "Error in RJ_band_mag",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RJ_band_abs_mag",
+    "comment": "R-band absolute magnitude from the original cube",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "RJ_band_abs_mag_error",
+    "comment": "Error in RJ_band_abs_mag",
+    "type": "float64",
+    "shape": [],
+    "unit": ""
+  }
+]

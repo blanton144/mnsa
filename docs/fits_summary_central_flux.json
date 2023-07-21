@@ -1,0 +1,65 @@
+[
+  {
+    "name": "plateifu",
+    "comment": "MaNGA Plate-IFU",
+    "type": "string",
+    "shape": [],
+    "unit": ""
+  },
+  {
+    "name": "central_emline_sflux",
+    "shortcomment": "Central PSF emission line summed fluxes",
+    "comment": "Central PSF emission line fluxes based on summed flux",
+    "type": "float32",
+    "shape": [
+      35
+    ],
+    "unit": "10^{-17} erg s$^{-1}$ cm^{-2}"
+  },
+  {
+    "name": "central_emline_sflux_ivar",
+    "comment": "Inverse variance of central_emline_sflux",
+    "type": "float32",
+    "shape": [
+      35
+    ],
+    "unit": "10^{34} erg^{-2} s$^2$ cm^4"
+  },
+  {
+    "name": "central_emline_sflux_nbad",
+    "comment": "Number of bad spaxels for summed flux",
+    "type": "int32",
+    "shape": [
+      35
+    ],
+    "unit": ""
+  },
+  {
+    "name": "central_emline_gflux",
+    "shortcomment": "Central PSF emission line Gaussian fluxes",
+    "comment": "Central PSF emission line fluxes based on Gaussian fit",
+    "type": "float32",
+    "shape": [
+      35
+    ],
+    "unit": "10^{-17} erg s$^{-1}$ cm^{-2}"
+  },
+  {
+    "name": "central_emline_gflux_ivar",
+    "comment": "Inverse variance of central_emline_gflux",
+    "type": "float32",
+    "shape": [
+      35
+    ],
+    "unit": "10^{34} erg^{-2} s$^2$ cm^4"
+  },
+  {
+    "name": "central_emline_gflux_nbad",
+    "comment": "Number of bad spaxels for Gaussian flux",
+    "type": "int32",
+    "shape": [
+      35
+    ],
+    "unit": ""
+  }
+]
