@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_summary
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import collections
+import numpy as np
+import fitsio
+import json
+
+apertures = ['AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+
+
+type2typedescr = {np.float32: 'float32',
+                  np.float64: 'float64',
+                  np.int32: 'int32',
+                  np.int64: 'int64',
+                  np.str_: 'string',
+                  np.bool_: 'boolean'}
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Creates latex describing summary mnsa file')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    summary = fitsio.read(sumfile, ext='SUMMARY')
+    summary_header = fitsio.read_header(sumfile, ext='SUMMARY').records()
+    summary_header_names = [s['name'] for s in summary_header]
+
+    summary_list = list()
+
+    latex_template = "{{\\tt {name}}} & {{\\tt {type}}}  & {unit} & \\begin{{minipage}}{{5in}} {descr} \end{{minipage}}\\cr\n"
+
+    extname = 'summary'
+    docfile = os.path.join(os.getenv('MNSA_DIR'),
+                           "docs",
+                           "fits_summary_{extname}.json".format(extname=extname.lower()))
+    fp = open(docfile, "r")
+    docs = json.loads(fp.read())
+    fp.close()
+    docnames = [d['name'] for d in docs]
+
+    fp = open("summary_summary.tex", "w")
+    for i, name in enumerate(summary.dtype.names):
+        n = i + 1
+
+        # ttype = 'TTYPE{n}'.format(n=n)
+        # iheader_type = summary_header_names.index(ttype)
+        # descr = summary_header[iheader_type]['comment']
+        idocnames = docnames.index(name)
+        descr = docs[idocnames]['comment']
+
+        tunit = 'TUNIT{n}'.format(n=n)
+        if(tunit in summary_header_names):
+            iheader_unit = summary_header_names.index(tunit)
+            unit = summary_header[iheader_unit]['value']
+        else:
+            unit = '---'
+
+        typedescr = type2typedescr[type(summary[name].flatten()[0])]
+
+        latex_line = latex_template.format(name=name, type=typedescr,
+                                           unit=unit, descr=descr)
+        latex_line = latex_line.replace('_', '\\_')
+        fp.write(latex_line)
+
+    fp.close()

@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_summary_add_descr
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import numpy as np
+import astropy.io.fits
+import json
+
+apertures = ['AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Adds documentation to summary mnsa file')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    f = astropy.io.fits.open(sumfile)
+
+    for ext in f:
+        extname = ext.name
+        docfile = os.path.join(os.getenv('MNSA_DIR'),
+                               "docs",
+                               "fits_summary_{extname}.json".format(extname=extname.lower()))
+        if(os.path.exists(docfile)):
+            fp = open(docfile, "r")
+            docs = json.loads(fp.read())
+            fp.close()
+
+            d = np.array(f[extname].data).copy()
+            newheader = f[extname].header.copy()
+            for h in newheader:
+                if('TUNIT' in h):
+                    newheader.remove(h)
+
+            newhdu = astropy.io.fits.BinTableHDU(data=d,
+                                                 header=newheader,
+                                                 name=extname)
+
+            docnames = [d['name'] for d in docs]
+            tkeys = [h for h in newhdu.header]
+            tnames = [newhdu.header[h] for h in newhdu.header]
+
+            for name in d.dtype.names:
+                if(name in docnames):
+                    castit = np.cast[type(d[name].flatten()[0])]
+
+                    idocnames = docnames.index(name)
+                    itnames = tnames.index(name)
+                    tkey = tkeys[itnames]
+                    if('shortcomment' in docs[idocnames]):
+                        comment = docs[idocnames]['shortcomment']
+                    else:
+                        comment = docs[idocnames]['comment']
+                    newhdu.header.set(tkey, name, comment=comment)
+
+                    tnullkey = tkey.replace('TYPE', 'NULL')
+                    if(tnullkey in newhdu.header):
+                        newhdu.header.remove(tnullkey)
+
+                    tunitkey = tkey.replace('TYPE', 'UNIT')
+                    unit = docs[idocnames]['unit']
+                    if(unit != ''):
+                        newhdu.header.set(tunitkey, unit, after=tkey)
+                else:
+                    print("WARNING: no docs for {n}".format(n=name))
+            f[extname] = newhdu
+
+    f.writeto(sumfile + '.new', overwrite=True)
+    f.close()

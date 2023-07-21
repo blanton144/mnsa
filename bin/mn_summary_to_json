@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Filename: mn_summary
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import collections
+import numpy as np
+import fitsio
+import json
+
+apertures = ['AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+
+
+type2typedescr = {np.float32: 'float32',
+                  np.float64: 'float64',
+                  np.int16: 'int16',
+                  np.int32: 'int32',
+                  np.int64: 'int64',
+                  np.str_: 'string',
+                  np.bool_: 'boolean'}
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Creates summary mnsa file')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    args = parser.parse_args()
+    version = args.version
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    extnames = ['SUMMARY', 'ELLIPSE', 'CENTRAL_FLUX', 'PIPE3D',
+                'SPS_AP04']
+
+    for extname in extnames:
+        print("Processing extension {e}".format(e=extname))
+        summary = fitsio.read(sumfile, ext=extname)
+        summary_header = fitsio.read_header(sumfile, ext=extname).records()
+        summary_header_names = [s['name'] for s in summary_header]
+
+        jsonfile = os.path.join(os.getenv('MNSA_DIR'),
+                                "docs", "fits_summary_{extname}.json".format(extname=extname.lower()))
+        if(os.path.exists(jsonfile)):
+            fp = open(jsonfile)
+            summary_list = json.loads(fp.read())
+            fp.close()
+            docnames = [s['name'] for s in summary_list]
+        else:
+            docnames = []
+            summary_list = []
+
+        for i, name in enumerate(summary.dtype.names):
+            n = i + 1
+            ttype = 'TTYPE{n}'.format(n=n)
+            iheader_type = summary_header_names.index(ttype)
+
+            summary_dict_fits = dict()
+            summary_dict_fits['name'] = summary_header[iheader_type]['value']
+            summary_dict_fits['comment'] = summary_header[iheader_type]['comment']
+            summary_dict_fits['shortcomment'] = summary_header[iheader_type]['comment']
+            summary_dict_fits['type'] = type2typedescr[type(summary[name].flatten()[0])]
+            summary_dict_fits['shape'] = list(summary[name][0].shape)
+            summary_dict_fits['unit'] = ''
+            tunit = 'TUNIT{n}'.format(n=n)
+            if(tunit in summary_header_names):
+                iheader_unit = summary_header_names.index(tunit)
+                summary_dict_fits['unit'] = summary_header[iheader_unit]['value']
+
+            if(name in docnames):
+                idocnames = docnames.index(name)
+                summary_dict = summary_list[idocnames]
+                for ck in ['shortcomment', 'unit', 'shape', 'type']:
+                    k = ck
+                    if((ck == 'shortcomment') and
+                       (ck not in summary_dict)):
+                        k = 'comment'
+                    if(summary_dict_fits[ck] != summary_dict[k]):
+                        print("Discrepancy in {k} for column {c}!".format(k=ck, c=name))
+                        print(" in fits: {s}".format(s=summary_dict_fits[ck]))
+                        print(" in json: {s}".format(s=summary_dict[k]))
+
+                summary_list[idocnames] = summary_dict
+            else:
+                summary_dict = summary_dict_fits
+                summary_list.append(summary_dict)
+
+        print(jsonfile)
+        fp = open(jsonfile, "w")
+        fp.write(json.dumps(summary_list, indent=2))
+        fp.close()
