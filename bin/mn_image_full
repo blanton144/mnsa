@@ -1,0 +1,314 @@
+#!/usr/bin/env python
+
+# Plot images on color grid
+
+import os
+import sys
+import argparse
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import fitsio
+import kcorrect.utils
+import kcorrect.response
+import kcorrect.template
+import mnsa.mnsa
+import mnsa.imagetypes
+
+
+matplotlib.rcParams['figure.figsize'] = [15., 6.]
+matplotlib.rcParams['font.size'] = 24
+matplotlib.rcParams['text.usetex'] = True
+
+responseDict = kcorrect.response.ResponseDict()
+
+imagetypes = mnsa.imagetypes.ImageTypes()
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Make set of summary images')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.1',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-p', '--plate-ifu', dest='plateifu',
+                        type=str, required=True,
+                        help='MaNGA plate-ifu')
+
+    parser.add_argument('-o', '--output', dest='output',
+                        type=str, required=False,
+                        default=None,
+                        help='Output file name')
+
+    parser.add_argument('-s', '--seventeen', dest='seventeen',
+                        action='store_true' , required=False,
+                        default=False, help='Use DR17 version')
+
+    choices = list(imagetypes.types.keys())
+    choices.append('stellar_vel')
+    choices.append('emline_gvel')
+
+    parser.add_argument('-f', '--fibers', dest='show_fibers',
+                        type=str, required=False,
+                        default=None,
+                        help='Fiber wavelength positions to show (comma separated)')
+
+    parser.add_argument('-c', '--fibers-colors', dest='show_fibers_colors',
+                        type=str, required=False,
+                        default=None,
+                        help='Colors for fibers')
+
+    args = parser.parse_args()
+    version = args.version
+    plateifu = args.plateifu
+    show_fibers_str = args.show_fibers
+    show_fibers_colors_str = args.show_fibers_colors
+    output = args.output
+    seventeen = args.seventeen
+
+    if(seventeen):
+        pixscale = 0.5
+    else:
+        pixscale = 0.75
+
+    if(show_fibers_str is None):
+        show_fibers = None
+    else:
+        show_fibers = np.array([np.float32(x)
+                                for x in show_fibers_str.split(',')])
+        if(show_fibers_colors_str is None):
+            show_fibers_colors = ['white'] * len(show_fibers)
+        else:
+            show_fibers_colors = show_fibers_colors_str.split(',')
+
+    summary_file = os.path.join(os.getenv('MNSA_DATA'), version,
+                                'mnsa-{version}.fits'.format(version=version))
+    kspec_file = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
+                              'sps-agn',
+                              'kc-spec-{version}-AP05.fits'.format(version=version))
+    kwave = fitsio.read(kspec_file, ext='WAVE')
+    kspec_grid = fitsio.read(kspec_file, ext='FLUX')
+
+    summary = fitsio.read(summary_file, ext='SUMMARY')
+    ellipse = fitsio.read(summary_file, ext='ELLIPSE')
+    sps = fitsio.read(summary_file, ext='SPS_AP05')
+
+    isingle = np.where(summary['plateifu'] == plateifu)[0][0]
+    pa = ellipse['PA_MOMENT'][isingle]
+    ba = ellipse['BA_MOMENT'][isingle]
+    sma = ellipse['SMA_AP05'][isingle]
+    kspec = kspec_grid[isingle, :] * 1.e+17
+
+    redshift = sps['redshift'][isingle]
+    kspec = kspec / (1. + redshift)
+    kwave = kwave * (1. + redshift)
+    maggies = sps['maggies'][isingle, :]
+    rmaggies = sps['rmaggies'][isingle, :]
+
+    mwtrans = np.array([ellipse['MW_TRANSMISSION_{b}'.format(b=b)][isingle]
+                        for b in ['FUV', 'NUV', 'G', 'R', 'Z', 'W1', 'W2', 'W3', 'W4']])
+    maggies = maggies * mwtrans
+    rmaggies = rmaggies * mwtrans
+
+    m = mnsa.mnsa.MNSA(plateifu=plateifu, version=version,
+                       dr17=seventeen)
+
+    hex_spectrum, hex_spectrum_ivar = m.hex_spectrum(sma=sma, ba=ba, pa=pa)
+    wave = m.cube['WAVE'].read()
+
+    bands = np.array(['FUV', 'NUV', 'g', 'r', 'z', 'W1', 'W2', 'W3', 'W4'])
+
+    hex_maggies = np.zeros(len(bands), dtype=np.float32)
+    hex_maggies_ivar = np.zeros(len(bands), dtype=np.float32)
+    for i, band in enumerate(bands):
+        ma, mai = m.hex_maggies(band=band, sma=sma, ba=ba, pa=pa)
+        apcorr = m.hex_apcorr(band=band, apband='r', sma=sma, ba=ba, pa=pa)
+        print(apcorr)
+        hex_maggies[i] = ma * 1.e-9
+        hex_maggies_ivar[i] = mai * 1.e+18
+
+    hex_maggies[5] = hex_maggies[5] * 10.**(- 0.4 * 2.699)
+    hex_maggies[6] = hex_maggies[6] * 10.**(- 0.4 * 3.339)
+    hex_maggies[7] = hex_maggies[7] * 10.**(- 0.4 * 5.174)
+    hex_maggies[8] = hex_maggies[8] * 10.**(- 0.4 * 6.620)
+
+    obands = ['decam_g', 'decam_r', 'decam_z']
+    obands = ['bass_g', 'bass_r', 'mzls_z']
+    ms = np.zeros(3, dtype=np.float32)
+    msivar = np.ones(3, dtype=np.float32)
+    for i, band in enumerate(obands):
+        responseDict.load_response(band)
+        ms[i] = responseDict[band].project(wave=wave, flux=hex_spectrum)
+    obandwave, fs, fsivar = kcorrect.utils.maggies2flambda(ms, msivar,
+                                                           obands)
+
+    bands = ['galex_FUV', 'galex_NUV', 'decam_g',
+             'decam_r', 'decam_z', 'wise_w1', 'wise_w2',
+             'wise_w3', 'wise_w4']
+    bands = ['galex_FUV', 'galex_NUV', 'bass_g',
+             'bass_r', 'mzls_z', 'wise_w1', 'wise_w2',
+             'wise_w3', 'wise_w4']
+    bandwave, fl, flivar = kcorrect.utils.maggies2flambda(hex_maggies,
+                                                          hex_maggies_ivar,
+                                                          bands)
+    fl = fl * 1.e+17
+    flivar = flivar * 1.e-34
+
+    bandwave, fl_sps, flivar_sps = kcorrect.utils.maggies2flambda(maggies,
+                                                                  hex_maggies_ivar,
+                                                                  bands)
+
+    bandwave, fl_sps_r, flivar_sps_r = kcorrect.utils.maggies2flambda(rmaggies,
+                                                                      hex_maggies_ivar,
+                                                                      bands)
+
+    fl_sps = fl_sps * 1.e+17
+    fl_sps_r = fl_sps_r * 1.e-34
+
+    fig = plt.figure(layout=None)
+
+    gs_lr = fig.add_gridspec(1, 2, hspace=0., wspace=0.,
+                             left=0., right=1., top=1., bottom=0.,
+                             width_ratios=[6., 9.])
+
+    gs_images = gs_lr[0].subgridspec(3, 3, wspace=0.012,
+                                     hspace=0.012)
+
+    ax = dict()
+    names = [['zrg-native', 'wise-native', 'galex-native'],
+             ['dlis', 'wise', 'galex'],
+             ['zrg', 'Ha-O3-Grey', 'velocity']]
+    for icol, names_col in enumerate(names):
+        for irow, name in enumerate(names_col):
+            ax[name] = fig.add_subplot(gs_images[icol, irow])
+
+    sax = fig.add_axes([0.47, 0.13, 0.53, 0.87])
+
+    sax.plot(np.log10(wave),
+             np.log10(wave * hex_spectrum),
+             label='MaNGA', color='black',
+             zorder=2, linewidth=0.5)
+    #sax.plot(np.log10(kwave),
+             #np.log10(kwave * kspec),
+             #label='SPS', color='grey',
+             #zorder=1, linewidth=0.5)
+    sax.scatter(np.log10(bandwave),
+                np.log10(bandwave * fl), s=40, color='grey',
+                zorder=5, label='Resampled flux through AP05')
+    sax.scatter(np.log10(bandwave),
+                np.log10(bandwave * fl_sps), s=20, color='red',
+                zorder=7, label='Native flux through AP05')
+    #sax.scatter(np.log10(bandwave),
+    #            np.log10(bandwave * fl_sps_r), s=20, color='blue',
+    #            zorder=9)
+    sax.set_xlim([3.1, 5.49])
+    iin = np.where((np.log10(kwave) > 3.1) &
+                   (np.log10(kwave) < 5.4))[0]
+    sax.set_ylim([
+        np.log10(kwave[iin] * kspec[iin]).min() - 0.2,
+        np.log10(kwave[iin] * kspec[iin]).max() + 2.2])
+    sax.legend(loc=1)
+
+    sax.set_xlabel(r'$\log {\rm ~Wavelength~(Angstroms)}$')
+    sax.set_ylabel(r'$\log \lambda f_\lambda$ ($10^{-17} {\rm ~erg~s}^{-1} {\rm ~cm}^{-2}$)')
+
+    rgb = m.velocity_image(ext='stellar_vel', vlimit=130.)
+    ax['velocity'].imshow(rgb, origin='lower', aspect='auto')
+    ax['velocity'].set_xticks([])
+    ax['velocity'].set_yticks([])
+
+    panels = ['zrg', 'Ha-O3-Grey']
+    for panel in panels:
+        rgb = m.image(imagetype=panel)
+        nx = rgb.shape[0]
+        ny = rgb.shape[1]
+        ax[panel].imshow(rgb, origin='lower', aspect='auto')
+        ax[panel].set_xticks([])
+        ax[panel].set_yticks([])
+        ax[panel].set_xlim([- 0.5, nx - 0.5])
+        ax[panel].set_ylim([- 0.5, ny - 0.5])
+
+    panels = ['zrg-native', 'wise-native', 'galex-native']
+    npixscales = [0.262, 2.75, 1.5]
+    for npixscale, panel in zip(npixscales, panels):
+        rgb = m.image(imagetype=panel)
+        cnx = rgb.shape[0]
+        cny = rgb.shape[1]
+        xsize = np.int32(nx * pixscale / npixscale)
+        xlo = (cnx // 2) - (xsize // 2)
+        xhi = xlo + xsize
+        ysize = np.int32(ny * pixscale / npixscale)
+        ylo = (cny // 2) - (ysize // 2)
+        yhi = ylo + ysize
+        ax[panel].imshow(rgb[xlo:xhi, ylo:yhi, :],
+                         origin='lower', aspect='auto')
+        ax[panel].set_xticks([])
+        ax[panel].set_yticks([])
+
+    panels = ['dlis', 'wise', 'galex']
+    for panel in panels:
+        rgb = m.image(imagetype=panel)
+        cnx = rgb.shape[0]
+        cny = rgb.shape[1]
+        xlo = (cnx // 2) - (nx // 2)
+        ylo = (cny // 2) - (ny // 2)
+        xhi = xlo + nx
+        yhi = ylo + ny
+        ax[panel].imshow(rgb[xlo:xhi, ylo:yhi, :],
+                         origin='lower', aspect='auto')
+        ax[panel].set_xticks([])
+        ax[panel].set_yticks([])
+
+    nth = 1000
+    th = np.arange(nth, dtype=np.float32) * 2. * np.pi / np.float(nth - 1)
+    parad = pa * np.pi / 180.
+    xell_p = np.cos(th) * sma / 0.75 * ba
+    yell_p = np.sin(th) * sma / 0.75
+    xell = xell_p * np.cos(parad) - yell_p * np.sin(parad)
+    yell = xell_p * np.sin(parad) + yell_p * np.cos(parad)
+    print(nx)
+    xell = xell + (nx // 2)
+    yell = yell + (ny // 2)
+    ax['zrg'].plot(xell, yell, linewidth=1, color='white')
+
+    if(show_fibers is not None):
+        m.read_rss()
+        wave = m.rss['WAVE'].read()
+        xpos = (m.rss['XPOS'].read() / pixscale) + np.float32(nx // 2)
+        ypos = (m.rss['YPOS'].read() / pixscale) + np.float32(ny // 2)
+        for show_fiber, show_fiber_color in zip(show_fibers,
+                                                show_fibers_colors):
+            close = np.abs(show_fiber - wave)
+            iclosest = np.argmin(close)
+            ax['zrg'].scatter(xpos[:, iclosest], ypos[:, iclosest], s=0.5,
+                              color=show_fiber_color)
+
+    panel2title = {'zrg-native': 'DLIS (native)',
+                   'wise-native': 'WISE (native)',
+                   'galex-native': 'GALEX (native)',
+                   'dlis': 'DLIS (resampled)',
+                   'wise': 'WISE (resampled)',
+                   'galex': 'GALEX (resampled)',
+                   'zrg': 'MaNGA (DLIS bands)',
+                   'Ha-O3-Grey': r'H$\alpha$ and [O III]',
+                   'velocity': 'Stellar velocity'}
+
+    for p in panel2title:
+        title = panel2title[p]
+        xlims = ax[p].get_xlim()
+        ylims = ax[p].get_ylim()
+        xpos = xlims[0] + 0.02 * (xlims[1] - xlims[0])
+        ypos = ylims[0] + 0.90 * (ylims[1] - ylims[0])
+        if(p == 'velocity'):
+            color = 'black'
+        else:
+            color = 'white'
+        ax[p].text(xpos, ypos, title, fontsize=15, color=color)
+
+    if(output is None):
+        plt.show()
+    else:
+        plt.savefig(output, dpi=300)

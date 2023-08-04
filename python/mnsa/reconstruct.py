@@ -11,6 +11,7 @@ from pydl.pydlutils.sdss import sdss_flagval
 from scipy import sparse
 import mnsa.kernel
 import os
+import fitsio
 
 # Set Marvin configuration so it gets everything local
 marvin.config.setRelease('DR17')
@@ -646,11 +647,15 @@ class Reconstruct(object):
             i = i + 1
 
             if(self.lsf_exist):
+                if(np.abs(weights).max() == 0.):
+                    use_weights = weights + 1.
+                else:
+                    use_weights = weights
                 self.disp[iWave] = (
-                (np.abs(weights) / (matlib.repmat(np.abs(weights).sum(axis=1), weights.shape[-1], 1).T)).dot(
+                (np.abs(use_weights) / (matlib.repmat(np.abs(use_weights).sum(axis=1), use_weights.shape[-1], 1).T)).dot(
                     self.flux_disp[:, iWave])).reshape(self.nside, self.nside)
                 self.predisp[iWave] = (
-                (np.abs(weights) / (matlib.repmat(np.abs(weights).sum(axis=1), weights.shape[-1], 1).T)).dot(
+                (np.abs(use_weights) / (matlib.repmat(np.abs(use_weights).sum(axis=1), use_weights.shape[-1], 1).T)).dot(
                     self.flux_predisp[:, iWave])).reshape(self.nside, self.nside)
 
         if(self.lsf_exist):

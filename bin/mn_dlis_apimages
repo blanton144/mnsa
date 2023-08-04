@@ -109,6 +109,9 @@ if __name__ == '__main__':
 
             print("plate-ifu {p}: Reading PSF: {f}".format(f=psf_file, p=plateifu), flush=True)
             psf = fitsio.read(psf_file)
+            psf_header = fitsio.read_header(psf_file)
+            cpixscale = np.float32(psf_header['PIXSCAL'])
+
             psf = psf / psf.sum()
             xpsf = np.arange(psf.shape[1])
             ypsf = np.arange(psf.shape[0])
@@ -118,8 +121,10 @@ if __name__ == '__main__':
                             (yypsf - (psf.shape[0] // 2))**2)
             psf = psf * (rrpsf < 10.)  # based on where PSF gets noisy
             psf = psf / psf.sum()
+            # psf_interp takes X and Y in PSF image pixel units
             psf_interp = interpolate.RectBivariateSpline(xpsf, ypsf, psf)
 
+            # xxpsf_out and yypsf_out are in MaNGA pixel units
             xpsf_out = np.arange(manga_psf_out.shape[1], dtype=np.float32)
             ypsf_out = np.arange(manga_psf_out.shape[0], dtype=np.float32)
             ocx = np.float32(manga_psf_out.shape[1] // 2)
@@ -128,13 +133,17 @@ if __name__ == '__main__':
                                  xpsf_out).flatten() - ocx
             yypsf_out = np.outer(ypsf_out,
                                  np.ones(manga_psf_out.shape[1])).flatten() - ocy
+
+            # lx, ly are converted to PSF image pixel units
             cx = np.float32(psf.shape[1] // 2)
             cy = np.float32(psf.shape[0] // 2)
-            lx = xxpsf_out * 0.75 / 2.75
-            ly = yypsf_out * 0.75 / 2.75
+            lx = xxpsf_out * pixscale / cpixscale
+            ly = yypsf_out * pixscale / cpixscale
+            
+            # psf_out is the PSF desired, in MaNGA pixel space
             psf_out = psf_interp(lx + cx, ly + cy, grid=False).flatten()
             psf_out = psf_out.reshape(manga_psf_out.shape)
-            psf_out = psf_out * (0.75 / 2.75)**2
+            psf_out = psf_out * (pixscale / cpixscale)**2
         else:
             psf_out = manga_psf_out.copy()
 
@@ -161,6 +170,7 @@ if __name__ == '__main__':
 
         invvar = fitsio.read(invvar_file, header=False)
 
+        # This takes the reference image, convolves with the PSF
         r = resample.Resample(image=image, invvar=invvar, input_header=hdr_in)
         r.set_output_header(hdr_out)
         r.set_output_psf(psf_out)

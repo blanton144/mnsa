@@ -2,6 +2,7 @@
 
 set apertures = "AP04 AP05 AP06 AP07 AP08"
 set apertures = "AP05 AP06 AP07 AP08"
+set apertures = "AP03"
 
 foreach aperture ($apertures)
   mn_fit_sps_ellipse -a $aperture -v 0.3.1 -t sps-agn

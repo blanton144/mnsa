@@ -25,13 +25,6 @@ import crr.utils.memory
 import astropy.wcs as wcs
 
 
-vega2ab = dict()
-vega2ab['W1'] = 2.699
-vega2ab['W2'] = 3.339
-vega2ab['W3'] = 5.174
-vega2ab['W4'] = 6.620
-
-
 def psf_func(x, y, i):
     cx = np.float32(psf.shape[1] // 2)
     cy = np.float32(psf.shape[0] // 2)
@@ -146,7 +139,7 @@ if __name__ == '__main__':
 
         if(os.path.exists(psf_file) is False):
             print("plate-ifu {p}: Skipping case where WISE PSF missing: {p}".format(p=plateifu), flush=True)
-            continue 
+            continue
 
         print("plate-ifu {p}: Reading PSF: {f}".format(f=psf_file, p=plateifu), flush=True)
         psf = fitsio.read(psf_file)
@@ -169,14 +162,12 @@ if __name__ == '__main__':
         image_file = image_file.format(plateifu=plateifu, band=band)
         print("plate-ifu {p}: Reading image: {f}".format(f=image_file, p=plateifu), flush=True)
         image, hdr_in = fitsio.read(image_file, header=True)
-        image = image * 10.**(- 0.4 * vega2ab[band])
 
         invvar_file = os.path.join(imaging_dir,
                                    '{plateifu}-custom-invvar-{band}.fits.fz')
         invvar_file = invvar_file.format(plateifu=plateifu, band=band)
         print("plate-ifu {p}: Reading invvar: {f}".format(f=invvar_file, p=plateifu), flush=True)
         invvar = fitsio.read(invvar_file)
-        invvar = invvar * 10.**(0.8 * vega2ab[band])
 
         print("plate-ifu {p}: b mem={m}".format(p=plateifu, m=crr.utils.memory.memory()), flush=True)
 

@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-#
-# @Author: Michael Blanton
-# @Date: Aug 21, 2020
-# @Filename: mn_done
-# @License: BSD 3-Clause
-# @Copyright: Michael Blanton
-
 
 import argparse
 import os
@@ -21,10 +14,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Performs an arithmetic operation.')
+        description='Gathers information about which MNSA observations are done.')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='v0',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     parser.add_argument('-n', '--no-clobber', dest='noclobber',
@@ -46,12 +39,12 @@ if __name__ == '__main__':
     )
 
     donefile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
-                            'mn-{version}-done.fits'.format(version=version))
+                            'mnsa-done-{version}.fits'.format(version=version))
 
     if((not os.path.exists(donefile)) or (not noclobber)):
 
         drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
-                               'v3_1_1', 'drpall-v3_1_1.fits')
+                               version, 'drpall-{v}.fits'.format(v=version))
         drpfile = drpfile.format(version=version)
         drp = fitsio.read(drpfile)
 
@@ -109,7 +102,7 @@ if __name__ == '__main__':
             resampled_dir = os.path.join(os.getenv('MNSA_DATA'),
                                          version, 'resampled',
                                          str(plate), str(plateifu))
-        
+
             for survey in bands:
                 cbands = bands[survey]
                 cdone = True
@@ -122,12 +115,11 @@ if __name__ == '__main__':
                         cdone = False
                 done['{survey}_done'.format(survey=survey)][i] = cdone
 
-
             coadd_dir = os.path.join(os.getenv('MNSA_DATA'),
                                      version, 'imaging',
                                      '{p}'.format(p=plate),
                                      str(plateifu))
-        
+
             for survey in coadd_bands:
                 cbands = coadd_bands[survey]
                 cdone = True
@@ -200,8 +192,8 @@ if __name__ == '__main__':
     template = env.get_template('mn-done-template.html')
     page = template.render(donedict)
 
-    html_file = os.path.join(os.getenv('MNSA_DATA'), version,
-                             'mn-done.html')
+    html_file = os.path.join(os.getenv('MNSA_DATA'),
+                             version + '.analysis', 'mn-done.html')
     fp = open(html_file, 'w')
     fp.write(page)
     fp.close()

@@ -11,6 +11,13 @@ import numpy as np
 import fitsio
 
 
+#vega2ab = dict()
+#vega2ab['W1'] = 2.699
+#vega2ab['W2'] = 3.339
+#vega2ab['W3'] = 5.174
+#vega2ab['W4'] = 6.620
+
+
 def north_or_south(ra, dec):
     """Get the hemisphere based on a simple declination cut."""
     if dec > 32.375:

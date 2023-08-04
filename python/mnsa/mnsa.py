@@ -145,13 +145,17 @@ class MNSA(object):
     def read_cube(self):
         """Read FITS file into cube attribute"""
         if(self.cube is None):
-            self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
+            try:
+                self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
+            except OSError:
+                raise OSError("Could not read in CUBE: {dm}".format(dm=self.manga_base + '.fits.gz'))
         return
 
     def read_rss(self):
         """Read RSS FITS file into rss attribute"""
         if(self.rss is None):
-            rssfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
+            rssfile = os.path.join(os.getenv('MANGA_ROOT'),
+                                   'spectro', 'redux',
                                    'v3_1_1', str(self.plate),
                                    'stack', 'manga-{p}-LOGRSS.fits.gz')
             rssfile = rssfile.format(p=self.plateifu)
@@ -211,9 +215,8 @@ class MNSA(object):
                                    t='MAPS')
         try:
             self.maps = fitsio.FITS(dap_maps)
-        except:
-            print("Could not read in MAPS: {dm}".format(dm=dap_maps), flush=True)
-            return
+        except OSError:
+            raise OSError("Could not read in MAPS: {dm}".format(dm=dap_maps))
         
         exts = [x.get_extname() for x in self.maps]
 

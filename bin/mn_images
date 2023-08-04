@@ -33,18 +33,18 @@ def create_images(indx):
     try:
         m.read_cube()
         m.read_maps()
-    except:
-        print("Could not read cube and map.")
+    except OSError:
+        print("Could not read cube and/or map.")
         return
     outdir = m.png_dir
     os.makedirs(outdir, exist_ok=True)
     if(dr17):
-        for imagetype in dr17_images: 
+        for imagetype in dr17_images:
             outfile = '{png_base}-dr17-{it}.png'
             outfile = outfile.format(png_base=m.png_base, it=imagetype)
             m.image(imagetype=imagetype, filename=outfile)
     else:
-        for imagetype in images: 
+        for imagetype in images:
             outfile = '{png_base}-{it}.png'
             outfile = outfile.format(png_base=m.png_base, it=imagetype)
             try:

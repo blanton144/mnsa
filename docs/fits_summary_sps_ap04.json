@@ -1,88 +1,78 @@
 [
   {
     "name": "plateifu",
-    "comment": "label for field   1",
-    "shortcomment": "label for field   1",
+    "comment": "MaNGA Plate-IFU",
     "type": "string",
     "shape": [],
     "unit": ""
   },
   {
     "name": "do_sps",
-    "comment": "label for field   2",
-    "shortcomment": "label for field   2",
+    "comment": "SPS fit was performed for this object",
     "type": "boolean",
     "shape": [],
     "unit": ""
   },
   {
     "name": "hemi",
-    "comment": "label for field   3",
-    "shortcomment": "label for field   3",
+    "comment": "north or south DLIS data",
     "type": "string",
     "shape": [],
     "unit": ""
   },
   {
     "name": "redshift",
-    "comment": "label for field   4",
-    "shortcomment": "label for field   4",
+    "comment": "Redshift input to kcorrect",
     "type": "float32",
     "shape": [],
     "unit": ""
   },
   {
     "name": "maggies",
-    "comment": "label for field   5",
-    "shortcomment": "label for field   5",
+    "comment": "Fluxes in FNgrzW1W2W3W4 bands",
     "type": "float32",
     "shape": [
       9
     ],
-    "unit": ""
+    "unit": "mgy"
   },
   {
     "name": "ivar",
-    "comment": "label for field   6",
-    "shortcomment": "label for field   6",
+    "comment": "Inverse variance of maggies",
     "type": "float32",
     "shape": [
       9
     ],
-    "unit": ""
+    "unit": "mgy$^{-2}"
   },
   {
     "name": "absmag",
-    "comment": "label for field   7",
-    "shortcomment": "label for field   7",
+    "comment": "Absolute magnitude in FNgrzW1W2W3W4 restframe bands",
     "type": "float32",
     "shape": [
       9
     ],
-    "unit": ""
+    "unit": "mag"
   },
   {
     "name": "rmaggies",
-    "comment": "label for field   8",
-    "shortcomment": "label for field   8",
+    "comment": "SPS model fluxes in FNgrzW1W2W3W4 bands",
     "type": "float32",
     "shape": [
       9
     ],
-    "unit": ""
+    "unit": "mgy"
   },
   {
     "name": "chi2",
-    "comment": "label for field   9",
-    "shortcomment": "label for field   9",
+    "comment": "$\chi^2$ of model fit",
     "type": "float32",
     "shape": [],
     "unit": ""
   },
   {
     "name": "dof",
-    "comment": "label for field  10",
-    "shortcomment": "label for field  10",
+    "comment": "Number of degrees of freedom in model fit",
     "type": "float32",
     "shape": [],
     "unit": ""
