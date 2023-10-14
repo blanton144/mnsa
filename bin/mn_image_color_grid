@@ -28,7 +28,7 @@ if __name__ == '__main__':
         description='Make color grid')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='0.3.1',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     parser.add_argument('-g', '--grid-refine', dest='grid_refine',
