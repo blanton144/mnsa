@@ -120,8 +120,12 @@ class MNSA(object):
         self.png_dir = png_dir
         self.png_base = png_base.format(plateifu=self.plateifu)
 
-        resampled_base = os.path.join(resampled_dir,
-                                      'resampled-{plateifu}')
+        if(self.dr17):
+            resampled_base = os.path.join(resampled_dir,
+                                          'resampled-dr17-{plateifu}')
+        else:
+            resampled_base = os.path.join(resampled_dir,
+                                          'resampled-{plateifu}')
         self.resampled_base = resampled_base.format(plateifu=self.plateifu)
 
         apimages_base = os.path.join(resampled_dir,
@@ -807,7 +811,11 @@ class MNSA(object):
         circle_mask = self.ellipse_mask(sma=rlimit)
 
         # Count how many ivar=0 pixels there are
-        nbad = np.int32(((ivar == 0) & (circle_mask > 0)).sum())
+        try:
+            nbad = np.int32(((ivar == 0) & (circle_mask > 0)).sum())
+        except:
+            raise ValueError("ivar.shape = {ivs}, circle_mask.shape = {cms}".format(ivs=ivar.shape,
+                                                                                    cms=circle_mask.shape))
         
         psf = self.psf[psfband] * circle_mask
         #   - then excise negatives        
@@ -827,7 +835,28 @@ class MNSA(object):
         central_flux = (im * psf).sum() / (psf * psf).sum()
 
         is_positive = (psf > 0)
-        central_ivar = (((psf[is_positive]**2).sum())**2 /
-                        (((psf[is_positive]**2) / ivar[is_positive]).sum()))
+        if(self.dr17):
+            nx, ny = im.shape
+            x1 = np.arange(nx, dtype=np.int32) - np.float32(nx // 2)
+            y1 = np.arange(ny, dtype=np.int32) - np.float32(ny // 2)
+            x, y = np.meshgrid(x1, y1, indexing='ij')
+            ipositive = np.where(is_positive & (ivar > 0.))
+            x = x[ipositive].flatten()
+            y = y[ipositive].flatten()
+            sigma = (1. / np.sqrt(ivar[ipositive])).flatten()
+            covar = np.zeros((len(x), len(x)), dtype=np.float32)
+            for i in np.arange(len(x), dtype=np.int32):
+                dd = (x[i] - x)**2 + (y[i] - y)**2
+                covar[i, :] = np.exp(- dd / 7.37) * sigma[i] * sigma
+            numer = ((psf[ipositive]**2).sum())**2
+            denom = psf[ipositive].dot(covar).dot(psf[ipositive])
+            central_ivar = numer / denom
+            #
+            #central_ivar2 = (((psf[is_positive]**2).sum())**2 /
+            #                 (((psf[is_positive]**2) / ivar[is_positive]).sum()))
+            #print(central_ivar, central_ivar2)
+        else:
+            central_ivar = (((psf[is_positive]**2).sum())**2 /
+                            (((psf[is_positive]**2) / ivar[is_positive]).sum()))
 
         return(central_flux, central_ivar, nbad)
