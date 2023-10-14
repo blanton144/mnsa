@@ -21,15 +21,18 @@ import fitsio
 import subprocess
 import multiprocessing
 
+dr17 = False
 clobber = False
 
 def call_resample_mask(i):
     plateifu = drpall['plateifu'][i]
     print("DOING INDX = {i}, PLATEIFU = {p}".format(i=i, p=plateifu))
+    cmds = ['mn_resample_mask', '-p', plateifu, '-v', version]
     if(clobber):
-        subprocess.call(['mn_resample_mask', '-p', plateifu, '-v', version, '-c'])
-    else:
-        subprocess.call(['mn_resample_mask', '-p', plateifu, '-v', version])
+        cmds.append('-c')
+    if(dr17):
+        cmds.append('-o')
+    subprocess.call(cmds)
 
 
 if __name__ == '__main__':
@@ -52,11 +55,17 @@ if __name__ == '__main__':
                         action='store_true', required=False, default=False,
                         help='clobber existing files')
 
+    parser.add_argument('-o', '--old', dest='dr17',
+                        required=False, help='dr17',
+                        action='store_true',
+                        default=False)
+
     args = parser.parse_args()
     version = args.version
     drp_start = args.start
     drp_end = args.end
     clobber = args.clobber
+    dr17 = args.dr17
 
     drpfile = os.path.join(os.getenv('MNSA_DATA'),
                            'samples',
