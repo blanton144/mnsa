@@ -10,6 +10,7 @@ import mnsa.mnsa
 
 
 flux_types = ['emline_sflux', 'emline_gflux']
+dr17 = False
 
 
 def plateifu_dir(version=None):
@@ -19,9 +20,13 @@ def plateifu_dir(version=None):
     return(fluxdir)
 
 
-def plateifu_file(plateifu=None, version=None):
-    fluxfile = os.path.join(plateifu_dir(version=version),
-                            'central-flux-{v}-{p}.fits')
+def plateifu_file(plateifu=None, version=None, dr17=None):
+    if(dr17):
+        fluxfile = os.path.join(plateifu_dir(version=version),
+                                'central-flux-dr17-{v}-{p}.fits')
+    else:
+        fluxfile = os.path.join(plateifu_dir(version=version),
+                                'central-flux-{v}-{p}.fits')
     fluxfile = fluxfile.format(p=plateifu, v=version)
     return(fluxfile)
 
@@ -29,19 +34,25 @@ def plateifu_file(plateifu=None, version=None):
 def call_central_flux(i):
     s = done[i]
     print(" {p}".format(p=s['plateifu']), flush=True)
-    m = mnsa.mnsa.MNSA(plateifu=s['plateifu'], version=version)
+    m = mnsa.mnsa.MNSA(plateifu=s['plateifu'], version=version, dr17=dr17)
     fluxstr = np.zeros(1, dtype=fluxstr_dtype)
     fluxstr['plateifu'] = s['plateifu']
     for flux_type in flux_types:
         for ichannel, channel in enumerate(channels[flux_type]):
-            cf, ci, cn = m.central_flux(channel=channel,
-                                        ext=flux_type.upper())
+            try:
+                cf, ci, cn = m.central_flux(channel=channel,
+                                            ext=flux_type.upper())
+            except OSError:
+                print("{p}: failure in determining central flux".format(p=s['plateifu']))
+                cf = - 9999.
+                ci = - 9999.
+                cn = 9999
             fluxstr['central_{t}'.format(t=flux_type)][0, ichannel] = cf
             fluxstr['central_{t}_ivar'.format(t=flux_type)][0, ichannel] = ci
             fluxstr['central_{t}_nbad'.format(t=flux_type)][0, ichannel] = cn
 
     print("Outputting fluxes", flush=True)
-    fluxfile = plateifu_file(plateifu=s['plateifu'], version=version)
+    fluxfile = plateifu_file(plateifu=s['plateifu'], version=version, dr17=dr17)
     fitsio.write(fluxfile, fluxstr, clobber=True)
     return
 
@@ -54,19 +65,24 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--version', dest='version',
                         type=str, help='version name', required=True)
+    parser.add_argument('-o', '--old', dest='dr17',
+                        required=False, help='dr17',
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args()
     version = args.version
+    dr17 = args.dr17
 
     print("Reading done file", flush=True)
     done = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
                                     '{v}.analysis',
-                                    'mn-{v}-done.fits').format(v=version))
+                                    'mnsa-done-{v}.fits').format(v=version))
 
     fluxstr_list = [('plateifu', str, 12)]
 
     print("Set up output structure", flush=True)
-    m = mnsa.mnsa.MNSA(plateifu=done['plateifu'][0], version=version)
+    m = mnsa.mnsa.MNSA(plateifu=done['plateifu'][0], version=version, dr17=dr17)
     m.read_maps()
     channels = dict()
     for flux_type in flux_types:
@@ -88,13 +104,18 @@ if __name__ == '__main__':
     fluxstr = np.zeros(len(done), dtype=fluxstr_dtype)
     for i, s in enumerate(done):
         fluxfile = plateifu_file(plateifu=s['plateifu'],
-                                 version=version)
+                                 version=version, dr17=dr17)
         fluxstr[i] = fitsio.read(fluxfile)
 
     print("Outputting fluxes", flush=True)
-    fluxfile = os.path.join(os.getenv('MNSA_DATA'),
-                            version + '.analysis', 'central_flux',
-                            'central-flux-{v}.fits')
+    if(dr17):
+        fluxfile = os.path.join(os.getenv('MNSA_DATA'),
+                                version + '.analysis', 'central_flux',
+                                'central-flux-dr17-{v}.fits')
+    else:
+        fluxfile = os.path.join(os.getenv('MNSA_DATA'),
+                                version + '.analysis', 'central_flux',
+                                'central-flux-{v}.fits')
     fluxfile = fluxfile.format(v=version)
     fitsio.write(fluxfile, fluxstr, extname='FLUXES', clobber=True)
 
