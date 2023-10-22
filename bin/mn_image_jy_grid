@@ -4,6 +4,7 @@
 
 import os
 import sys
+import subprocess
 import argparse
 import numpy as np
 import scipy.ndimage
@@ -12,7 +13,6 @@ import matplotlib.pyplot as plt
 import fitsio
 import mnsa.mnsa
 import mnsa.imagetypes
-import mnsa.jiyan
 
 
 matplotlib.rcParams['figure.figsize'] = [8., 6.]
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         description='Make color grid')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='0.3.1',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     parser.add_argument('-g', '--grid-refine', dest='grid_refine',
@@ -40,6 +40,11 @@ if __name__ == '__main__':
                         default=False,
                         action='store_true',
                         help='only plot points version')
+
+    parser.add_argument('-a', '--agn', dest='agn',
+                        default=False,
+                        action='store_true',
+                        help='show AGN classification box')
 
     parser.add_argument('-s', '--seed', dest='seed',
                         type=int, default=1,
@@ -59,45 +64,23 @@ if __name__ == '__main__':
     image_type = args.image_type
     nogrid = args.nogrid
     seed = args.seed
+    agn = args.agn
 
     np.random.seed(seed)
 
-    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
-                           'mnsa-{version}.fits'.format(version=version))
-    summary = fitsio.read(sumfile, ext='SUMMARY')
+    jyfile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
+                          'agn', 'jiyan',
+                          'jiyan-agn-{version}.fits'.format(version=version))
+    jiyan = fitsio.read(jyfile)
 
-    cffile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
-                          'central_flux',
-                          'central-flux-{version}.fits'.format(version=version))
-    central_flux = fitsio.read(cffile, ext='FLUXES')
-    channels = fitsio.read(cffile, ext='CHANNELS_EMLINE_GFLUX')
-
-    ichannel = dict()
-    for channel in ['Hb-4862', 'OIII-5008', 'Ha-6564', 'NII-6585',
-                    'SII-6718', 'SII-6732']:
-        ichannel[channel] = np.where(channels['channel'] == channel)[0][0]
-
-    cf = dict()
-    cf_ivar = dict()
-    cf_nbad = dict()
-    for channel in ichannel:
-        cf[channel] = central_flux['central_emline_gflux'][:, ichannel[channel]]
-        cf_ivar[channel] = central_flux['central_emline_gflux_ivar'][:, ichannel[channel]]
-        cf_nbad[channel] = central_flux['central_emline_gflux_nbad'][:, ichannel[channel]]
-    cf['SII-6718+6732'] = cf['SII-6718'] + cf['SII-6732']
-
-    good = np.ones(len(summary), dtype=bool)
-    for channel in ichannel:
-        good = (good & (cf[channel] * np.sqrt(cf_ivar[channel]) > 3.) &
-                (cf_ivar[channel] > 0.) & (cf_nbad[channel] < 4))
-
-    summary = summary[good]
-
-    n2ha = np.log10(cf['NII-6585'][good] / cf['Ha-6564'][good])
-    s2ha = np.log10(cf['SII-6718+6732'][good] / cf['Ha-6564'][good])
-    o3hb = np.log10(cf['OIII-5008'][good] / cf['Hb-4862'][good])
-
-    p1, p2, p3 = mnsa.jiyan.ratios_to_pspace(n2ha=n2ha, s2ha=s2ha, o3hb=o3hb)
+    detected = jiyan['detected']
+    plateifu = jiyan['plateifu'][detected]
+    p1 = jiyan['p1'][detected]
+    p2 = jiyan['p2'][detected]
+    p3 = jiyan['p3'][detected]
+    p1_err = jiyan['p1_err'][detected]
+    p2_err = jiyan['p2_err'][detected]
+    p3_err = jiyan['p3_err'][detected]
 
     nx = 40
     ny = 30
@@ -127,9 +110,14 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
 
     ax.scatter(p1, p3, color='black', s=15, alpha=0.5)
+    ax.errorbar(p1, p3, xerr=p1_err, yerr=p3_err, color='black', fmt='none', alpha=0.4,
+                linewidth=1)
     levels = dist.max() * np.array([0.5, 0.7, 0.87, 0.93])
     ax.contour(dist, origin='lower', extent=[xmin, xmax, ymin, ymax],
-               colors='grey', levels=levels, alpha=0.6, linewidths=3)
+               colors='grey', levels=levels, alpha=0.6, linewidths=2)
+
+    if(agn):
+        ax.add_patch(matplotlib.patches.Rectangle((- 0.3, 0.5), 5, 5, alpha=0.3, edgecolor='darkblue'))
 
     ax.set_xlim([xmin, xmax])
     ax.set_ylim([ymin, ymax])
@@ -143,6 +131,7 @@ if __name__ == '__main__':
                                                                     v=version))
 
     plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
 
     if(nogrid):
         sys.exit()
@@ -158,8 +147,8 @@ if __name__ == '__main__':
             rgb = None
             for i in igrid:
                 try:
-                    plateifu = summary['plateifu'][i]
-                    m = mnsa.mnsa.MNSA(plateifu=plateifu, version=version)
+                    cplateifu = plateifu[i]
+                    m = mnsa.mnsa.MNSA(plateifu=cplateifu, version=version)
                     if((image_type == 'stellar_vel') |
                        (image_type == 'emline_gvel')):
                         rgb = m.velocity_image(ext=image_type, vlimit=130.)
@@ -180,6 +169,10 @@ if __name__ == '__main__':
                       extent=[xgrid_min, xgrid_max, ygrid_min, ygrid_max],
                       aspect='auto')
 
+    if(agn):
+        ax.add_patch(matplotlib.patches.Rectangle((- 0.3, 0.5), 5, 5, alpha=0.18, edgecolor='none'))
+        ax.add_patch(matplotlib.patches.Rectangle((- 0.3, 0.5), 5, 5, alpha=0.5, facecolor='none', edgecolor='darkblue'))
+
     levels = dist.max() * np.array([0.5, 0.7, 0.87, 0.93])
     ax.contour(dist, origin='lower', extent=[xmin, xmax, ymin, ymax],
                colors='grey', levels=levels, alpha=0.6, linewidths=3)
@@ -195,3 +188,4 @@ if __name__ == '__main__':
                                                                           v=version))
 
     plt.savefig(pngfile, dpi=300)
+    subprocess.run(['convert', pngfile, '-trim', pngfile])
