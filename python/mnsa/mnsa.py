@@ -408,7 +408,7 @@ class MNSA(object):
             return(hex_spec, hex_ivar)
 
     def fiber_spectrum(self, radius=None, seeing_fwhm=None,
-                       return_mask=False):
+                       return_aperture=False):
         """Calculate and return total spectrum in seeing-apodized fiber
 
         Parameters
@@ -420,7 +420,7 @@ class MNSA(object):
         seeing_fwhm : np.float32
             FWHM of seeing (arcsec)
 
-        return_mask : bool
+        return_aperture : bool
             if True, return the mask used to sum the spectra
 
         Returns
@@ -429,28 +429,33 @@ class MNSA(object):
         fiber_spectrum : ndarray of np.float32
             summed spectrum across cube (masked if specified)
 
-        fiber_ivar : ndarray of np.float32
-            inverse variance of hex_spectrum (masked if specified)
-
-        fiber_mask : ndarray of bool
-            2D mask used (if return_mask set)
+        fiber_aperture : ndarray of bool
+            2D aperture used (if return_mask set)
 """
-        if(self.
-        radial = self.ellipse_mask(ba=ba, pa=pa, sma=sma, manga=True)
-            hex_mask = hex_mask & ellipse_mask
+        hex_mask = self.hex_mask()
+        nx = hex_mask.shape[0]
+        k = mnsa.kernel.Kernel(seeing=seeing_fwhm, radius=radius)
+        if(self.dr17):
+            dx = 0.5
+        else:
+            dx = 0.75
+        aperture = k.grid(dx=dx, nx=nx)
+
+        aperture = aperture * np.float32(hex_mask)
+        inaperture = aperture > 0
+
         flux = self.cube['FLUX'].read()
         ivar = self.cube['IVAR'].read()
         mask = self.cube['MASK'].read()
-        hex_mask_expanded = np.tile(hex_mask, (flux.shape[0], 1, 1))
-        ok = ((mask == 0) & (hex_mask_expanded > 0))
-        nok = np.float32(ok.sum(axis=1).sum(axis=1))
-        scale = np.float32(hex_mask.sum()) / nok
-        hex_spec = flux[:, hex_mask].sum(axis=1) * scale
-        hex_ivar = 1. / (1. / ivar[:, hex_mask]).sum(axis=1) / scale**2
-        if(return_mask):
-            return(hex_spec, hex_ivar, hex_mask)
+        aperture_expanded = np.tile(aperture, (flux.shape[0], 1, 1))
+        ok = ((mask == 0) & (aperture_expanded > 0))
+        sumok = (aperture_expanded * np.float32(ok)).sum(axis=1).sum(axis=1)
+        scale = np.float32(aperture.sum()) / sumok
+        aperture_spec = (flux * aperture_expanded).sum(axis=1).sum(axis=1) * scale
+        if(return_aperture):
+            return(aperture_spec, aperture)
         else:
-            return(hex_spec, hex_ivar)
+            return(aperture_spec)
 
     def hex_maggies(self, band=None, ba=1., pa=0., sma=None,
                     return_mask=False):
