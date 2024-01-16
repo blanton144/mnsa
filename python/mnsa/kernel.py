@@ -17,13 +17,16 @@ class Kernel(object):
         pixel scale for this kernel grid in arcsec (default 0.01)
 
     nseeing : int, np.int32
-        number of seeing FWHM values on FWHM grid (default 200)
+        number of FWHM values on FWHM grid (1 if only one value)
 
-    minseeing : int, np.int32
-        minimum FWHM value on FWHM grid in arcsec (default 0.5)
+    minseeing : float, np.float32
+        minimum FWHM value on FWHM grid (if nseeing > 1)
 
-    maxseeing : int, np.int32
-        maximum FWHM value on FWHM grid in arcsec (default 2.5)
+    maxseeing : float, np.float32
+        maximum FWHM value on FWHM grid (if nseeing > 1)
+
+    seeing : float, np.float32
+        FWHM value of seeing (if nseeing == 1)
 
     radius : float, np.float32
         radius of the fiber in arcsec (default 1.0)
@@ -38,13 +41,13 @@ class Kernel(object):
         pixel scale for this kernel grid in arcsec
 
     nseeing : int, np.int32
-        number of FWHM values on FWHM grid
+        number of FWHM values on FWHM grid (1 if only one value)
 
-    minseeing : int, np.int32
-        minimum FWHM value on FWHM grid
+    minseeing : float, np.float32
+        minimum FWHM value on FWHM grid (if nseeing > 1)
 
-    maxseeing : int, np.int32
-        maximum FWHM value on FWHM grid
+    maxseeing : float, np.float32
+        maximum FWHM value on FWHM grid (if nseeing > 1)
 
     xmin : np.float32
         outer edge of lowest X pixel
@@ -133,15 +136,15 @@ class Kernel(object):
     multiplying by arcsec in the radial dimension, by multiplying by
     rs in the ().sum() term).
 """
-
     def __init__(self, rough_length=9., dkernel=0.01, nseeing=200,
-                 minseeing=0.5, maxseeing=2.5, radius=1.0, extra=None):
+                 minseeing=0.5, maxseeing=2.5, radius=1.0, seeing=None,
+                 extra=None):
         self.rough_length = rough_length
         self.dkernel = dkernel
         self.extra = extra
         self.radius = radius
         self._set_kernel_grid(nseeing=nseeing, minseeing=minseeing,
-                              maxseeing=maxseeing)
+                              maxseeing=maxseeing, seeing=seeing)
         self._set_kernel_radial_grid()
         return
 
@@ -198,12 +201,19 @@ class Kernel(object):
         gaus = (gaus1 + scale21 * gaus2) / (1. + scale21)
         return gaus
 
-    def _set_kernel_grid(self, nseeing=100, minseeing=0.5, maxseeing=2.5):
+    def _set_kernel_grid(self, nseeing=100, minseeing=0.5, maxseeing=2.5,
+                         seeing=None):
         """Create the kernel for each wavelength"""
 
-        self.nseeing = nseeing
-        self.minseeing = minseeing
-        self.maxseeing = maxseeing
+        if(seeing is not None):
+            self.nseeing = 1
+            self.seeing = seeing
+            self.minseeing = None
+            self.maxseeing = None
+        else:
+            self.nseeing = nseeing
+            self.minseeing = minseeing
+            self.maxseeing = maxseeing
 
         (self.nkernel, self.length, self.x2k, self.y2k, self.xkernel,
          self.ykernel) = self._create_grid(self.rough_length, self.dkernel)
@@ -215,25 +225,44 @@ class Kernel(object):
         fiber[ifiber] = 1.
         self.fiber = fiber / fiber.sum()
 
-        # Now convolve with the PSF of various widths
-        self.seeing = minseeing + ((maxseeing - minseeing) * np.arange(nseeing) /
-                                   np.float32(nseeing - 1))
-        nseeing = len(self.seeing)
-        self.kernel = np.zeros([nseeing, self.nkernel, self.nkernel],
-                               dtype=np.float32)
-        for index, iseeing in enumerate(self.seeing):
-            psf0 = self._psf(iseeing, self.x2k, self.y2k)
-            self.kernel[index, :, :] = scipy.signal.fftconvolve(self.fiber,
-                                                                psf0,
-                                                                mode='same')
-        if(self.extra is not None):
-            norm = 1. / (2. * np.pi * self.extra**2) * self.dkernel**2
-            r2k2 = self.x2k**2 + self.y2k**2
-            psf_extra = norm * np.exp(- 0.5 * r2k2 / self.extra**2)
+        if(self.nseeing == 1):
+            self.seeing = seeing
+            self.kernel = np.zeros([self.nkernel, self.nkernel],
+                                   dtype=np.float32)
+            psf0 = self._psf(self.seeing, self.x2k, self.y2k)
+            self.kernel[:, :] = scipy.signal.fftconvolve(self.fiber,
+                                                         psf0,
+                                                         mode='same')
+            if(self.extra is not None):
+                norm = 1. / (2. * np.pi * self.extra**2) * self.dkernel**2
+                r2k2 = self.x2k**2 + self.y2k**2
+                psf_extra = norm * np.exp(- 0.5 * r2k2 / self.extra**2)
+                self.kernel[:, :] = scipy.signal.fftconvolve(self.kernel[index, :, :],
+                                                             psf_extra,
+                                                             mode='same')
+            return
+        else:
+            # Now convolve with the PSF of various widths
+            self.seeing = minseeing + ((maxseeing - minseeing) * np.arange(self.nseeing) /
+                                       np.float32(self.nseeing - 1))
+            self.nseeing = len(self.seeing)
+            self.kernel = np.zeros([self.nseeing, self.nkernel, self.nkernel],
+                                   dtype=np.float32)
             for index, iseeing in enumerate(self.seeing):
-                self.kernel[index, :, :] = scipy.signal.fftconvolve(self.kernel[index, :, :],
-                                                                    psf_extra,
+                psf0 = self._psf(iseeing, self.x2k, self.y2k)
+                self.kernel[index, :, :] = scipy.signal.fftconvolve(self.fiber,
+                                                                    psf0,
                                                                     mode='same')
+            if(self.extra is not None):
+                norm = 1. / (2. * np.pi * self.extra**2) * self.dkernel**2
+                r2k2 = self.x2k**2 + self.y2k**2
+                psf_extra = norm * np.exp(- 0.5 * r2k2 / self.extra**2)
+                for index, iseeing in enumerate(self.seeing):
+                    self.kernel[index, :, :] = scipy.signal.fftconvolve(self.kernel[index, :, :],
+                                                                        psf_extra,
+                                                                        mode='same')
+            return
+
         return
 
     def _set_kernel_radial_grid(self):
@@ -250,22 +279,40 @@ class Kernel(object):
                           np.float32(self.nradial - 1))
         self.r_radial = (kernel_radial_min +
                          np.arange(self.nradial) * self.d_radial)
-        self.kernel_radial = np.zeros((len(self.seeing), self.nradial),
-                                      dtype=np.float32)
-        for index, iseeing in enumerate(self.seeing):
-            tmp_radial = self.kernel[index, :, :].flatten()[uindex]
+
+        if(self.nseeing == 1):
+            tmp_radial = self.kernel[:, :].flatten()[uindex]
             tmp_radial_interp = scipy.interpolate.interp1d(uradii, tmp_radial,
                                                            kind='linear',
                                                            bounds_error=False,
                                                            fill_value=0.,
                                                            assume_sorted=True)
-            self.kernel_radial[index, :] = tmp_radial_interp(self.r_radial)
+            self.kernel_radial = tmp_radial_interp(self.r_radial)
 
-        self._radial_function = (
-            scipy.interpolate.interp2d(self.seeing, self.r_radial,
-                                       self.kernel_radial.transpose(),
-                                       kind='cubic', bounds_error=False,
-                                       fill_value=None))
+            self._radial_function = (
+                scipy.interpolate.interp1d(self.r_radial,
+                                           self.kernel_radial,
+                                           kind='cubic', bounds_error=False,
+                                           fill_value=0.))
+
+        else:
+            self.kernel_radial = np.zeros((len(self.seeing), self.nradial),
+                                          dtype=np.float32)
+
+            for index, iseeing in enumerate(self.seeing):
+                tmp_radial = self.kernel[index, :, :].flatten()[uindex]
+                tmp_radial_interp = scipy.interpolate.interp1d(uradii, tmp_radial,
+                                                               kind='linear',
+                                                               bounds_error=False,
+                                                               fill_value=0.,
+                                                               assume_sorted=True)
+                self.kernel_radial[index, :] = tmp_radial_interp(self.r_radial)
+
+            self._radial_function = (
+                scipy.interpolate.interp2d(self.seeing, self.r_radial,
+                                           self.kernel_radial.transpose(),
+                                           kind='cubic', bounds_error=False,
+                                           fill_value=None))
 
         return
 
@@ -288,10 +335,38 @@ class Kernel(object):
             kernel values at radii
 """
         isort = np.argsort(radii)
-        tvals = self._radial_function(seeing, radii[isort]).flatten()
+        if(self.nseeing == 1):
+            tvals = self._radial_function(radii[isort]).flatten()
+        else:
+            tvals = self._radial_function(seeing, radii[isort]).flatten()
         vals = np.zeros(len(radii), dtype=np.float32)
         vals[isort] = tvals
         return(vals)
+
+    def grid(self, seeing=None, dx=0.5, nx=40):
+        """Kernel values on a grid
+
+        Parameters
+        ----------
+
+        dx : float, np.float32
+            grid pixel scale
+
+        nx : int, np.int32
+            number of elements on grid
+
+        Returns
+        -------
+
+        image : ndarray of np.float32
+            2D kernel sampled on grid
+"""
+        x1 = dx * ((np.arange(nx, dtype=np.float32) + 0.5) - (nx // 2))
+        x, y = np.meshgrid(x1, x1)
+        r = np.sqrt(x**2 + y**2).flatten()
+        image = self.radial(seeing=seeing, radii=r)
+        image = image.reshape(nx, nx)
+        return(image)
 
     def fwhm(self, seeing=None):
         """FWHM of kernel associated with a given seeing FWHM
@@ -309,7 +384,10 @@ class Kernel(object):
             full-width half maximum of kernel
 """
         rs = self.r_radial
-        vs = self._radial_function(seeing, rs).flatten()
+        if(self.nseeing == 1):
+            vs = self._radial_function(rs).flatten()
+        else:
+            vs = self._radial_function(seeing, rs).flatten()
         rs = np.flip(rs)
         vs = np.flip(vs)
         vmax = vs.max()
