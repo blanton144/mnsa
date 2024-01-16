@@ -25,6 +25,9 @@ class Kernel(object):
     maxseeing : int, np.int32
         maximum FWHM value on FWHM grid in arcsec (default 2.5)
 
+    radius : float, np.float32
+        radius of the fiber in arcsec (default 1.0)
+
     Attributes
     ----------
 
@@ -132,10 +135,11 @@ class Kernel(object):
 """
 
     def __init__(self, rough_length=9., dkernel=0.01, nseeing=200,
-                 minseeing=0.5, maxseeing=2.5, extra=None):
+                 minseeing=0.5, maxseeing=2.5, radius=1.0, extra=None):
         self.rough_length = rough_length
         self.dkernel = dkernel
         self.extra = extra
+        self.radius = radius
         self._set_kernel_grid(nseeing=nseeing, minseeing=minseeing,
                               maxseeing=maxseeing)
         self._set_kernel_radial_grid()
@@ -207,7 +211,7 @@ class Kernel(object):
         # Create the fiber image (just a circular aperture)
         radius = np.sqrt(self.x2k**2 + self.y2k**2)
         fiber = np.zeros([self.nkernel, self.nkernel], dtype=np.float32)
-        ifiber = np.where(radius < 1.0)
+        ifiber = np.where(radius < self.radius)
         fiber[ifiber] = 1.
         self.fiber = fiber / fiber.sum()
 

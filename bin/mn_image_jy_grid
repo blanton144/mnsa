@@ -109,20 +109,36 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-    ax.scatter(p1, p3, color='black', s=15, alpha=0.5)
-    ax.errorbar(p1, p3, xerr=p1_err, yerr=p3_err, color='black', fmt='none', alpha=0.4,
+    ax.scatter(p1, p3, color='black', s=10, alpha=0.18)
+    ax.errorbar(p1, p3, xerr=p1_err, yerr=p3_err, color='black', fmt='none', alpha=0.15,
                 linewidth=1)
     levels = dist.max() * np.array([0.5, 0.7, 0.87, 0.93])
     ax.contour(dist, origin='lower', extent=[xmin, xmax, ymin, ymax],
-               colors='grey', levels=levels, alpha=0.6, linewidths=2)
+               colors='black', levels=levels, alpha=0.6, linewidths=2)
 
     if(agn):
-        ax.add_patch(matplotlib.patches.Rectangle((- 0.3, 0.5), 5, 5, alpha=0.3, edgecolor='darkblue'))
+        ax.add_patch(matplotlib.patches.Rectangle((- 0.3, 0.55), 5, 5, alpha=0.3, edgecolor='darkblue'))
+        ax.plot([- 0.3, 5], [0.55, 0.55], linewidth=2, color='blue', alpha=0.5)
+        ax.plot([- 0.3, - 0.3], [-5., 5.], linewidth=2, color='blue', alpha=0.5)
+        xseyfert = xmin + (xmax - xmin) * 0.80
+        yseyfert = ymin + (ymax - ymin) * 0.92
+        plt.text(xseyfert, yseyfert, r'{\it Seyferts}',
+                 bbox=dict(facecolor='white', alpha=0.6, boxstyle='round'))
+        xliner = xmin + (xmax - xmin) * 0.80
+        yliner = ymin + (ymax - ymin) * 0.06
+        plt.text(xliner, yliner, r'{\it LINERs}',
+                 bbox=dict(facecolor='white', alpha=0.6, boxstyle='round'))
+        xsf = xmin + (xmax - xmin) * 0.02
+        ysf = ymin + (ymax - ymin) * 0.92
+        plt.text(xsf, ysf, r'{\it Star formers}',
+                 bbox=dict(facecolor='white', alpha=0.6, boxstyle='round'))
 
     ax.set_xlim([xmin, xmax])
     ax.set_ylim([ymin, ymax])
-    ax.set_xlabel('$P1$')
-    ax.set_ylabel('$P3$')
+    #ax.set_xlabel(r'$P1 = 0.63 {\rm [NII]}/{\rm H}\alpha + 0.51 {\rm [SII]}/{\rm H}\alpha + 0.59 {\rm [OIII]}/{\rm H}\beta$', fontsize=20)
+    #ax.set_ylabel(r'$P3 = -0.46 {\rm [NII]}/{\rm H}\alpha - 0.37 {\rm [SII]}/{\rm H}\alpha + 0.81 {\rm [OIII]}/{\rm H}\beta$', fontsize=20)
+    ax.set_xlabel(r'${\rm P1} = 0.63 {\rm N2} + 0.51 {\rm S2} + 0.59 {\rm R3}$', fontsize=22)
+    ax.set_ylabel(r'${\rm P3} = -0.46 {\rm N2} - 0.37 {\rm S2} + 0.81 {\rm R3}$', fontsize=22)
     fig.tight_layout()
     pngfile = os.path.join(pngdir,
                            'points-p1p3-{t}-{g}-{s}-{v}.png'.format(t=image_type,
