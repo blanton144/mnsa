@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import sys
+import numpy as np
+import astropy.cosmology
+import astropy.units
+
+
+cosmo = astropy.cosmology.Planck18
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Find scale factor between two redshifts.')
+
+    parser.add_argument('-m', '--manga-redshift', dest='manga_redshift',
+                        type=np.float32, default=0.03, required=False,
+                        help='MaNGA redshift')
+    parser.add_argument('-d', '--desi-redshift', dest='desi_redshift',
+                        type=np.float32, default=0.35, required=False,
+                        help='DESI redshift')
+    args = parser.parse_args()
+    manga_redshift = args.manga_redshift
+    desi_redshift = args.desi_redshift
+
+    manga_add = cosmo.angular_diameter_distance(manga_redshift)
+    desi_add = cosmo.angular_diameter_distance(desi_redshift)
+    scale = desi_add / manga_add
+
+    print(scale)
