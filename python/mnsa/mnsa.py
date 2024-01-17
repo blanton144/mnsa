@@ -428,7 +428,10 @@ class MNSA(object):
         -------
 
         fiber_spectrum : ndarray of np.float32
-            summed spectrum across cube (masked if specified)
+            summed spectrum across cube
+
+        fiber_spectrum_mask: ndarray of bool
+            True or False if spectrum is OK at each wavelength
 
         fiber_aperture : ndarray of bool
             2D aperture used (if return_mask set)
@@ -451,12 +454,14 @@ class MNSA(object):
         aperture_expanded = np.tile(aperture, (flux.shape[0], 1, 1))
         ok = ((mask == 0) & (aperture_expanded > 0))
         sumok = (aperture_expanded * np.float32(ok)).sum(axis=1).sum(axis=1)
-        scale = np.float32(aperture.sum()) / sumok
+        scale = (np.float32(sumok > 0) * np.float32(aperture.sum()) /
+                 (sumok + np.float32(sumok == 0)))
         aperture_spec = (flux * aperture_expanded).sum(axis=1).sum(axis=1) * scale
+        aperture_ok = (sumok > 0)
         if(return_aperture):
-            return(aperture_spec, aperture)
+            return(aperture_spec, aperture_ok, aperture)
         else:
-            return(aperture_spec)
+            return(aperture_spec, aperture_ok)
 
     def hex_maggies(self, band=None, ba=1., pa=0., sma=None,
                     return_mask=False):
