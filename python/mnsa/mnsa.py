@@ -3,6 +3,7 @@ import re
 import numpy as np
 import matplotlib.image
 import matplotlib.cm
+import mnsa.kernel
 import mnsa.bandscale as bandscale
 import fitsio
 import mnsa.utils.configuration as configuration
