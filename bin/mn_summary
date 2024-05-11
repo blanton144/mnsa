@@ -19,7 +19,7 @@ import sys
 import numpy as np
 import fitsio
 
-apertures = ['AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+apertures = ['AP02', 'AP03', 'AP04', 'AP05', 'AP06', 'AP07', 'AP08']
 
 
 if __name__ == '__main__':
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         description='Creates summary mnsa file')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='0.3.0',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     args = parser.parse_args()
@@ -38,46 +38,29 @@ if __name__ == '__main__':
     sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
                            'mnsa-{version}.fits'.format(version=version))
 
+    # Read in the "done" file
     donefile = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
-                            'mn-{version}-done.fits'.format(version=version))
+                            'mnsa-done-{version}.fits'.format(version=version))
     done = fitsio.read(donefile)
 
-    photfile = os.path.join(os.getenv('MNSA_DATA'),
-                            version + '.analysis',
-                            'manga-legacyphot-{version}.fits'.format(version=version))
-    ellipse = fitsio.read(photfile, ext='ELLIPSE')
-
-    sps = dict()
-    for aperture in apertures:
-        spsfile = os.path.join(os.getenv('MNSA_DATA'),
-                               version + '.analysis', 'sps-agn',
-                               'kc-params-{version}-{aperture}.fits')
-        spsfile = spsfile.format(version=version, aperture=aperture)
-        sps[aperture] = fitsio.read(spsfile)
-
-    cffile = os.path.join(os.getenv('MNSA_DATA'),
-                          version + '.analysis',
-                          'central_flux', 'central-flux-{v}.fits')
-    cffile = cffile.format(v=version)
-    central_flux = fitsio.read(cffile)
-
+    # Read in the drpall file
     drpfile = os.path.join(os.getenv('MANGA_SPECTRO_REDUX'),
-                           'v3_1_1', 'drpall-v3_1_1.fits')
-
-    pipe3dfile = os.path.join(os.getenv('MANGA_PIPE3D'),
-                              'v3_1_1', '3.1.1',
-                              'SDSS17Pipe3D_v3_1_1.fits')
-    pipe3d = fitsio.read(pipe3dfile)
-
+                           version, 'drpall-{v}.fits'.format(v=version))
     drp = fitsio.read(drpfile)
 
+    # Make summary structure; start with drpall structure, add "done" information,
+    # and some other information
     sum_dtype = drp.dtype.descr
     exclude = ['plate', 'ifu', 'plateifu']
     for x in done.dtype.descr:
         if (x[0] not in exclude):
             sum_dtype.append(x)
+    sum_dtype.append(('do_imaging', np.int32))
+    sum_dtype.append(('do_sps', np.int32))
+    sum_dtype.append(('iellipse', np.int32))
     sum_dtype.append(('ipipe3d', np.int32))
 
+    # Copy drpall information in
     summary = np.zeros(len(drp), dtype=sum_dtype)
     for n in summary.dtype.names:
         if(n in drp.dtype.names):
@@ -85,12 +68,56 @@ if __name__ == '__main__':
         if(n in done.dtype.names):
             summary[n] = done[n]
 
-    summary['ipipe3d'] = - 1
-    for i, s in enumerate(summary):
-        ipipe3d = np.where(pipe3d['plateifu'] == s['plateifu'])[0]
-        if(len(ipipe3d) > 0):
-            summary['ipipe3d'][i] = ipipe3d[0]
+    # Read in do_imaging from Moustakas output
+    doimfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + '.analysis',
+                            'drpall-{version}-doimaging.fits'.format(version=version))
+    doim = fitsio.read(doimfile)
+    summary['do_imaging'] = doim['DO_IMAGING']
 
+    # Read in ellipse photometry file [subset]
+    photfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + '.analysis',
+                            'manga-legacyphot-{version}.fits'.format(version=version))
+    parent = fitsio.read(photfile, ext='PARENT')
+    ellipse = fitsio.read(photfile, ext='ELLIPSE')
+    summary['iellipse'] = - 1
+    plateifu, isummary, iellipse = np.intersect1d(summary['plateifu'], parent['PLATEIFU'],
+                                                  return_indices=True)
+    summary['iellipse'][isummary] = iellipse
+    ellipse_matched = np.zeros(len(summary), dtype=ellipse.dtype)
+    ellipse_matched[isummary] = ellipse[iellipse]
+
+    # Read in SPS file(s) [subset]
+    sps = dict()
+    for aperture in apertures:
+        spsfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version + '.analysis', 'sps-agn',
+                               'kc-params-{version}-{aperture}.fits')
+        spsfile = spsfile.format(version=version, aperture=aperture)
+        tmp_sps = fitsio.read(spsfile)
+        plateifu, isummary, isps = np.intersect1d(done['plateifu'], tmp_sps['plateifu'],
+                                                  return_indices=True)
+        sps_matched = np.zeros(len(done), dtype=tmp_sps.dtype)
+        sps_matched[isummary] = tmp_sps[isps]
+        sps[aperture] = sps_matched
+
+    # Read in central flux file 
+    cffile = os.path.join(os.getenv('MNSA_DATA'),
+                          version + '.analysis',
+                          'central_flux', 'central-flux-{v}.fits')
+    cffile = cffile.format(v=version)
+    central_flux = fitsio.read(cffile)
+
+    # Read in Pipe3D [subset]
+    pipe3dfile = os.path.join(os.getenv('MANGA_PIPE3D'),
+                              'v3_1_1', '3.1.1',
+                              'SDSS17Pipe3D_v3_1_1.fits')
+    pipe3d = fitsio.read(pipe3dfile)
+    summary['ipipe3d'] = - 1
+    plateifu, isummary, ipipe3d = np.intersect1d(summary['plateifu'], pipe3d['plateifu'],
+                                                 return_indices=True)
+    summary['ipipe3d'][isummary] = ipipe3d
     pipe3d_matched = np.zeros(len(summary), dtype=pipe3d.dtype)
     matched = (summary['ipipe3d'] >= 0)
     pipe3d_matched[matched] = pipe3d[summary['ipipe3d'][matched]]
@@ -104,7 +131,7 @@ if __name__ == '__main__':
 
     fitsio.write(sumfile, summary, header=hdr, extname='SUMMARY',
                  clobber=True)
-    fitsio.write(sumfile, ellipse, extname='ELLIPSE',
+    fitsio.write(sumfile, ellipse_matched, extname='ELLIPSE',
                  clobber=False)
     fitsio.write(sumfile, central_flux, extname='CENTRAL_FLUX',
                  clobber=False)

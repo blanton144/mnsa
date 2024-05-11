@@ -39,21 +39,25 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--aperture', dest='aperture',
                         type=str, help='aperture name', required=True)
 
+    parser.add_argument('-n', '--nmc', dest='nmc', default=50,
+                        type=np.int32, help='number of MCs for errors', required=False)
+
     parser.add_argument('-v', '--version', dest='version',
                         type=str, help='version name', required=True)
 
     parser.add_argument('-t', '--type', dest='type',
                         type=str, help='SPS type', required=False,
-                        default='sps',
+                        default='sps-agn',
                         choices=['sps', 'sps-agn'])
 
     args = parser.parse_args()
     aperture = args.aperture
     version = args.version
     spstype = args.type
+    nmc = args.nmc
 
     if(spstype == 'sps'):
-        subdir = ''
+        subdir = '.analysis'
     elif(spstype == 'sps-agn'):
         subdir = '.analysis'
 
@@ -181,7 +185,7 @@ if __name__ == '__main__':
     coeffs_south = kcn.fit_coeffs(redshift=redshift[isouth],
                                   maggies=maggies[isouth, :],
                                   ivar=ivar[isouth, :])
-
+    
     print("Outputting coeffs", flush=True)
     coeffs_dtype = np.dtype([('plateifu', str, 12),
                              ('do_sps', np.int32),
@@ -189,15 +193,16 @@ if __name__ == '__main__':
                              ('redshift', np.float32),
                              ('maggies', np.float32, maggies.shape[1]),
                              ('ivar', np.float32, maggies.shape[1]),
-                             ('coeffs', np.float32, coeffs_north.shape[1])])
+                             ('coeffs', np.float32, coeffs_north.shape[1]))
     coeffs = np.zeros(len(parent), dtype=coeffs_dtype)
     coeffs['plateifu'] = parent['PLATEIFU']
     coeffs['do_sps'][idone] = 1
     coeffs['hemi'][idone] = hemi
     coeffs['redshift'][idone] = redshift
     coeffs['maggies'][idone, :] = maggies
+    coeffs['maggies_mc'][idone, :] = maggies
     coeffs['ivar'][idone, :] = ivar
-    coeffs['coeffs'][idone[inorth]] = coeffs_north
+    coeffs['coeffs'][idone[inorth], :] = coeffs_north
     coeffs['coeffs'][idone[isouth], :] = coeffs_south
 
     coeffsfile = os.path.join(os.getenv('MNSA_DATA'),

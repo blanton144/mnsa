@@ -1,0 +1,324 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import collections
+import argparse
+import kcorrect.kcorrect as kk
+import kcorrect.utils as ku
+import kcorrect.template as kt
+import numpy as np
+import fitsio
+
+
+def north_or_south(ra, dec):
+    """Get the hemisphere based on a simple declination cut."""
+    if dec > 32.375:
+        if ra < 45 or ra > 315:
+            run = 'south'
+        else:
+            run = 'north'
+    else:
+        run = 'south'
+    return run
+
+
+def safe_ivar(stddev):
+    return(np.float32(stddev > 0.) / (stddev**2 + np.float32(stddev <= 0.)))
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Fit SPS models to ellipse photometry, with error calculation')
+
+    parser.add_argument('-a', '--aperture', dest='aperture',
+                        type=str, help='aperture name', required=True)
+
+    parser.add_argument('-n', '--nmc', dest='nmc', default=20,
+                        type=np.int32, help='number of MCs for errors', required=False)
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, help='version name', required=True)
+
+    parser.add_argument('-t', '--type', dest='type',
+                        type=str, help='SPS type', required=False,
+                        default='sps-agn',
+                        choices=['sps', 'sps-agn'])
+
+    args = parser.parse_args()
+    aperture = args.aperture
+    version = args.version
+    spstype = args.type
+    nmc = args.nmc
+
+    if(spstype == 'sps'):
+        subdir = '.analysis'
+    elif(spstype == 'sps-agn'):
+        subdir = '.analysis'
+
+    r2c_north = [('galex_FUV', 'FUV'),
+                 ('galex_NUV', 'NUV'),
+                 ('bass_g', 'G'),
+                 ('bass_r', 'R'),
+                 ('mzls_z', 'Z'),
+                 ('wise_w1', 'W1'),
+                 ('wise_w2', 'W2'),
+                 ('wise_w3', 'W3'),
+                 ('wise_w4', 'W4')]
+    response2column_north = collections.OrderedDict()
+    for r2c in r2c_north:
+        response2column_north[r2c[0]] = r2c[1]
+    responses_north = list(response2column_north.keys())
+    nresponses = len(responses_north)
+
+    r2c_south = [('galex_FUV', 'FUV'),
+                 ('galex_NUV', 'NUV'),
+                 ('decam_g', 'G'),
+                 ('decam_r', 'R'),
+                 ('decam_z', 'Z'),
+                 ('wise_w1', 'W1'),
+                 ('wise_w2', 'W2'),
+                 ('wise_w3', 'W3'),
+                 ('wise_w4', 'W4')]
+    response2column_south = collections.OrderedDict()
+    for r2c in r2c_south:
+        response2column_south[r2c[0]] = r2c[1]
+    responses_south = list(response2column_south.keys())
+
+    print("Prepping photometry", flush=True)
+    ellipse = fitsio.read(os.path.join(os.getenv('MNSA_DATA'),
+                                       '{v}.analysis',
+                                       'manga-legacyphot-{v}.fits').format(v=version),
+                          ext='ELLIPSE')
+    parent = fitsio.read(os.path.join(os.getenv('MNSA_DATA'), '{v}.analysis',
+                                      'manga-legacyphot-{v}.fits').format(v=version),
+                         ext='PARENT')
+
+    idone = np.where(parent['DO_ELLIPSE'] * parent['DO_IMAGING'] *
+                     (parent['Z'] > 0.))[0]
+
+    idone = idone[0:100]
+
+    redshift = parent['Z'][idone]
+    maggies = np.zeros((len(idone), nresponses), dtype=np.float32)
+    ivar = np.zeros((len(idone), nresponses), dtype=np.float32)
+    mwtrans = np.zeros((len(idone), nresponses), dtype=np.float32)
+
+    hemi = np.array([north_or_south(parent['IFURA'][i], parent['IFUDEC'][i])
+                     for i in idone])
+    inorth = np.where(hemi == 'north')[0]
+    isouth = np.where(hemi == 'south')[0]
+
+    for ir, response in enumerate(responses_north):
+        col = response2column_north[response]
+        mname = 'FLUX_{a}_{c}'.format(a=aperture, c=col)
+        iname = 'FLUX_IVAR_{a}_{c}'.format(a=aperture, c=col)
+        dname = 'MW_TRANSMISSION_{c}'.format(c=col)
+        maggies[inorth, ir] = ellipse[mname][idone[inorth]]
+        ivar[inorth, ir] = ellipse[iname][idone[inorth]]
+        mwtrans[inorth, ir] = ellipse[dname][idone[inorth]]
+
+    for ir, response in enumerate(responses_south):
+        col = response2column_south[response]
+        mname = 'FLUX_{a}_{c}'.format(a=aperture, c=col)
+        iname = 'FLUX_IVAR_{a}_{c}'.format(a=aperture, c=col)
+        dname = 'MW_TRANSMISSION_{c}'.format(c=col)
+        maggies[isouth, ir] = ellipse[mname][idone[isouth]]
+        ivar[isouth, ir] = ellipse[iname][idone[isouth]]
+        mwtrans[isouth, ir] = ellipse[dname][idone[isouth]]
+
+    maggies = maggies * 1.e-9
+    ivar = ivar * 1.e+18
+
+    maggies = maggies / mwtrans
+    ivar = ivar * mwtrans**2
+
+    floor = np.zeros(maggies.shape[1], dtype=np.float32) + 0.03
+    ivar = ku.error_floor(floor=floor, maggies=maggies, ivar=ivar)
+
+    print("Preparing Kcorrect object", flush=True)
+
+    fspsfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + subdir, spstype,
+                            'fsps.fits')
+
+    kcnorthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version + subdir, spstype,
+                               'kc-fsps-north-{v}.fits'.format(v=version))
+
+    kcsouthfile = os.path.join(os.getenv('MNSA_DATA'),
+                               version + subdir, spstype,
+                               'kc-fsps-south-{v}.fits'.format(v=version))
+
+    kc = dict()
+
+    if(os.path.exists(kcnorthfile)):
+        print(" ... reading Kcorrect object (north)", flush=True)
+        kc['north'] = kk.Kcorrect(filename=kcnorthfile)
+    else:
+        print(" ... reading Kcorrect object (north)", flush=True)
+        templates = kt.Template(filename=fspsfile)
+        kc['north'] = kk.Kcorrect(responses=responses_north,
+                                  responses_out=responses_south,  # this is on purpose!
+                                  templates=templates,
+                                  redshift_range=[-0.002, 0.16],
+                                  nredshift=50)
+        kc['north'].tofits(kcnorthfile)
+
+    if(os.path.exists(kcsouthfile)):
+        print(" ... reading Kcorrect object (south)", flush=True)
+        kc['south'] = kk.Kcorrect(filename=kcsouthfile)
+    else:
+        print(" ... reading Kcorrect object (south)", flush=True)
+        templates = kt.Template(filename=fspsfile)
+        kc['south'] = kk.Kcorrect(responses=responses_south,
+                                  responses_out=responses_south,
+                                  templates=templates,
+                                  redshift_range=[-0.002, 0.16],
+                                  nredshift=50)
+        kc['south'].tofits(kcsouthfile)
+
+    print("Creating output structures", flush=True)
+
+    coeffs_dtype = np.dtype([('plateifu', str, 12),
+                             ('do_sps', np.int32),
+                             ('hemi', str, 5),
+                             ('redshift', np.float32),
+                             ('maggies', np.float32, maggies.shape[1]),
+                             ('ivar', np.float32, maggies.shape[1]),
+                             ('coeffs', np.float32, 57636)])
+    coeffs = np.zeros(len(parent), dtype=coeffs_dtype)
+    coeffs['plateifu'] = parent['PLATEIFU']
+    coeffs['do_sps'][idone] = 1
+    coeffs['hemi'][idone] = hemi
+    coeffs['redshift'][idone] = redshift
+    coeffs['maggies'][idone, :] = maggies
+    coeffs['ivar'][idone, :] = ivar
+
+    params_dtype = np.dtype([('plateifu', str, 12),
+                             ('do_sps', bool),
+                             ('hemi', str, 5),
+                             ('redshift', np.float32),
+                             ('maggies', np.float32, nresponses),
+                             ('ivar', np.float32, nresponses),
+                             ('absmag', np.float32, nresponses),
+                             ('absmag_ivar', np.float32, nresponses),
+                             ('absmag_limit', np.float32, nresponses),
+                             ('absmag_reconstruct', np.float32, nresponses),
+                             ('absmag_reconstruct_ivar', np.float32, nresponses),
+                             ('rmaggies', np.float32, nresponses),
+                             ('rmaggies_ivar', np.float32, nresponses),
+                             ('chi2', np.float32),
+                             ('dof', np.float32),
+                             ('intsfh', np.float32),
+                             ('intsfh_ivar', np.float32),
+                             ('mass', np.float32),
+                             ('mass_ivar', np.float32),
+                             ('sfr50', np.float32),
+                             ('sfr50_ivar', np.float32),
+                             ('sfr300', np.float32),
+                             ('sfr300_ivar', np.float32),
+                             ('sfr1000', np.float32),
+                             ('sfr1000_ivar', np.float32)])
+    params = np.zeros(len(parent), dtype=params_dtype)
+    params['plateifu'] = parent['PLATEIFU']
+    params['do_sps'][idone] = 1
+    params['hemi'][idone] = hemi
+    params['redshift'][idone] = redshift
+    params['maggies'][idone, :] = maggies
+    params['ivar'][idone, :] = ivar
+    params['absmag'] = - 9999.
+    params['absmag_reconstruct'] = - 9999.
+    params['absmag_limit'] = - 9999.
+
+    print("Looping through galaxies", flush=True)
+    for i, cidone in enumerate(idone):
+        print("Galaxy {c}".format(c=cidone), flush=True)
+        
+        # Get coefficients and MC coefficients
+        c, c_mc, maggies_mc = kc[hemi[i]].fit_coeffs(redshift=redshift[i],
+                                                     maggies=maggies[i, :],
+                                                     ivar=ivar[i, :],
+                                                     mc=nmc)
+        
+        coeffs['coeffs'][cidone, :] = c
+
+        # Calculate reconstructed maggies and MC errors on same
+        params['rmaggies'][cidone, :] = kc[hemi[i]].reconstruct(redshift=redshift[i],
+                                                                coeffs=c)
+        rmaggies_mc = np.zeros((nresponses, nmc), dtype=np.float32)
+        for imc in np.arange(nmc, dtype=np.int32):
+            rmaggies_mc[:, imc] = kc[hemi[i]].reconstruct(redshift[i],
+                                                          coeffs=c_mc[:, imc])
+        rmaggies_std = rmaggies_mc.std(axis=1)
+        params['rmaggies_ivar'][cidone, :] = safe_ivar(rmaggies_std) * (ivar[i] > 0.)
+        
+        # Calculate absolute magnitude and MC errors on same; if absmag
+        # is undefined ivar should be zero
+        tmp_absmag, tmp_absmag_reconstruct, tmp_absmag_limit = kc[hemi[i]].absmag(redshift=redshift[i],
+                                                                                  coeffs=c,
+                                                                                  maggies=maggies[i, :],
+                                                                                  ivar=ivar[i, :],
+                                                                                  reconstruct=True,
+                                                                                  limit=True)
+        params['absmag'][cidone, :] = tmp_absmag
+        params['absmag_reconstruct'][cidone, :] = tmp_absmag_reconstruct
+        params['absmag_limit'][cidone, :] = tmp_absmag_limit
+        absmag_mc, absmag_reconstruct_mc = kc[hemi[i]].absmag_mc(redshift=redshift[i],
+                                                                 coeffs_mc=c_mc,
+                                                                 maggies_mc=maggies_mc,
+                                                                 ivar=ivar[i, :],
+                                                                 reconstruct=True)
+
+        absmag_std = np.std(absmag_mc, axis=1, where=(absmag_mc != - 9999.))
+        iok = np.where(np.isfinite(absmag_std))[0]
+        params['absmag_ivar'][cidone, iok] = (safe_ivar(absmag_std[iok]) *
+                                              np.float32(params['absmag'][cidone, iok] != - 9999.) *
+                                              (ivar[i, iok] > 0.))
+
+        absmag_reconstruct_std = np.std(absmag_reconstruct_mc, axis=1,
+                                        where=(absmag_reconstruct_mc != - 9999.))
+        iok = np.where(np.isfinite(absmag_reconstruct_std))[0]
+        params['absmag_reconstruct_ivar'][cidone, iok] = (safe_ivar(absmag_reconstruct_std[iok]) *
+                                                          np.float32(params['absmag_reconstruct'][cidone, iok] != - 9999.))
+    
+        # Calculate derived quantities and MC versions, then ivars
+        derived = kc[hemi[i]].derived(redshift=redshift[i], coeffs=c)
+        derived_mc = kc[hemi[i]].derived_mc(redshift=redshift[i], coeffs_mc=c_mc)
+
+        params['mass'][cidone] = derived['mremain']
+        mass_std = np.std(derived_mc['mremain'])
+        params['mass_ivar'][cidone] = safe_ivar(mass_std)
+
+        params['intsfh'][cidone] = derived['intsfh']
+        intsfh_std = np.std(derived_mc['intsfh'])
+        params['intsfh_ivar'][cidone] = safe_ivar(intsfh_std)
+
+        params['sfr50'][cidone] = derived['b50'] * derived['intsfh'] / 50.e+6
+        sfr50_mc = derived_mc['b50'] * derived_mc['intsfh'] / 50.e+6
+        sfr50_std = np.std(sfr50_mc)
+        params['sfr50_ivar'][cidone] = safe_ivar(sfr50_std)
+
+        params['sfr300'][cidone] = derived['b300'] * derived['intsfh'] / 300.e+6
+        sfr300_mc = derived_mc['b300'] * derived_mc['intsfh'] / 300.e+6
+        sfr300_std = np.std(sfr300_mc)
+        params['sfr300_ivar'][cidone] = safe_ivar(sfr300_std)
+
+        params['sfr1000'][cidone] = derived['b1000'] * derived['intsfh'] / 1000.e+6
+        sfr1000_mc = derived_mc['b1000'] * derived_mc['intsfh'] / 1000.e+6
+        sfr1000_std = np.std(sfr1000_mc)
+        params['sfr1000_ivar'][cidone] = safe_ivar(sfr1000_std)
+
+    coeffsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version + subdir, spstype,
+                              'kc-test-coeffs-{v}-{a}.fits')
+    coeffsfile = coeffsfile.format(a=aperture, v=version)
+    fitsio.write(coeffsfile, coeffs, clobber=True)
+
+    paramsfile = os.path.join(os.getenv('MNSA_DATA'),
+                              version + subdir, spstype,
+                              'kc-test-params-{v}-{a}.fits')
+    paramsfile = paramsfile.format(a=aperture, v=version)
+    fitsio.write(paramsfile, params, clobber=True)

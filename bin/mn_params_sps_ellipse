@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-t', '--type', dest='type',
                         type=str, help='SPS type', required=False,
-                        default='sps',
+                        default='sps-agn',
                         choices=['sps', 'sps-agn'])
 
     args = parser.parse_args()
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     spstype = args.type
 
     if(spstype == 'sps'):
-        subdir = ''
+        subdir = '.analysis'
     elif(spstype == 'sps-agn'):
         subdir = '.analysis'
 

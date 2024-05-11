@@ -31,7 +31,7 @@ if __name__ == '__main__':
         description='Make set of summary images')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='0.3.1',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     parser.add_argument('-p', '--plate-ifu', dest='plateifu',
@@ -88,19 +88,22 @@ if __name__ == '__main__':
                                 'mnsa-{version}.fits'.format(version=version))
     kspec_file = os.path.join(os.getenv('MNSA_DATA'), version + '.analysis',
                               'sps-agn',
-                              'kc-spec-{version}-AP05.fits'.format(version=version))
+                              'kc-spec-{version}-AP02.fits'.format(version=version))
     kwave = fitsio.read(kspec_file, ext='WAVE')
     kspec_grid = fitsio.read(kspec_file, ext='FLUX')
 
     summary = fitsio.read(summary_file, ext='SUMMARY')
     ellipse = fitsio.read(summary_file, ext='ELLIPSE')
-    sps = fitsio.read(summary_file, ext='SPS_AP05')
+    sps = fitsio.read(summary_file, ext='SPS_AP02')
 
     isingle = np.where(summary['plateifu'] == plateifu)[0][0]
     pa = ellipse['PA_MOMENT'][isingle]
     ba = ellipse['BA_MOMENT'][isingle]
-    sma = ellipse['SMA_AP05'][isingle]
-    kspec = kspec_grid[isingle, :] * 1.e+17
+    sma = ellipse['SMA_AP02'][isingle]
+
+    factor = 1.0
+    sma = sma * factor
+    kspec = kspec_grid[summary['iellipse'][isingle], :] * 1.e+17
 
     redshift = sps['redshift'][isingle]
     kspec = kspec / (1. + redshift)
@@ -112,6 +115,7 @@ if __name__ == '__main__':
                         for b in ['FUV', 'NUV', 'G', 'R', 'Z', 'W1', 'W2', 'W3', 'W4']])
     maggies = maggies * mwtrans
     rmaggies = rmaggies * mwtrans
+    print(maggies)
 
     m = mnsa.mnsa.MNSA(plateifu=plateifu, version=version,
                        dr17=seventeen)
@@ -129,6 +133,8 @@ if __name__ == '__main__':
         print(apcorr)
         hex_maggies[i] = ma * 1.e-9
         hex_maggies_ivar[i] = mai * 1.e+18
+
+    ellipse_mask = m.ellipse_mask(sma=sma, ba=ba, pa=pa)
 
     hex_maggies[5] = hex_maggies[5] * 10.**(- 0.4 * 2.699)
     hex_maggies[6] = hex_maggies[6] * 10.**(- 0.4 * 3.339)
@@ -191,16 +197,16 @@ if __name__ == '__main__':
              np.log10(wave * hex_spectrum),
              label='MaNGA', color='black',
              zorder=2, linewidth=0.5)
-    #sax.plot(np.log10(kwave),
-             #np.log10(kwave * kspec),
-             #label='SPS', color='grey',
-             #zorder=1, linewidth=0.5)
+    sax.plot(np.log10(kwave),
+             np.log10(kwave * kspec),
+             label='SPS', color='grey',
+             zorder=1, linewidth=0.5)
     sax.scatter(np.log10(bandwave),
                 np.log10(bandwave * fl), s=40, color='grey',
-                zorder=5, label='Resampled flux through AP05')
+                zorder=5, label='Resampled flux through AP02')
     sax.scatter(np.log10(bandwave),
                 np.log10(bandwave * fl_sps), s=20, color='red',
-                zorder=7, label='Native flux through AP05')
+                zorder=7, label='Native flux through AP02')
     #sax.scatter(np.log10(bandwave),
     #            np.log10(bandwave * fl_sps_r), s=20, color='blue',
     #            zorder=9)
@@ -259,17 +265,17 @@ if __name__ == '__main__':
         yhi = ylo + ny
         ax[panel].imshow(rgb[xlo:xhi, ylo:yhi, :],
                          origin='lower', aspect='auto')
+                         # * np.uint8(np.outer(ellipse_mask.flatten(), np.ones(3, dtype=np.uint8)).reshape((nx, ny, 3))),
         ax[panel].set_xticks([])
         ax[panel].set_yticks([])
 
     nth = 1000
-    th = np.arange(nth, dtype=np.float32) * 2. * np.pi / np.float(nth - 1)
+    th = np.arange(nth, dtype=np.float32) * 2. * np.pi / np.float32(nth - 1)
     parad = pa * np.pi / 180.
     xell_p = np.cos(th) * sma / 0.75 * ba
     yell_p = np.sin(th) * sma / 0.75
     xell = xell_p * np.cos(parad) - yell_p * np.sin(parad)
     yell = xell_p * np.sin(parad) + yell_p * np.cos(parad)
-    print(nx)
     xell = xell + (nx // 2)
     yell = yell + (ny // 2)
     ax['zrg'].plot(xell, yell, linewidth=1, color='white')
