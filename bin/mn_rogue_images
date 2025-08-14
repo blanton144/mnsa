@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: Michael Blanton
+# @Date: Aug 21, 2020
+# @Filename: mn_summary
+# @License: BSD 3-Clause
+# @Copyright: Michael Blanton
+
+
+import argparse
+import os
+import shutil
+import sys
+import numpy as np
+import fitsio
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Find rogue imaging directories file')
+
+    parser.add_argument('-v', '--version', dest='version',
+                        type=str, default='0.3.2',
+                        help='MNSA configuration version')
+
+    parser.add_argument('-r', '--remove', dest='remove',
+                        action='store_true', required=False, default=False,
+                        help='remove the rogues')
+
+    args = parser.parse_args()
+    version = args.version
+    remove = args.remove
+
+    sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
+                           'mnsa-{version}.fits'.format(version=version))
+
+    summary = fitsio.read(sumfile, ext='SUMMARY')
+
+    inot = np.where(summary['do_imaging'] == False)[0]
+    for i in inot:
+        dircheck = os.path.join(os.getenv('MNSA_DATA'),
+                                version, 'imaging', str(summary['plate'][i]),
+                                '{p}-{i}'.format(p=summary['plate'][i], i=summary['ifudsgn'][i]))
+        if(os.path.exists(dircheck)):
+            if(remove):
+                shutil.rmtree(dircheck)
+            else:
+                print(dircheck)
+        dircheck = os.path.join(os.getenv('MNSA_DATA'),
+                                version, 'resampled', str(summary['plate'][i]),
+                                '{p}-{i}'.format(p=summary['plate'][i], i=summary['ifudsgn'][i]))
+        if(os.path.exists(dircheck)):
+            if(remove):
+                shutil.rmtree(dircheck)
+            else:
+                print(dircheck)

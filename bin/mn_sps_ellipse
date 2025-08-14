@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--aperture', dest='aperture',
                         type=str, help='aperture name', required=True)
 
-    parser.add_argument('-n', '--nmc', dest='nmc', default=20,
+    parser.add_argument('-n', '--nmc', dest='nmc', default=50,
                         type=np.int32, help='number of MCs for errors', required=False)
 
     parser.add_argument('-v', '--version', dest='version',
@@ -47,11 +47,20 @@ if __name__ == '__main__':
                         default='sps-agn',
                         choices=['sps', 'sps-agn'])
 
+    parser.add_argument('-d', '--debug', dest='debug',
+                        action='store_true', required=False, default=False,
+                        help='debug mode')
+
     args = parser.parse_args()
     aperture = args.aperture
     version = args.version
     spstype = args.type
+    debug = args.debug
     nmc = args.nmc
+
+    prefix = 'kc'
+    if(debug):
+        prefix = prefix + '-test'
 
     if(spstype == 'sps'):
         subdir = '.analysis'
@@ -99,7 +108,9 @@ if __name__ == '__main__':
     idone = np.where(parent['DO_ELLIPSE'] * parent['DO_IMAGING'] *
                      (parent['Z'] > 0.))[0]
 
-    idone = idone[0:100]
+    if(debug):
+        np.random.shuffle(idone)
+        idone = idone[0:50]
 
     redshift = parent['Z'][idone]
     maggies = np.zeros((len(idone), nresponses), dtype=np.float32)
@@ -143,6 +154,8 @@ if __name__ == '__main__':
     fspsfile = os.path.join(os.getenv('MNSA_DATA'),
                             version + subdir, spstype,
                             'fsps.fits')
+    models = fitsio.read(fspsfile, ext='MODELS')
+    istellar = np.where(models['type'] == 'stellar')[0]
 
     kcnorthfile = os.path.join(os.getenv('MNSA_DATA'),
                                version + subdir, spstype,
@@ -203,6 +216,8 @@ if __name__ == '__main__':
                              ('redshift', np.float32),
                              ('maggies', np.float32, nresponses),
                              ('ivar', np.float32, nresponses),
+                             ('kcorrect', np.float32, nresponses),
+                             ('kcorrect_ivar', np.float32, nresponses),
                              ('absmag', np.float32, nresponses),
                              ('absmag_ivar', np.float32, nresponses),
                              ('absmag_limit', np.float32, nresponses),
@@ -229,9 +244,26 @@ if __name__ == '__main__':
     params['redshift'][idone] = redshift
     params['maggies'][idone, :] = maggies
     params['ivar'][idone, :] = ivar
+    params['kcorrect'] = - 9999.
     params['absmag'] = - 9999.
     params['absmag_reconstruct'] = - 9999.
     params['absmag_limit'] = - 9999.
+
+    wave = None
+    spec = None
+    agnspec = None
+    spec_err = None
+    agnspec_err = None
+
+    wavehdr = list()
+    wavehdr.append({'name': 'BUNIT',
+                    'value': 'Angstrom',
+                    'comment': ''})
+
+    spechdr = list()
+    spechdr.append({'name': 'BUNIT',
+                    'value': 'erg s^{-1} cm^{-2} Angstrom^{-1}',
+                    'comment': ''})
 
     print("Looping through galaxies", flush=True)
     for i, cidone in enumerate(idone):
@@ -257,26 +289,36 @@ if __name__ == '__main__':
         
         # Calculate absolute magnitude and MC errors on same; if absmag
         # is undefined ivar should be zero
-        tmp_absmag, tmp_absmag_reconstruct, tmp_absmag_limit = kc[hemi[i]].absmag(redshift=redshift[i],
-                                                                                  coeffs=c,
-                                                                                  maggies=maggies[i, :],
-                                                                                  ivar=ivar[i, :],
-                                                                                  reconstruct=True,
-                                                                                  limit=True)
+        tmp_absmag, tmp_absmag_reconstruct, tmp_absmag_limit, tmp_kcorrect = kc[hemi[i]].absmag(redshift=redshift[i],
+                                                                                                coeffs=c,
+                                                                                                maggies=maggies[i, :],
+                                                                                                ivar=ivar[i, :],
+                                                                                                reconstruct=True,
+                                                                                                limit=True,
+                                                                                                kcorrect=True)
+
         params['absmag'][cidone, :] = tmp_absmag
+        params['kcorrect'][cidone, :] = tmp_kcorrect
         params['absmag_reconstruct'][cidone, :] = tmp_absmag_reconstruct
         params['absmag_limit'][cidone, :] = tmp_absmag_limit
-        absmag_mc, absmag_reconstruct_mc = kc[hemi[i]].absmag_mc(redshift=redshift[i],
-                                                                 coeffs_mc=c_mc,
-                                                                 maggies_mc=maggies_mc,
-                                                                 ivar=ivar[i, :],
-                                                                 reconstruct=True)
+
+        absmag_mc, absmag_reconstruct_mc, kcorrect_mc = kc[hemi[i]].absmag_mc(redshift=redshift[i],
+                                                                              coeffs_mc=c_mc,
+                                                                              maggies_mc=maggies_mc,
+                                                                              ivar=ivar[i, :],
+                                                                              reconstruct=True,
+                                                                              kcorrect=True)
 
         absmag_std = np.std(absmag_mc, axis=1, where=(absmag_mc != - 9999.))
         iok = np.where(np.isfinite(absmag_std))[0]
         params['absmag_ivar'][cidone, iok] = (safe_ivar(absmag_std[iok]) *
                                               np.float32(params['absmag'][cidone, iok] != - 9999.) *
                                               (ivar[i, iok] > 0.))
+
+        kcorrect_std = np.std(kcorrect_mc, axis=1, where=(kcorrect_mc != - 9999.))
+        iok = np.where(np.isfinite(kcorrect_std))[0]
+        params['kcorrect_ivar'][cidone, iok] = (safe_ivar(kcorrect_std[iok]) *
+                                                np.float32(params['kcorrect'][cidone, iok] != - 9999.))
 
         absmag_reconstruct_std = np.std(absmag_reconstruct_mc, axis=1,
                                         where=(absmag_reconstruct_mc != - 9999.))
@@ -311,14 +353,97 @@ if __name__ == '__main__':
         sfr1000_std = np.std(sfr1000_mc)
         params['sfr1000_ivar'][cidone] = safe_ivar(sfr1000_std)
 
+        agnc= c.copy()
+        agnc[istellar] = 0.
+
+        inz = np.where(c > 0)[0]
+
+        tmp_wave = kc[hemi[i]].templates.restframe_wave
+        tmp_spec = c[inz].dot(kc[hemi[i]].templates.restframe_flux[inz, :])
+
+        iagnnz = np.where(agnc > 0)[0]
+        if(len(iagnnz) > 0):
+            hasagn = True
+            tmp_agnspec = agnc[iagnnz].dot(kc[hemi[i]].templates.restframe_flux[iagnnz, :])
+        else:
+            hasagn = False
+
+        # Wavelength grids should all be same
+        if(wave is None):
+            wave = tmp_wave
+
+        if(spec is None):
+            spec = np.zeros((len(parent), len(wave)), dtype=np.float32)
+
+        if(agnspec is None):
+            agnspec = np.zeros((len(parent), len(wave)), dtype=np.float32)
+
+        if(spec_err is None):
+            spec_err = np.zeros((len(parent), len(wave)), dtype=np.float32)
+
+        if(agnspec_err is None):
+            agnspec_err = np.zeros((len(parent), len(wave)), dtype=np.float32)
+
+        spec[cidone, :] = tmp_spec
+        if(hasagn):
+            agnspec[cidone, :] = tmp_agnspec
+
+        spec_mc = np.zeros((nmc, len(wave)), dtype=np.float32)
+        agnspec_mc = np.zeros((nmc, len(wave)), dtype=np.float32)
+        for imc in np.arange(nmc, dtype=np.int32):
+            cc = c_mc[:, imc]
+            agncc= cc.copy()
+            agncc[istellar] = 0.
+            
+            inz = np.where(cc > 0)[0]
+            
+            tmp_spec = cc[inz].dot(kc[hemi[i]].templates.restframe_flux[inz, :])
+
+            iagnnz = np.where(agncc > 0)[0]
+            if(len(iagnnz) > 0):
+                tmp_agnspec = agncc[iagnnz].dot(kc[hemi[i]].templates.restframe_flux[iagnnz, :])
+            else:
+                tmp_agnspec = np.zeros(len(wave), dtype=np.float32)
+
+            spec_mc[imc, :] = tmp_spec
+            agnspec_mc[imc, :] = tmp_agnspec
+
+        spec_err[cidone, :] = spec_mc.std(axis=0)
+        agnspec_err[cidone, :] = agnspec_mc.std(axis=0)
+
+        plate, ifu = params['plateifu'][cidone].split('-')
+        mcdir = os.path.join(os.getenv('MNSA_DATA'),
+                             version + subdir, spstype, 'mc',
+                             plate, params['plateifu'][cidone])
+        os.makedirs(mcdir, exist_ok=True)
+        mcfile = os.path.join(mcdir,
+                              '{p}-spec-mc-{pifu}-{v}-{a}.fits'.format(p=prefix,
+                                                                       v=version,
+                                                                       a=aperture,
+                                                                       pifu=params['plateifu'][cidone]))
+        fitsio.write(mcfile, wave, header=wavehdr, extname='WAVE', clobber=True)
+        fitsio.write(mcfile, spec_mc, header=spechdr, extname='FLUX', clobber=False)
+        fitsio.write(mcfile, agnspec_mc, header=spechdr, extname='AGNFLUX', clobber=False)
+                              
+    
     coeffsfile = os.path.join(os.getenv('MNSA_DATA'),
                               version + subdir, spstype,
-                              'kc-test-coeffs-{v}-{a}.fits')
-    coeffsfile = coeffsfile.format(a=aperture, v=version)
+                              '{p}-coeffs-{v}-{a}.fits')
+    coeffsfile = coeffsfile.format(a=aperture, v=version, p=prefix)
     fitsio.write(coeffsfile, coeffs, clobber=True)
 
     paramsfile = os.path.join(os.getenv('MNSA_DATA'),
                               version + subdir, spstype,
-                              'kc-test-params-{v}-{a}.fits')
-    paramsfile = paramsfile.format(a=aperture, v=version)
+                              '{p}-params-{v}-{a}.fits')
+    paramsfile = paramsfile.format(a=aperture, v=version, p=prefix)
     fitsio.write(paramsfile, params, clobber=True)
+
+    specfile = os.path.join(os.getenv('MNSA_DATA'),
+                            version + subdir, spstype,
+                            '{p}-spec-{v}-{a}.fits')
+    specfile = specfile.format(a=aperture, v=version, p=prefix)
+    fitsio.write(specfile, wave, header=wavehdr, extname='WAVE', clobber=True)
+    fitsio.write(specfile, spec, header=spechdr, extname='FLUX', clobber=False)
+    fitsio.write(specfile, agnspec, header=spechdr, extname='AGNFLUX', clobber=False)
+    fitsio.write(specfile, spec_err, header=spechdr, extname='FLUX_ERR', clobber=False)
+    fitsio.write(specfile, agnspec_err, header=spechdr, extname='AGNFLUX_ERR', clobber=False)

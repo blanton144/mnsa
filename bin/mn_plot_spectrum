@@ -4,13 +4,16 @@
 import argparse
 import os
 import sys
+import subprocess
 import numpy as np
+import scipy.ndimage
 import mnsa.mnsa as mnsa
 import matplotlib.pyplot as plt
 import matplotlib
 
-matplotlib.rcParams['figure.figsize'] = [8., 5]
-matplotlib.rcParams['font.size'] = 16.
+matplotlib.rcParams['figure.figsize'] = [10., 6]
+matplotlib.rcParams['font.size'] = 14.
+matplotlib.rcParams['text.usetex'] = True
 
 if __name__ == '__main__':
 
@@ -19,42 +22,120 @@ if __name__ == '__main__':
         description='Performs an arithmetic operation.')
 
     parser.add_argument('-v', '--version', dest='version',
-                        type=str, default='0.3.0',
+                        type=str, default='0.3.2',
                         help='MNSA configuration version')
 
     parser.add_argument('-o', '--out-file', dest='outfile',
                         type=str, default=None,
-                        required=True, help='output file name')
+                        required=False, help='output file name')
 
     parser.add_argument('-p', '--plate-ifu', dest='plateifu',
                         type=str,
                         required=True, help='plate-ifu to plot')
 
+    parser.add_argument('-D', '--no-detail', dest='nodetail',
+                        required=False, help='no detail plot',
+                        action='store_true',
+                        default=False)
+
     args = parser.parse_args()
     version = args.version
     plateifu = args.plateifu
     outfile = args.outfile
+    nodetail = args.nodetail
 
     m = mnsa.MNSA(version=version, plateifu=plateifu)
 
-    m.read_cube()
-    wave = m.cube['WAVE'].read()
-    cube_flux = m.cube['FLUX'].read()
-    nx = cube_flux.shape[1]
-    ny = cube_flux.shape[2]
+    if(outfile is None):
+        outfile = os.path.join(m.png_dir,
+                               "{b}-spectrum.png".format(b=m.png_base))
 
-    cx = nx // 2
-    cy = ny // 2
-    cflux = cube_flux[:, cx - 2:cx + 3, cy - 2:cy + 3].sum(axis=1).sum(axis=1)
+    cs = m.central_spectrum(model=True)
+    cz = m.central_stellar_velocity()
 
-    iok = np.where(cflux > 0)[0]
-    plt.plot(wave[iok], np.log10(cflux[iok]), color='black')
-    plt.xlabel('Observed Wavelength (Angstroms)')
-    plt.ylabel('$\\log_{10} f_\\lambda$ (erg s$^{-1}$ cm$^{-2}$ A$^{-1}$)')
-    plt.title('Plate-IFU {p}'.format(p=plateifu))
+    ms_cs = scipy.ndimage.median_filter(cs['flux'], 30)
+    ymax = ms_cs.max() * 1.2
+    ymin = ms_cs.max() * (- 0.05)
+
+    c = 2.99792e+5
+    wave = cs['wave'] / (1.0 + cz / c)
+
+    plt.plot(wave, cs['flux'], color='black', linewidth=1.3)
+    plt.plot(wave, cs['model'], color='red', linewidth=1, label='Model')
+    plt.plot(wave, cs['model'] - cs['emline'], color='pink', linewidth=1,
+             label='Continuum')
+    plt.plot(wave, cs['emline'], color='lightblue', linewidth=1,
+             label='Emission Lines')
+    plt.xlabel(r'{\rm Restframe Wavelength (Angstroms)}')
+    plt.ylabel(r'{\rm $f_\lambda$ (erg s$^{-1}$ cm$^{-2}$ A$^{-1}$)}')
+    plt.ylim([ymin, ymax])
+    plt.title(r'\rm Plate-IFU {p}'.format(p=plateifu))
+    plt.legend()
     plt.tight_layout()
 
     if(outfile is None):
         plt.show()
     else:
         plt.savefig(outfile, dpi=300)
+
+    plt.clf()
+
+    subprocess.run(['convert', outfile, '-trim', outfile])
+
+    if(nodetail):
+        sys.exit()
+
+    lines = dict()
+    lines['hb'] = {'wave': 4862.721, 'label': r'\rm H$\beta$'}
+    lines['o3a'] = {'wave': 4960.295, 'label': r'\rm [OIII]'}
+    lines['o3b'] = {'wave': 5008.239, 'label': r'\rm [OIII]'}
+    lines['ha'] = {'wave': 6564.614, 'label': r'\rm H$\alpha$'}
+    lines['n2a'] = {'wave': 6549.86, 'label': r'\rm [NII]'}
+    lines['n2b'] = {'wave': 6585.27, 'label': r'\rm [NII]'}
+    lines['s2a'] = {'wave': 6718.29, 'label': r'\rm [SII]'}
+    lines['s2b'] = {'wave': 6732.68, 'label': r'\rm [SII]'}
+
+    details = dict()
+    details['hb'] = {'wmin': 4800., 'wmax': 5050., 'lines': ['hb', 'o3a', 'o3b']}
+    details['ha'] = {'wmin': 6500., 'wmax': 6750., 'lines': ['ha', 'n2a', 'n2b', 's2a', 's2b']}
+
+    for detail in details:
+        f = plt.figure(figsize=(10., 3.))
+        
+        d = details[detail]
+        
+        detailfile = outfile.replace('.png', '-{d}.png'.format(d=detail)) 
+
+        iwave = np.where((wave > d['wmin']) & (wave < d['wmax']))[0]
+
+        dwave = wave[iwave]
+        dflux = cs['flux'][iwave] - (cs['model'][iwave] - cs['emline'][iwave])
+        eflux = cs['emline'][iwave]
+
+        ymax = eflux.max() * 1.37
+        ymin = eflux.max() * (- 0.05)
+
+        plt.plot(dwave, dwave * 0., color='black', linewidth=1, linestyle='dotted')
+        plt.plot(dwave, eflux, color='red', linewidth=1)
+        plt.plot(dwave, dflux, color='black', linewidth=1)
+
+        for l in d['lines']:
+            line = lines[l]
+            jwave = np.argmin(np.abs(line['wave'] - dwave))
+            cflux = np.array([eflux[jwave], dflux[jwave]]).max()
+            ylow = cflux + 0.02 * ymax
+            yhigh = ylow + 0.05 * (ymax)
+            plt.plot([line['wave'], line['wave']], [ylow, yhigh], color='black', linewidth=1)
+            plt.text(line['wave'], yhigh + 0.01 * ymax, line['label'], ha='center', va='bottom')
+
+        plt.xlabel(r'{\rm Restframe Wavelength (Angstroms)}')
+        plt.ylabel(r'{\rm $f_\lambda$ (erg s$^{-1}$ cm$^{-2}$ A$^{-1}$)}')
+        plt.ylim([ymin, ymax])
+        #plt.title(r'\rm Plate-IFU {p}'.format(p=plateifu))
+        plt.tight_layout()
+
+        plt.savefig(detailfile, dpi=300)
+
+        plt.clf()
+
+        subprocess.run(['convert', detailfile, '-trim', detailfile])

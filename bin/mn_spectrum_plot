@@ -6,7 +6,6 @@ import os
 import sys
 import argparse
 import numpy as np
-import scipy.ndimage
 import matplotlib
 from matplotlib.patches import Circle, ConnectionPatch
 import matplotlib.ticker as ticker
@@ -135,12 +134,11 @@ if __name__ == '__main__':
     kspec = kspec / (1. + redshift)
     kspecmc = kspecmc / (1. + redshift)
     kwave = kwave * (1. + redshift)
-
     mnames = ['f', 'n', 'g', 'r', 'z', 'w1', 'w2', 'w3', 'w4']
-    maggies = np.array([sps['maggies_{m}'.format(m=m)][isingle] for m in mnames])
-    maggies_ivar = np.array([sps['ivar_{m}'.format(m=m)][isingle] for m in mnames])
-    rmaggies = np.array([sps['rmaggies_{m}'.format(m=m)][isingle] for m in mnames])
-    rmaggies_ivar = np.array([sps['rmaggies_ivar_{m}'.format(m=m)][isingle] for m in mnames])
+    maggies = np.array([sps['maggies_{m}'.format(m=m)][isingle, :] for m in mnames])
+    maggies_ivar = np.array([sps['maggies_ivar_{m}'.format(m=m)][isingle, :] for m in mnames])
+    rmaggies = np.array([sps['rmaggies_{m}'.format(m=m)][isingle, :] for m in mnames])
+    rmaggies_ivar = np.array([sps['rmaggies_ivar_{m}'.format(m=m)][isingle, :] for m in mnames])
 
     mwtrans = np.array([ellipse['MW_TRANSMISSION_{b}'.format(b=b)][isingle]
                         for b in ['FUV', 'NUV', 'G', 'R', 'Z', 'W1', 'W2', 'W3', 'W4']])
@@ -169,8 +167,9 @@ if __name__ == '__main__':
     for i, band in enumerate(bands):
         ma, mai = m.hex_maggies(band=band, sma=sma, ba=ba, pa=pa)
         apcorr = m.hex_apcorr(band=band, apband='r', sma=sma, ba=ba, pa=pa)
-        hex_maggies[i] = ma * 1.e-9 * apcorr
-        hex_maggies_ivar[i] = mai * 1.e+18 / apcorr**2
+        print(apcorr)
+        hex_maggies[i] = ma * 1.e-9
+        hex_maggies_ivar[i] = mai * 1.e+18
 
     ellipse_mask = m.ellipse_mask(sma=sma, ba=ba, pa=pa)
 
@@ -306,9 +305,8 @@ if __name__ == '__main__':
     
     iin = np.where((wave > spec_wavelims[0] * 1.e+4) &
                    (wave < spec_wavelims[1] * 1.e+4))[0]
-    ms_hex_spectrum = scipy.ndimage.median_filter(hex_spectrum[iin], 50)
-    spec_ymin = (ms_hex_spectrum).max() * (- 0.05)
-    spec_ymax = (ms_hex_spectrum).max() * (  1.30)
+    spec_ymin = (hex_spectrum[iin]).max() * (- 0.05)
+    spec_ymax = (hex_spectrum[iin]).max() * (  1.30)
     specax.set_ylim([spec_ymin, spec_ymax])
     specax.legend(loc=1, fontsize=14)
 

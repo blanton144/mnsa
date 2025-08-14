@@ -6,4 +6,5 @@ foreach aperture ($apertures)
   mn_fit_sps_ellipse -a $aperture -v 0.3.2 -t sps-agn
   mn_params_sps_ellipse -a $aperture -v 0.3.2 -t sps-agn
   mn_specs_sps_ellipse -a $aperture -v 0.3.2 -t sps-agn
+  mn_plot_spec_sps_ellipse -a $aperture -v 0.3.2 -t sps-agn
 end

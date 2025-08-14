@@ -2,6 +2,7 @@
 
 import os
 import sys
+import subprocess
 import argparse
 import matplotlib
 import matplotlib.pyplot as plt
@@ -36,17 +37,12 @@ if __name__ == '__main__':
     spstype = args.type
 
     if(spstype == 'sps'):
-        subdir = ''
+        subdir = '.analysis'
         pngs = 'pngs'
     elif(spstype == 'sps-agn'):
         subdir = '.analysis'
         pngs = 'sps-agn-pngs'
 
-    print("Reading parent", flush=True)
-    parent = fitsio.read(os.path.join(os.getenv('MNSA_DATA'), '0.3.0.analysis',
-                                      'manga-legacyphot-0.3.0.fits'),
-                         ext='PARENT')
-    
     print("Reading specs", flush=True)
     specfile = os.path.join(os.getenv('MNSA_DATA'),
                             version + subdir, spstype,
@@ -158,7 +154,7 @@ if __name__ == '__main__':
         plt.ylim([miny, maxy])
         plt.xlabel('log Wavelength (Ang)')
         plt.ylabel('log $\\lambda f_\\lambda$ (erg s$^{-1}$ cm$^{-2}$)')
-        plt.title('Plate-IFU {p}'.format(p=parent['PLATEIFU'][i]))
+        plt.title('Plate-IFU {p}'.format(p=plateifu))
         plt.legend(fontsize=8)
 
         outfile = os.path.join(outdir, 'manga-{p}-sps-{a}.png'.format(p=plateifu,
@@ -167,3 +163,5 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.savefig(outfile, dpi=150)
         plt.clf()
+
+        subprocess.run(['convert', outfile, '-trim', outfile])

@@ -138,6 +138,7 @@ class MNSA(object):
         self.native_base = native_base.format(plateifu=self.plateifu)
 
         self.cube = None
+        self.dap_cube = None
         self.maps = None
         self.rss = None
         self.resampled_mask = None
@@ -154,6 +155,29 @@ class MNSA(object):
                 self.cube = fitsio.FITS(self.manga_base + '.fits.gz')
             except OSError:
                 raise OSError("Could not read in CUBE: {dm}".format(dm=self.manga_base + '.fits.gz'))
+        return
+
+    def read_dap_cube(self):
+        """Read FITS file into cube attribute"""
+        if(self.dap_cube is None):
+            daptype = self.cfg['MANGA']['daptype']
+            dap_dir = os.path.join(os.getenv('MNSA_DATA'),
+                                   self.version, 'manga', 'analysis',
+                                   self.version, self.version, daptype,
+                                   str(self.plate), str(self.ifu))
+            if(self.dr17):
+                dap_dir = os.path.join(os.getenv('MANGA_ROOT'),
+                                       'spectro', 'analysis',
+                                       'v3_1_1', '3.1.0',
+                                       daptype,
+                                       str(self.plate), str(self.ifu))
+            dap_file = os.path.join(dap_dir, 'manga-{p}-{t}-{d}.fits.gz')
+            dap_cube = dap_file.format(p=self.plateifu, d=daptype,
+                                       t='LOGCUBE')
+            try:
+                self.dap_cube = fitsio.FITS(dap_cube)
+            except OSError:
+                raise OSError("Could not read in DAP CUBE: {dm}".format(dm=dap_cube))
         return
 
     def read_rss(self):
@@ -916,3 +940,170 @@ class MNSA(object):
                             (((psf[is_positive]**2) / ivar[is_positive]).sum()))
 
         return(central_flux, central_ivar, nbad)
+
+    def central_stellar_velocity(self, psfband='r', rlimit=3.5):
+        """Calculate a central PSF-weighted stellar recession velocity
+
+        Parameters
+        ----------
+
+        psfband : str
+            band to use for PSF weighting
+
+        thlimit : np.float32
+            radius limit for PSF in arcsec
+        
+        Returns
+        -------
+
+        velocity : np.float32
+"""
+        self.read_maps()
+        if(self.maps is None):
+            return(None)
+
+        hdr = self.maps[0].read_header()
+        sysv = np.float32(hdr['SCINPVEL'])
+
+        self.read_psf(band=psfband)
+
+        vel = self.read_image(channel=0, ext='STELLAR_VEL', file='maps')
+        vel_ivar = self.read_image(channel=0, ext='STELLAR_VEL_IVAR', file='maps')
+
+        # Create PSF weighting mask
+        #   - first limit in radius
+        circle_mask = self.ellipse_mask(sma=rlimit)
+
+        # Count how many ivar=0 pixels there are
+        try:
+            nbad = np.int32(((vel_ivar == 0) & (circle_mask > 0)).sum())
+        except:
+            raise ValueError("ivar.shape = {ivs}, circle_mask.shape = {cms}".format(ivs=vel_ivar.shape,
+                                                                                    cms=circle_mask.shape))
+        
+        psf = self.psf[psfband] * circle_mask
+        #   - then excise negatives        
+        psf[psf < 0.] = 0.
+        #   - if no pixels left, return flux=0, ivar=0
+        if((psf > 0.).sum() == 0):
+            return(0., 0., nbad)
+        #   - now excise poorly measured pixels
+        psf[vel_ivar <= 0.] = 0.
+        # If no pixels left, return nothing
+        if((psf > 0.).sum() == 0):
+            return(None)
+        #   - normalize
+        psf = psf / psf.sum()
+
+        central_vel = (vel * psf).sum() / (psf).sum()
+
+        c = 2.99792e+5
+        return(c * ((1. + central_vel / c) * (1. + sysv / c) - 1.))
+
+    def central_spectrum(self, psfband='r', rlimit=3.5, model=False):
+        """Calculate a central PSF-weighted spectrum
+
+        Parameters
+        ----------
+
+        psfband : str
+            band to use for PSF weighting
+
+        rlimit : np.float32
+            radius limit for PSF in arcsec
+        
+        Returns
+        -------
+
+        central_spectrum : dict()
+            dictionary with 'wave', 'flux', 'ivar'
+"""
+        self.read_cube()
+        if(self.cube is None):
+            return(None)
+
+        wave = self.cube['WAVE'].read()
+        cube_flux = self.cube['FLUX'].read()
+        cube_ivar = self.cube['IVAR'].read()
+
+        if(model):
+            self.read_dap_cube()
+            dap_cube = dict()
+            dap_cube['model'] = self.dap_cube['MODEL'].read()
+            dap_cube['stellar'] = self.dap_cube['STELLAR'].read()
+            dap_cube['emline'] = self.dap_cube['EMLINE'].read()
+
+        nwave, nx, ny = cube_flux.shape
+        x1 = np.arange(nx, dtype=np.int32) - np.float32(nx // 2)
+        y1 = np.arange(ny, dtype=np.int32) - np.float32(ny // 2)
+        x, y = np.meshgrid(x1, y1, indexing='ij')
+
+        self.read_psf(band=psfband)
+
+        # Create PSF weighting mask
+        #   - first limit in radius
+        circle_mask = self.ellipse_mask(sma=rlimit)
+
+        psf = self.psf[psfband] * circle_mask
+        #   - then excise negatives        
+        psf[psf < 0.] = 0.
+        #   - if no pixels left, return flux=0, ivar=0
+        if((psf > 0.).sum() == 0):
+            return(None)
+        #   - normalize to this PSF model
+        psf = psf / psf.sum()
+
+        # If no pixels left, return nothing
+        if((psf > 0.).sum() == 0):
+            return(None)
+
+        central_spectrum = dict()
+        central_spectrum['wave'] = wave
+        central_spectrum['flux'] = np.zeros(nwave, dtype=np.float32)
+        central_spectrum['ivar'] = np.zeros(nwave, dtype=np.float32)
+        if(model):
+            central_spectrum['model'] = np.zeros(nwave, dtype=np.float32)
+            central_spectrum['emline'] = np.zeros(nwave, dtype=np.float32)
+            central_spectrum['stellar'] = np.zeros(nwave, dtype=np.float32)
+
+        for iwave in np.arange(nwave, dtype=np.int32):
+            nbad = np.int32(((cube_ivar[iwave, :, :] <= 0.) &
+                             (circle_mask > 0)).sum())
+            if(nbad >= 4):
+                continue
+
+            curr_flux = np.squeeze(cube_flux[iwave, :, :])
+            curr_ivar = np.squeeze(cube_ivar[iwave, :, :])
+
+            #   - now excise poorly measured pixels (but do not renorm)
+            curr_psf = psf.copy()
+            curr_psf[curr_ivar <= 0.] = 0.
+
+            central_spectrum['flux'][iwave] = ((curr_flux * curr_psf).sum() /
+                                               (curr_psf * curr_psf).sum())
+
+            if(model):
+                for t in ['model', 'emline', 'stellar']:
+                    curr_model = np.squeeze(dap_cube[t][iwave, :, :])
+                    central_spectrum[t][iwave] = ((curr_model * curr_psf).sum() /
+                                                  (curr_psf * curr_psf).sum())
+
+            is_positive = (curr_psf > 0)
+            if(self.dr17):
+                ipositive = np.where(is_positive & (curr_ivar > 0.))
+                x = x[ipositive].flatten()
+                y = y[ipositive].flatten()
+                sigma = (1. / np.sqrt(ivar[ipositive])).flatten()
+                covar = np.zeros((len(x), len(x)), dtype=np.float32)
+                for i in np.arange(len(x), dtype=np.int32):
+                    dd = (x[i] - x)**2 + (y[i] - y)**2
+                    covar[i, :] = np.exp(- dd / 7.37) * sigma[i] * sigma
+                    numer = ((psf[ipositive]**2).sum())**2
+                    denom = psf[ipositive].dot(covar).dot(psf[ipositive])
+                    central_spectrum['ivar'][iwave] = numer / denom
+            else:
+                central_spectrum['ivar'][iwave] = (((curr_psf[is_positive]**2).sum())**2 /
+                                                   (((curr_psf[is_positive]**2) /
+                                                     curr_ivar[is_positive]).sum()))
+                
+        return(central_spectrum)

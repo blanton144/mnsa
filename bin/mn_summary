@@ -20,6 +20,26 @@ import numpy as np
 import fitsio
 
 apertures = ['AP02', 'AP03', 'AP04', 'AP05', 'AP06', 'AP07', 'AP08']
+bands = ['f', 'n', 'g', 'r', 'z', 'w1', 'w2', 'w3', 'w4']
+quants = ['maggies', 'ivar', 'absmag', 'absmag_ivar', 'absmag_limit',
+          'absmag_reconstruct', 'absmag_reconstruct_ivar', 'rmaggies',
+          'rmaggies_ivar']
+
+sps_dtype = [('plateifu', str, 12),
+             ('do_sps', np.int32),
+             ('hemi', str, 5),
+             ('redshift', np.float32),
+             ('chi2', np.float32),
+             ('dof', np.float32),
+             ('mass', np.float32),
+             ('mass_ivar', np.float32)]
+nonquants = [x[0] for x in sps_dtype]
+
+for quant in quants:
+    for band in bands:
+        sps_dtype.append(('{q}_{b}'.format(q=quant, b=band), np.float32))
+
+sps_dtype = np.dtype(sps_dtype)
 
 
 if __name__ == '__main__':
@@ -59,6 +79,7 @@ if __name__ == '__main__':
     sum_dtype.append(('do_sps', np.int32))
     sum_dtype.append(('iellipse', np.int32))
     sum_dtype.append(('ipipe3d', np.int32))
+    sum_dtype.append(('idap', np.int32))
 
     # Copy drpall information in
     summary = np.zeros(len(drp), dtype=sum_dtype)
@@ -98,8 +119,13 @@ if __name__ == '__main__':
         tmp_sps = fitsio.read(spsfile)
         plateifu, isummary, isps = np.intersect1d(done['plateifu'], tmp_sps['plateifu'],
                                                   return_indices=True)
-        sps_matched = np.zeros(len(done), dtype=tmp_sps.dtype)
-        sps_matched[isummary] = tmp_sps[isps]
+        sps_matched = np.zeros(len(done), dtype=sps_dtype)
+        for n in nonquants:
+            sps_matched[n][isummary] = tmp_sps[n][isps]
+        for quant in quants:
+            for iband, band in enumerate(bands):
+                n = '{q}_{b}'.format(q=quant, b=band)
+                sps_matched[n][isummary] = tmp_sps[quant][isps, iband]
         sps[aperture] = sps_matched
 
     # Read in central flux file 
@@ -108,6 +134,18 @@ if __name__ == '__main__':
                           'central_flux', 'central-flux-{v}.fits')
     cffile = cffile.format(v=version)
     central_flux = fitsio.read(cffile)
+
+    # Read in DAP all file 
+    dapfile = os.path.join(os.getenv('MANGA_SPECTRO_ANALYSIS'),
+                           version, version, 'dapall-{v}-{v}.fits'.format(v=version))
+    dapall = fitsio.read(dapfile)
+    summary['idap'] = - 1
+    plateifu, isummary, idap = np.intersect1d(summary['plateifu'], dapall['PLATEIFU'],
+                                              return_indices=True)
+    summary['idap'][isummary] = idap
+    dap_matched = np.zeros(len(summary), dtype=dapall.dtype)
+    matched = (summary['idap'] >= 0)
+    dap_matched[matched] = dapall[summary['idap'][matched]]
 
     # Read in Pipe3D [subset]
     pipe3dfile = os.path.join(os.getenv('MANGA_PIPE3D'),
@@ -136,6 +174,8 @@ if __name__ == '__main__':
     fitsio.write(sumfile, central_flux, extname='CENTRAL_FLUX',
                  clobber=False)
     fitsio.write(sumfile, pipe3d_matched, extname='PIPE3D',
+                 clobber=False)
+    fitsio.write(sumfile, dap_matched, extname='DAPALL',
                  clobber=False)
     for aperture in apertures:
         aphdr = hdr
