@@ -58,10 +58,10 @@ if __name__ == '__main__':
     sumfile = os.path.join(os.getenv('MNSA_DATA'), version,
                            'mnsa-{version}.fits'.format(version=version))
 
-    sps = fitsio.read(sumfile, ext='SPS_AP06')
+    sps = fitsio.read(sumfile, ext='SPS_AP04')
 
-    absmag_r = sps['absmag'][:, 3]
-    absmag_FmW1 = sps['absmag'][:, 0] - sps['absmag'][:, 5]
+    absmag_r = sps['absmag_r']
+    absmag_FmW1 = sps['absmag_f'] - sps['absmag_w1']
 
     nx = 40
     ny = 30
